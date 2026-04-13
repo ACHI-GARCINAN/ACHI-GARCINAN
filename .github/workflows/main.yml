@@ -22,15 +22,13 @@ jobs:
 
     - name: Build Portable EXE
       run: |
-        pyinstaller --onefile --windowed --icon="Gemini_Generated_Image_tpfbketpfbk8etpfb.ico" --add-data "*.json;." main.py
-      # וודא ששם הקובץ הוא main.py
+        pyinstaller --onefile --windowed --icon="Gemini_Generated_Image_tpfbketpfbk8etpfb.ico" --add-data "*.json;." synopsis_viewer-13.py
 
     - name: Install Inno Setup
       run: choco install innosetup --no-progress
 
     - name: Build Installer
       run: |
-        # יצירת תיקיית פלט כדי למנוע שגיאות
         mkdir Output -ErrorAction SilentlyContinue
         & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "יצירת תוכנה.iss"
 
