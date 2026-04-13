@@ -8,6 +8,7 @@ on:
 jobs:
   build:
     runs-on: windows-latest
+    permissions: write-all
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -22,7 +23,7 @@ jobs:
 
     - name: Build Portable EXE
       run: |
-        pyinstaller --onefile --windowed --icon="Gemini_Generated_Image_tpfbketpfbk8etpfb.ico" --add-data "*.json;." synopsis_viewer-13.py
+        pyinstaller --onefile --windowed --icon="icon.ico" --add-data "*.json;." synopsis_viewer-13.py
 
     - name: Install Inno Setup
       run: choco install innosetup --no-progress
@@ -32,10 +33,13 @@ jobs:
         mkdir Output -ErrorAction SilentlyContinue
         & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "יצירת תוכנה.iss"
 
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v4
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
       with:
-        name: Talmud-Program-Files
-        path: |
+        tag_name: v${\{ github.run_number \}\}
+        name: Release v${\{ github.run_number \}\}
+        files: |
           dist/*.exe
           Output/*.exe
+      env:
+        GITHUB_TOKEN: ${\{ secrets.GITHUB_TOKEN \}\}
