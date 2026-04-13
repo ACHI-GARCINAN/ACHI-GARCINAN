@@ -48,3 +48,4 @@ jobs:
           Output/*.exe
       env:
         GITHUB_TOKEN: ${\{ secrets.GITHUB_TOKEN \}\}
+# Trigger new run with updated permissions
