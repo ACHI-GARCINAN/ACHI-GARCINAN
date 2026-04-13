@@ -16,10 +16,11 @@
 
 ---
 
-## 📥 הורדת התוכנה
+## הורדת התוכנה
 הקישורים הבאים תמיד יורידו את הגרסה האחרונה ביותר שיצאה:
 
-* 🖥️ **[להורדת גרסת התקנה (Setup)](https://github.com/ACHI-GARCINAN/---/releases/latest/download/Talmud-Formulas-Setup.exe)**
-* 🚀 **[להורדת גרסה ניידת - ללא התקנה (Portable)](https://github.com/ACHI-GARCINAN/---/releases/latest/download/Talmud-Formulas.exe)**
+* **[להורדת גרסת התקנה (Setup)](https://github.com/ACHI-GARCINAN/ACHI-GARCINAN/releases/latest/download/Talmud-Formulas-Setup.exe)**
+
+* **[להורדת גרסה ניידת - ללא התקנה (Portable)](https://github.com/ACHI-GARCINAN/ACHI-GARCINAN/releases/latest/download/Talmud-Formulas.exe)**
 
 ---
