@@ -23,7 +23,7 @@ jobs:
 
     - name: Build Portable EXE
       run: |
-        pyinstaller --onefile --windowed --icon="icon.ico" --add-data "*.json;." synopsis_viewer-13.py
+        pyinstaller --onefile --windowed --icon="icon.ico" --name="Talmud-Formulas" --add-data "*.json;." synopsis_viewer-13.py
 
     - name: Install Inno Setup
       run: choco install innosetup --no-progress
@@ -37,9 +37,14 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         tag_name: v${\{ github.run_number \}\}
-        name: Release v${\{ github.run_number \}\}
+        name: גרסה חדשה - v${\{ github.run_number \}\}
+        body: |
+          **גרסה ראשונה של תוכנת נוסחאות התלמוד. כוללת את כל המסכתות במצב אופליין**
+          
+          ## להורדת גרסת ההתקנה לחצו על הקובץ Talmud-Formulas-Setup.exe למטה
+          ## להורדת גרסה ניידת - לחצו על הקובץ Talmud-Formulas.exe למטה
         files: |
-          dist/*.exe
+          dist/Talmud-Formulas.exe
           Output/*.exe
       env:
         GITHUB_TOKEN: ${\{ secrets.GITHUB_TOKEN \}\}
