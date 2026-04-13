@@ -32,7 +32,7 @@ ArchitecturesInstallIn64BitMode=x64compatible
 ;SetupArchitecture=x64
 ChangesAssociations=yes
 DisableProgramGroupPage=yes
-LicenseFile=���� �����!.txt
+LicenseFile=license.txt
 InfoAfterFile=C:\Users\ZMB\Desktop\נוסחאות התלמוד\talmud1239@gmail.com תגובות והערות.txt
 ; Uncomment the following line to run in non administrative install mode (install for current user only).
 ;PrivilegesRequired=lowest
@@ -50,45 +50,45 @@ Name: "hebrew"; MessagesFile: "compiler:Languages\Hebrew.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "C:\Users\ZMB\Desktop\נוסחאות התלמוד\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\ZMB\Desktop\נוסחאות התלמוד\01 - מסכת ברכות.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\ZMB\Desktop\נוסחאות התלמוד\02 - מסכת שבת.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\ZMB\Desktop\נוסחאות התלמוד\03 - מסכת עירובין.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\ZMB\Desktop\נוסחאות התלמוד\04 - מסכת פסחים.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\ZMB\Desktop\נוסחאות התלמוד\05 - מסכת יומא.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\ZMB\Desktop\נוסחאות התלמוד\06 - מסכת סוכה.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\ZMB\Desktop\נוסחאות התלמוד\07 - מסכת ביצה.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\ZMB\Desktop\נוסחאות התלמוד\08 - מסכת ראש השנה.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\ZMB\Desktop\נוסחאות התלמוד\09 - מסכת תענית.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\ZMB\Desktop\נוסחאות התלמוד\10 - מסכת מגילה.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\ZMB\Desktop\נוסחאות התלמוד\11 - מסכת מועד קטן.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\ZMB\Desktop\נוסחאות התלמוד\12 - מסכת חגיגה.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\ZMB\Desktop\נוסחאות התלמוד\13 - מסכת יבמות.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\ZMB\Desktop\נוסחאות התלמוד\14 - מסכת כתובות.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\ZMB\Desktop\נוסחאות התלמוד\15 - מסכת נדרים.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\ZMB\Desktop\נוסחאות התלמוד\16 - מסכת נזיר.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\ZMB\Desktop\נוסחאות התלמוד\17 - מסכת סוטה.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\ZMB\Desktop\נוסחאות התלמוד\18 - מסכת גיטין.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\ZMB\Desktop\נוסחאות התלמוד\19 - מסכת קידושין.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\ZMB\Desktop\נוסחאות התלמוד\20 - מסכת בבא קמא.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\ZMB\Desktop\נוסחאות התלמוד\21 - מסכת בבא מציעא.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\ZMB\Desktop\נוסחאות התלמוד\22 - מסכת בבא בתרא.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\ZMB\Desktop\נוסחאות התלמוד\23 - מסכת סנהדרין.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\ZMB\Desktop\נוסחאות התלמוד\24 - מסכת מכות.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\ZMB\Desktop\נוסחאות התלמוד\25 - מסכת שבועות.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\ZMB\Desktop\נוסחאות התלמוד\26 - עבודה זרה.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\ZMB\Desktop\נוסחאות התלמוד\27 - מסכת הוריות.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\ZMB\Desktop\נוסחאות התלמוד\28 - מסכת זבחים.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\ZMB\Desktop\נוסחאות התלמוד\29 - מסכת מנחות.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\ZMB\Desktop\נוסחאות התלמוד\30 - מסכת חולין.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\ZMB\Desktop\נוסחאות התלמוד\31 - מסכת בכורות.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\ZMB\Desktop\נוסחאות התלמוד\32 - מסכת ערכין.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\ZMB\Desktop\נוסחאות התלמוד\33 - מסכת תמורה.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\ZMB\Desktop\נוסחאות התלמוד\34 - מסכת כריתות.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\ZMB\Desktop\נוסחאות התלמוד\35 - מסכת מעילה.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\ZMB\Desktop\נוסחאות התלמוד\36 - מסכת תמיד.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\ZMB\Desktop\נוסחאות התלמוד\37 - מסכת נדה.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\ZMB\Desktop\נוסחאות התלמוד\Gemini_Generated_Image_tpfbketpfbk8etpfb.ico"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "01 - מסכת ברכות.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "02 - מסכת שבת.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "03 - מסכת עירובין.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "04 - מסכת פסחים.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "05 - מסכת יומא.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "06 - מסכת סוכה.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "07 - מסכת ביצה.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "08 - מסכת ראש השנה.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "09 - מסכת תענית.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "10 - מסכת מגילה.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "11 - מסכת מועד קטן.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "12 - מסכת חגיגה.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "13 - מסכת יבמות.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "14 - מסכת כתובות.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "15 - מסכת נדרים.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "16 - מסכת נזיר.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "17 - מסכת סוטה.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "18 - מסכת גיטין.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "19 - מסכת קידושין.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "20 - מסכת בבא קמא.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "21 - מסכת בבא מציעא.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "22 - מסכת בבא בתרא.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "23 - מסכת סנהדרין.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "24 - מסכת מכות.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "25 - מסכת שבועות.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "26 - עבודה זרה.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "27 - מסכת הוריות.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "28 - מסכת זבחים.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "29 - מסכת מנחות.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "30 - מסכת חולין.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "31 - מסכת בכורות.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "32 - מסכת ערכין.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "33 - מסכת תמורה.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "34 - מסכת כריתות.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "35 - מסכת מעילה.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "36 - מסכת תמיד.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "37 - מסכת נדה.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Gemini_Generated_Image_tpfbketpfbk8etpfb.ico"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Registry]
