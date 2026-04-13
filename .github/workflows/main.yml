@@ -22,10 +22,12 @@ jobs:
       run: |
         pyinstaller --onefile --windowed --icon="Gemini_Generated_Image_tpfbketpfbk8etpfb.ico" --add-data "*.json;." main.py
 
+    - name: Install Inno Setup
+      run: choco install innosetup
+
     - name: Build Installer (Inno Setup)
-      uses: scottmelhop/iscc-action@v1.5.1
-      with:
-        filepath: "יצירת תוכנה.iss"
+      run: |
+        & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "יצירת תוכנה.iss"
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
