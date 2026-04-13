@@ -36,7 +36,7 @@ LicenseFile=C:\Users\ZMB\Desktop\נוסחאות התלמוד\הערת שימוש
 InfoAfterFile=C:\Users\ZMB\Desktop\נוסחאות התלמוד\talmud1239@gmail.com תגובות והערות.txt
 ; Uncomment the following line to run in non administrative install mode (install for current user only).
 ;PrivilegesRequired=lowest
-OutputDir=C:\Users\ZMB\Desktop
+OutputDir=Output
 OutputBaseFilename=נוסחאות התלמוד
 SetupIconFile=C:\Users\ZMB\Desktop\נוסחאות התלמוד\Gemini_Generated_Image_tpfbketpfbk8etpfb.ico
 SolidCompression=yes
