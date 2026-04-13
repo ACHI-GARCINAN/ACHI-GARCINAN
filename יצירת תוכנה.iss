@@ -32,7 +32,7 @@ ArchitecturesInstallIn64BitMode=x64compatible
 ;SetupArchitecture=x64
 ChangesAssociations=yes
 DisableProgramGroupPage=yes
-LicenseFile=C:\Users\ZMB\Desktop\נוסחאות התלמוד\הערת שימוש!.txt
+LicenseFile=���� �����!.txt
 InfoAfterFile=C:\Users\ZMB\Desktop\נוסחאות התלמוד\talmud1239@gmail.com תגובות והערות.txt
 ; Uncomment the following line to run in non administrative install mode (install for current user only).
 ;PrivilegesRequired=lowest
