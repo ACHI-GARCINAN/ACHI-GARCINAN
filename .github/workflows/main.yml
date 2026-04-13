@@ -8,20 +8,25 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.9'
+
     - name: Install dependencies
       run: |
         pip install pyinstaller
+
     - name: Build Portable EXE
       run: |
         pyinstaller --onefile --windowed --icon="Gemini_Generated_Image_tpfbketpfbk8etpfb.ico" --add-data "*.json;." main.py
-    - name: Build Installer
-      uses: Gabriel-Oatley/Inno-Setup-Action@v1.2.2
+
+    - name: Build Installer (Inno Setup)
+      uses: scottmelhop/iscc-action@v1.5.1
       with:
-        file: "יצירת תוכנה.iss"
+        filepath: "יצירת תוכנה.iss"
+
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       with:
