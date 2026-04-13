@@ -8,7 +8,10 @@ on:
 jobs:
   build:
     runs-on: windows-latest
-    permissions: write-all
+    # זה החלק שמוודא ש-GitHub ייתן לריצה הזו רשות לכתוב ריליס
+    permissions:
+      contents: write
+      packages: write
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -48,4 +51,3 @@ jobs:
           Output/*.exe
       env:
         GITHUB_TOKEN: ${\{ secrets.GITHUB_TOKEN \}\}
-# Trigger new run with updated permissions
