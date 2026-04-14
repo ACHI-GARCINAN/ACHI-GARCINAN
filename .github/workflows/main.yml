@@ -36,13 +36,12 @@ jobs:
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
       with:
-        tag_name: v${{ github.run_number }}
-        name: גרסה חדשה - v${{ github.run_number }}
+        # כאן קבעתי את הפורמט ל-1.X (לפי מספר הריצה)
+        tag_name: 1.${{ github.run_number }}
+        name: גרסה 1.${{ github.run_number }}
         body: |
-          **גרסה ראשונה של תוכנת נוסחאות התלמוד. כוללת את כל המסכתות במצב אופליין**
-          
-          ## להורדת גרסת ההתקנה לחצו על הקובץ Talmud-Formulas-Setup.exe למטה
-          ## להורדת גרסה ניידת - לחצו על הקובץ Talmud-Formulas.exe למטה
+          **גרסה אוטומטית 1.${{ github.run_number }}**
+          הקבצים מוכנים להורדה למטה.
         files: |
           dist/Talmud-Formulas.exe
           Output/*.exe
