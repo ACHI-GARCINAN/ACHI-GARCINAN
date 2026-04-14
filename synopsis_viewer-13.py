@@ -148,63 +148,55 @@ def normalize_word(w: str) -> str:
     return w.strip()
 
 
+def _diff_highlight(source_text: str, reference_text: str, highlight_style: str) -> str:
+    """
+    מחזיר HTML עם הדגשה של מילים בטקסט המקור שאינן תואמות לרצף בטקסט הייחוס.
+    משתמש ב-difflib.SequenceMatcher כדי להשוות לפי סדר ותדירות, לא רק לפי הימצאות.
+    """
+    import difflib
+
+    # פירוק לטוקנים (מילים + רווחים)
+    source_tokens = tokenize(source_text)
+    ref_tokens = tokenize(reference_text)
+
+    # רשימות המילים בלבד (ללא רווחים) עם הנרמול
+    source_words = [normalize_word(t) for t in source_tokens if t.strip()]
+    ref_words    = [normalize_word(t) for t in ref_tokens    if t.strip()]
+
+    # מיפוי: אינדקס במילות-המקור → האם תואמת לייחוס
+    matched = [False] * len(source_words)
+    matcher = difflib.SequenceMatcher(None, source_words, ref_words, autojunk=False)
+    for a, b, size in matcher.get_matching_blocks():
+        for i in range(size):
+            matched[a + i] = True
+
+    # בניית ה-HTML — עוברים על כל הטוקנים (כולל רווחים) ומדגישים את שלא הותאמו
+    parts = []
+    word_idx = 0
+    for token in source_tokens:
+        if not token.strip():
+            parts.append(token.replace('\n', '<br>'))
+        else:
+            norm = normalize_word(token)
+            if norm and not matched[word_idx]:
+                parts.append(f'<span style="{highlight_style}">{token}</span>')
+            else:
+                parts.append(token)
+            word_idx += 1
+
+    return ''.join(parts)
+
+
 def build_highlighted_html(witness_text: str, base_text: str) -> str:
-    base_words = set(normalize_word(w) for w in tokenize(base_text) if w.strip())
-    tokens = tokenize(witness_text)
-    parts = []
-    for token in tokens:
-        if not token.strip():
-            parts.append(token.replace('\n', '<br>'))
-        else:
-            norm = normalize_word(token)
-            if norm and norm not in base_words:
-                parts.append(
-                    f'<span style="background-color:#FFD700;color:#3A1A00;'
-                    f'border-radius:3px;padding:0 2px;font-weight:bold;">{token}</span>'
-                )
-            else:
-                parts.append(token)
-    return ''.join(parts)
+    """מדגיש מילים בעד הנוסח שאינן מופיעות ברצף המתאים בטקסט הבסיס (וילנא)."""
+    style = "background-color:#FFD700;color:#3A1A00;border-radius:3px;padding:0 2px;font-weight:bold;"
+    return _diff_highlight(witness_text, base_text, style)
 
 
 def build_vilna_diff_html(base_text: str, witness_text: str) -> str:
-    """Highlights words in base_text (Vilna) that differ from the witness text."""
-    witness_words = set(normalize_word(w) for w in tokenize(witness_text) if w.strip())
-    tokens = tokenize(base_text)
-    parts = []
-    for token in tokens:
-        if not token.strip():
-            parts.append(token.replace('\n', '<br>'))
-        else:
-            norm = normalize_word(token)
-            if norm and norm not in witness_words:
-                parts.append(
-                    f'<span style="background-color:#FF6B35;color:#FFFFFF;'
-                    f'border-radius:3px;padding:0 2px;font-weight:bold;">{token}</span>'
-                )
-            else:
-                parts.append(token)
-    return ''.join(parts)
-
-
-def build_vilna_diff_html(base_text: str, witness_text: str) -> str:
-    """Highlights words in base_text (Vilna) that differ from the witness text."""
-    witness_words = set(normalize_word(w) for w in tokenize(witness_text) if w.strip())
-    tokens = tokenize(base_text)
-    parts = []
-    for token in tokens:
-        if not token.strip():
-            parts.append(token.replace('\n', '<br>'))
-        else:
-            norm = normalize_word(token)
-            if norm and norm not in witness_words:
-                parts.append(
-                    f'<span style="background-color:#FF6B35;color:#FFFFFF;'
-                    f'border-radius:3px;padding:0 2px;font-weight:bold;">{token}</span>'
-                )
-            else:
-                parts.append(token)
-    return ''.join(parts)
+    """מדגיש מילים בטקסט וילנא שאינן מופיעות ברצף המתאים בעד הנוסח."""
+    style = "background-color:#FF6B35;color:#FFFFFF;border-radius:3px;padding:0 2px;font-weight:bold;"
+    return _diff_highlight(base_text, witness_text, style)
 
 
 # ============================================================
