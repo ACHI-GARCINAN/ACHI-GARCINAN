@@ -13,8 +13,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       with:
-        # חובה עבור קבצים גדולים (LFS) כמו talmud.db
-        lfs: true
+        lfs: true # מוריד את קובץ ה-talmud.db האמיתי מה-LFS
 
     - name: Calculate Version
       id: version_calc
@@ -32,12 +31,11 @@ jobs:
     - name: Install Dependencies
       run: |
         pip install pyinstaller
-        # אם יש ספריות חיצוניות כמו PyQt6, בטל את ההערה:
+        # אם יש ספריות כמו PyQt6, בטל את ההערה בשורה הבאה:
         # pip install PyQt6
 
     - name: Build Portable EXE
       run: |
-        # פקודה שכוללת את כל המבנה החדש של הפרויקט
         pyinstaller --onefile --windowed `
         --icon="icon.ico" `
         --name="Talmud-Formulas" `
@@ -63,8 +61,9 @@ jobs:
           גרסה אוטומטית של תוכנת נוסחאות התלמוד. כוללת את כל המסכתות במצב אופליין.
           
           ---
-          ## להורדת גירסת ההתקנה Talmud-Formulas-Setup.exe לחצו על הקובץ שמופיע למטה
-          ## להורדת גירסת ניידת Talmud-Formulas.exe - לחצו על הקובץ שמופיע למטה
+          
+          ## להורדת גירסת ההתקנה Talmud-Formulas-Setup.exe - לחצו על הקובץ
+          ## להורדת גירסת ניידת Talmud-Formulas.exe - לחצו על הקובץ
         draft: false
         prerelease: false
         make_latest: true
