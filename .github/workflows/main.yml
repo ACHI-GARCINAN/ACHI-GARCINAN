@@ -13,7 +13,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       with:
-        lfs: true # מוריד את קובץ ה-talmud.db האמיתי
+        lfs: true 
 
     - name: Calculate Version
       id: version_calc
@@ -30,8 +30,8 @@ jobs:
 
     - name: Install Dependencies
       run: |
-        pip install pyinstaller
-        pip install PyQt6  # תיקון קריטי: התקנת הספרייה החסרה
+        python -m pip install --upgrade pip
+        pip install pyinstaller PyQt6
 
     - name: Build Portable EXE
       run: |
@@ -40,7 +40,9 @@ jobs:
         --name="Talmud-Formulas" `
         --add-data "widgets;widgets" `
         --add-data "talmud.db;." `
-        --add-data "*.py;." `
+        --add-data "icon.ico;." `
+        --collect-all PyQt6 `
+        --clean `
         main.py
 
     - name: Install Inno Setup
@@ -57,12 +59,20 @@ jobs:
         tag_name: 1.${{ steps.version_calc.outputs.final_version }}
         name: נוסחאות התלמוד גירסה 1.${{ steps.version_calc.outputs.final_version }}
         body: |
-          גרסה אוטומטית מתוקנת (כולל PyQt6).
+          ### 🚀 שחרור גרסה 1.${{ steps.version_calc.outputs.final_version }}
+          
+          **תיקונים בגרסה זו:**
+          * הוספת ספריות PyQt6 חסרות לגרסה הניידת.
+          * תיקון נתיבי גישה למסד הנתונים (talmud.db).
+          * שיפור יציבות במערכות Windows 10/11.
           
           ---
-          ###  הורדה ישירה:
-          *  [לחצו כאן להורדת גירסת ההתקנה - Talmud-Formulas-Setup.exe](https://github.com/${{ github.repository }}/releases/download/1.${{ steps.version_calc.outputs.final_version }}/Talmud-Formulas-Setup.exe)
-          *  [לחצו כאן להורדת גירסה ניידת - Talmud-Formulas.exe](https://github.com/${{ github.repository }}/releases/download/1.${{ steps.version_calc.outputs.final_version }}/Talmud-Formulas.exe)
+          ###  הורדה:
+          *  [**גרסת התקנה (Setup)**](https://github.com/${{ github.repository }}/releases/download/1.${{ steps.version_calc.outputs.final_version }}/Talmud-Formulas-Setup.exe) - מומלץ! כולל אייקון בשולחן העבודה.
+          *  [**גרסה ניידת (Portable)**](https://github.com/${{ github.repository }}/releases/download/1.${{ steps.version_calc.outputs.final_version }}/Talmud-Formulas.exe) - להרצה ללא התקנה.
+          
+          ---
+          _הערה: אם האנטי-וירוס מתריע, יש לאשר את ההרצה (זה קורה בגלל שהקובץ אינו חתום דיגיטלית)._
         draft: false
         prerelease: false
         make_latest: true
