@@ -15,7 +15,6 @@ InfoBeforeFile=comments.txt
 Source: "dist\Talmud-Formulas.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "talmud.db"; DestDir: "{app}"; Flags: ignoreversion
 Source: "widgets\*"; DestDir: "{app}\widgets"; Flags: ignoreversion recursesubdirs createallsubdirs
-# כאן השינוי - אנחנו לוקחים את הקבצים מתוך תיקיית הארכיון
 Source: "JSON_Archive\*.json"; DestDir: "{app}"; Flags: ignoreversion
 Source: "license.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "comments.txt"; DestDir: "{app}"; Flags: ignoreversion
