@@ -36,12 +36,17 @@ jobs:
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
       with:
-        # כאן קבעתי את הפורמט ל-1.X (לפי מספר הריצה)
-        tag_name: 1.${{ github.run_number }}
-        name: גרסה 1.${{ github.run_number }}
+        # יצירת גרסה ייחודית בכל פעם (למשל v1.0.18, v1.0.19)
+        tag_name: v1.0.${{ github.run_number }}
+        name: גרסה 1.0.${{ github.run_number }}
         body: |
-          **גרסה אוטומטית 1.${{ github.run_number }}**
-          הקבצים מוכנים להורדה למטה.
+          **עדכון אוטומטי - גרסה 1.0.${{ github.run_number }}**
+          
+          שינויים אחרונים בגרסה זו:
+          * עדכון נוסחאות ומסכתות
+          * בנייה אוטומטית של קובץ התקנה (Setup) וקובץ נייד (Portable)
+        draft: false
+        prerelease: false
         files: |
           dist/Talmud-Formulas.exe
           Output/*.exe
