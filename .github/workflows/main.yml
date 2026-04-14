@@ -31,7 +31,15 @@ jobs:
 
     - name: Build Portable EXE
       run: |
-        pyinstaller --onefile --windowed --icon="icon.ico" --name="Talmud-Formulas" --add-data "*.json;." synopsis_viewer-13.py
+        # פקודה מעודכנת שכוללת את כל הקבצים החדשים, תיקיית הווידג'טים ומסד הנתונים
+        pyinstaller --onefile --windowed `
+        --icon="icon.ico" `
+        --name="Talmud-Formulas" `
+        --add-data "widgets;widgets" `
+        --add-data "talmud.db;." `
+        --add-data "*.py;." `
+        --add-data "*.json;." `
+        main.py
 
     - name: Install Inno Setup
       run: choco install innosetup --no-progress
@@ -54,6 +62,7 @@ jobs:
           ## להורדת גירסת ניידת Talmud-Formulas.exe - לחצו על הקובץ
         draft: false
         prerelease: false
+        make_latest: true
         files: |
           dist/Talmud-Formulas.exe
           Output/*.exe
