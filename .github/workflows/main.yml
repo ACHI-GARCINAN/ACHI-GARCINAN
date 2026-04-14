@@ -13,7 +13,6 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    # שלב חדש שמחשב את מספר הגרסה המאופס
     - name: Calculate Version
       id: version_calc
       run: |
@@ -45,11 +44,14 @@ jobs:
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
       with:
-        # משתמש בתוצאה של החישוב מהשלב הקודם
-        tag_name: 1.${{ steps.version_calc.outputs.final_version }}
-        name: גרסה 1.${{ steps.version_calc.outputs.final_version }}
+        tag_name: 1.0.${{ steps.version_calc.outputs.final_version }}
+        name: נוסחאות התלמוד גירסה 1.0.${{ steps.version_calc.outputs.final_version }}
         body: |
-          **גרסה אוטומטית 1.${{ steps.version_calc.outputs.final_version }}**
+          גרסה אוטומטית של תוכנת נוסחאות התלמוד. כוללת את כל המסכתות במצב אופליין.
+          
+          ---
+          ## להורדת גירסת ההתקנה Talmud-Formulas-Setup.exe לחצו על הקובץ
+          ## להורדת גירסת ניידת Talmud-Formulas.exe - לחצו על הקובץ
         draft: false
         prerelease: false
         files: |
