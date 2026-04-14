@@ -19,7 +19,8 @@ jobs:
       id: version_calc
       run: |
         $runNumber = ${{ github.run_number }}
-        $newVersion = $runNumber - 17
+        # הפחתה של 27 תביא אותנו לגרסה 3 (כלומר 1.3)
+        $newVersion = $runNumber - 27
         echo "final_version=$newVersion" >> $env:GITHUB_OUTPUT
       shell: powershell
 
@@ -31,8 +32,6 @@ jobs:
     - name: Install Dependencies
       run: |
         pip install pyinstaller
-        # אם יש ספריות כמו PyQt6, בטל את ההערה בשורה הבאה:
-        # pip install PyQt6
 
     - name: Build Portable EXE
       run: |
@@ -55,20 +54,25 @@ jobs:
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
       with:
-        tag_name: 1.0.${{ steps.version_calc.outputs.final_version }}
-        name: נוסחאות התלמוד גירסה 1.0.${{ steps.version_calc.outputs.final_version }}
+        # יצירת תגית בפורמט 1.3 במקום 1.0.13
+        tag_name: 1.${{ steps.version_calc.outputs.final_version }}
+        name: נוסחאות התלמוד גירסה 1.${{ steps.version_calc.outputs.final_version }}
         body: |
           גרסה אוטומטית של תוכנת נוסחאות התלמוד. כוללת את כל המסכתות במצב אופליין.
           
           ---
           
-          ## להורדת גירסת ההתקנה Talmud-Formulas-Setup.exe - לחצו על הקובץ
-          ## להורדת גירסת ניידת Talmud-Formulas.exe - לחצו על הקובץ
+          ###  להורדה ישירה:
+          *  [לחצו כאן להורדת גירסת ההתקנה - Talmud-Formulas-Setup.exe](https://github.com/${{ github.repository }}/releases/download/1.${{ steps.version_calc.outputs.final_version }}/Talmud-Formulas-Setup.exe)
+          *  [לחצו כאן להורדת גירסה ניידת - Talmud-Formulas.exe](https://github.com/${{ github.repository }}/releases/download/1.${{ steps.version_calc.outputs.final_version }}/Talmud-Formulas.exe)
+          
+          ---
+          _הערה: אם ההורדה נחסמת על ידי הדפדפן, יש לבחור ב-"שמור" (Keep)._
         draft: false
         prerelease: false
         make_latest: true
         files: |
           dist/Talmud-Formulas.exe
-          Output/*.exe
+          Output/Talmud-Formulas-Setup.exe
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
