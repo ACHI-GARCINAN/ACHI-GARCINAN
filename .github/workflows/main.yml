@@ -13,13 +13,12 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       with:
-        lfs: true # מוריד את קובץ ה-talmud.db האמיתי מה-LFS
+        lfs: true # מוריד את קובץ ה-talmud.db האמיתי
 
     - name: Calculate Version
       id: version_calc
       run: |
         $runNumber = ${{ github.run_number }}
-        # הפחתה של 27 תביא אותנו לגרסה 3 (כלומר 1.3)
         $newVersion = $runNumber - 27
         echo "final_version=$newVersion" >> $env:GITHUB_OUTPUT
       shell: powershell
@@ -32,6 +31,7 @@ jobs:
     - name: Install Dependencies
       run: |
         pip install pyinstaller
+        pip install PyQt6  # תיקון קריטי: התקנת הספרייה החסרה
 
     - name: Build Portable EXE
       run: |
@@ -54,20 +54,15 @@ jobs:
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
       with:
-        # יצירת תגית בפורמט 1.3 במקום 1.0.13
         tag_name: 1.${{ steps.version_calc.outputs.final_version }}
         name: נוסחאות התלמוד גירסה 1.${{ steps.version_calc.outputs.final_version }}
         body: |
-          גרסה אוטומטית של תוכנת נוסחאות התלמוד. כוללת את כל המסכתות במצב אופליין.
+          גרסה אוטומטית מתוקנת (כולל PyQt6).
           
           ---
-          
-          ###  להורדה ישירה:
+          ###  הורדה ישירה:
           *  [לחצו כאן להורדת גירסת ההתקנה - Talmud-Formulas-Setup.exe](https://github.com/${{ github.repository }}/releases/download/1.${{ steps.version_calc.outputs.final_version }}/Talmud-Formulas-Setup.exe)
           *  [לחצו כאן להורדת גירסה ניידת - Talmud-Formulas.exe](https://github.com/${{ github.repository }}/releases/download/1.${{ steps.version_calc.outputs.final_version }}/Talmud-Formulas.exe)
-          
-          ---
-          _הערה: אם ההורדה נחסמת על ידי הדפדפן, יש לבחור ב-"שמור" (Keep)._
         draft: false
         prerelease: false
         make_latest: true
