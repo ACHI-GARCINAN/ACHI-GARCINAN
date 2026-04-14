@@ -36,15 +36,13 @@ jobs:
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
       with:
-        # יצירת גרסה ייחודית בכל פעם (למשל v1.0.18, v1.0.19)
-        tag_name: v1.0.${{ github.run_number }}
-        name: גרסה 1.0.${{ github.run_number }}
+        # כאן אנחנו מבצעים את ה"איפוס": המונה הנוכחי פחות 17
+        # כך שהריצה הבאה (18) תהיה גרסה 1.1
+        tag_name: 1.${{ github.run_number - 17 }}
+        name: גרסה 1.${{ github.run_number - 17 }}
         body: |
-          **עדכון אוטומטי - גרסה 1.0.${{ github.run_number }}**
-          
-          שינויים אחרונים בגרסה זו:
-          * עדכון נוסחאות ומסכתות
-          * בנייה אוטומטית של קובץ התקנה (Setup) וקובץ נייד (Portable)
+          **גרסה 1.${{ github.run_number - 17 }}**
+          עדכון אוטומטי של המערכת.
         draft: false
         prerelease: false
         files: |
