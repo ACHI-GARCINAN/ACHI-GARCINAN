@@ -15,7 +15,7 @@ InfoBeforeFile=comments.txt
 Source: "dist\Talmud-Formulas.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "talmud.db"; DestDir: "{app}"; Flags: ignoreversion
 Source: "widgets\*"; DestDir: "{app}\widgets"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "JSON_Archive\*.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "JSON_Archive\*.json"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
 Source: "license.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "comments.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "icon.ico"; DestDir: "{app}"; Flags: ignoreversion
