@@ -2,16 +2,13 @@ name: Build and Release
 on:
   push:
     branches: [ "main" ]
-    paths-ignore:
-      - 'README.md'
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: windows-latest
-    # זה החלק שמוודא ש-GitHub ייתן לריצה הזו רשות לכתוב ריליס
     permissions:
       contents: write
-      packages: write
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -39,8 +36,8 @@ jobs:
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
       with:
-        tag_name: v${\{ github.run_number \}\}
-        name: גרסה חדשה - v${\{ github.run_number \}\}
+        tag_name: v${{ github.run_number }}
+        name: גרסה חדשה - v${{ github.run_number }}
         body: |
           **גרסה ראשונה של תוכנת נוסחאות התלמוד. כוללת את כל המסכתות במצב אופליין**
           
@@ -50,4 +47,4 @@ jobs:
           dist/Talmud-Formulas.exe
           Output/*.exe
       env:
-        GITHUB_TOKEN: ${\{ secrets.GITHUB_TOKEN \}\}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
