@@ -13,6 +13,14 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Calculate Version
+      id: version_calc
+      run: |
+        $runNumber = ${{ github.run_number }}
+        $newVersion = $runNumber - 17
+        echo "final_version=$newVersion" >> $env:GITHUB_OUTPUT
+      shell: powershell
+
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
@@ -23,7 +31,15 @@ jobs:
 
     - name: Build Portable EXE
       run: |
-        pyinstaller --onefile --windowed --icon="icon.ico" --name="Talmud-Formulas" --add-data "*.json;." synopsis_viewer-13.py
+        # פקודה מעודכנת שכוללת את כל הקבצים החדשים, תיקיית הווידג'טים ומסד הנתונים
+        pyinstaller --onefile --windowed `
+        --icon="icon.ico" `
+        --name="Talmud-Formulas" `
+        --add-data "widgets;widgets" `
+        --add-data "talmud.db;." `
+        --add-data "*.py;." `
+        --add-data "*.json;." `
+        main.py
 
     - name: Install Inno Setup
       run: choco install innosetup --no-progress
@@ -36,12 +52,17 @@ jobs:
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
       with:
-        # כאן קבעתי את הפורמט ל-1.X (לפי מספר הריצה)
-        tag_name: 1.${{ github.run_number }}
-        name: גרסה 1.${{ github.run_number }}
+        tag_name: 1.0.${{ steps.version_calc.outputs.final_version }}
+        name: נוסחאות התלמוד גירסה 1.0.${{ steps.version_calc.outputs.final_version }}
         body: |
-          **גרסה אוטומטית 1.${{ github.run_number }}**
-          הקבצים מוכנים להורדה למטה.
+          גרסה אוטומטית של תוכנת נוסחאות התלמוד. כוללת את כל המסכתות במצב אופליין.
+          
+          ---
+          ## להורדת גירסת ההתקנה Talmud-Formulas-Setup.exe לחצו על הקובץ
+          ## להורדת גירסת ניידת Talmud-Formulas.exe - לחצו על הקובץ
+        draft: false
+        prerelease: false
+        make_latest: true
         files: |
           dist/Talmud-Formulas.exe
           Output/*.exe
