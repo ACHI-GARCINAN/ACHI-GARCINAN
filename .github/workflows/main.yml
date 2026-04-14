@@ -12,6 +12,9 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        # חובה עבור קבצים גדולים (LFS) כמו talmud.db
+        lfs: true
 
     - name: Calculate Version
       id: version_calc
@@ -26,19 +29,21 @@ jobs:
       with:
         python-version: '3.9'
 
-    - name: Install PyInstaller
-      run: pip install pyinstaller
+    - name: Install Dependencies
+      run: |
+        pip install pyinstaller
+        # אם יש ספריות חיצוניות כמו PyQt6, בטל את ההערה:
+        # pip install PyQt6
 
     - name: Build Portable EXE
       run: |
-        # פקודה מעודכנת שכוללת את כל הקבצים החדשים, תיקיית הווידג'טים ומסד הנתונים
+        # פקודה שכוללת את כל המבנה החדש של הפרויקט
         pyinstaller --onefile --windowed `
         --icon="icon.ico" `
         --name="Talmud-Formulas" `
         --add-data "widgets;widgets" `
         --add-data "talmud.db;." `
         --add-data "*.py;." `
-        --add-data "*.json;." `
         main.py
 
     - name: Install Inno Setup
@@ -58,8 +63,8 @@ jobs:
           גרסה אוטומטית של תוכנת נוסחאות התלמוד. כוללת את כל המסכתות במצב אופליין.
           
           ---
-          ## להורדת גירסת ההתקנה Talmud-Formulas-Setup.exe לחצו על הקובץ
-          ## להורדת גירסת ניידת Talmud-Formulas.exe - לחצו על הקובץ
+          ## להורדת גירסת ההתקנה Talmud-Formulas-Setup.exe לחצו על הקובץ שמופיע למטה
+          ## להורדת גירסת ניידת Talmud-Formulas.exe - לחצו על הקובץ שמופיע למטה
         draft: false
         prerelease: false
         make_latest: true
