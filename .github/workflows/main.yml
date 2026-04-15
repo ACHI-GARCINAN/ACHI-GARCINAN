@@ -58,7 +58,13 @@ jobs:
         name: נוסחאות התלמוד גירסה 1.${{ steps.version_calc.outputs.final_version }}
         body: |
           ###  הורדה ישירה:
-          *  [**לחצו כאן להורדת גירסת ההתקנה - Talmud-Formulas-Setup.exe**](https://github.com/${{ github.repository }}/releases/download/1.${{ steps.version_calc.outputs.final_version }}/Talmud-Formulas-Setup.exe)
-          *  [**לחצו כאן להורדת גירסה ניידת - Talmud-Formulas.exe**](https://github.com/${{ github.repository }}/releases/download/1.${{ steps.version_calc.outputs.final_version }}/Talmud-Formulas.exe)
-          
-          ---
+          *  [לחצו כאן להורדת גירסת ההתקנה - Talmud-Formulas-Setup.exe](https://github.com/${{ github.repository }}/releases/download/1.${{ steps.version_calc.outputs.final_version }}/Talmud-Formulas-Setup.exe)
+          *  [לחצו כאן להורדת גירסה ניידת - Talmud-Formulas.exe](https://github.com/${{ github.repository }}/releases/download/1.${{ steps.version_calc.outputs.final_version }}/Talmud-Formulas.exe)
+        draft: false
+        prerelease: false
+        make_latest: true
+        files: |
+          dist/Talmud-Formulas.exe
+          Output/Talmud-Formulas-Setup.exe
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
