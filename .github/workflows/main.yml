@@ -13,13 +13,16 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       with:
-        lfs: true 
+        lfs: true # מוודא שגיטהאב מושך את הקובץ האמיתי מה-LFS
+
+    - name: Pull LFS objects
+      run: git lfs pull # וידוא סופי שהקובץ פיזית על שרת הבנייה
 
     - name: Calculate Version
       id: version_calc
       run: |
         $runNumber = ${{ github.run_number }}
-        $newVersion = "1." + ($runNumber - 20) # יתחיל מ-1.8 בערך
+        $newVersion = "1." + ($runNumber - 20)
         echo "final_version=$newVersion" >> $env:GITHUB_OUTPUT
       shell: powershell
 
@@ -39,18 +42,17 @@ jobs:
         --icon="icon.ico" `
         --name="Talmud-Formulas" `
         --add-data "widgets;widgets" `
-        --add-data "talmud.db;." `
         --add-data "icon.ico;." `
         --collect-all PyQt6 `
         --clean `
         main.py
+      # שים לב: הסרתי את talmud.db מה-pyinstaller כדי שה-EXE יהיה קטן ומהיר
 
     - name: Install Inno Setup
       run: choco install innosetup --no-progress
 
     - name: Build Installer
       run: |
-        # עדכון גרסה אוטומטי בתוך קובץ ה-ISS לפני הבנייה
         (Get-Content "יצירת תוכנה.iss") -replace 'AppVersion=.*', 'AppVersion=${{ steps.version_calc.outputs.final_version }}' | Set-Content "יצירת תוכנה.iss"
         mkdir Output -ErrorAction SilentlyContinue
         & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "יצירת תוכנה.iss"
@@ -62,13 +64,16 @@ jobs:
         name: נוסחאות התלמוד גרסה ${{ steps.version_calc.outputs.final_version }}
         body: |
           ###  הורדה ישירה:
-          *  [**גרסת התקנה (Setup)**](https://github.com/${{ github.repository }}/releases/download/v${{ steps.version_calc.outputs.final_version }}/Talmud-Formulas-Setup.exe)
-          *  [**גרסה ניידת (Portable)**](https://github.com/${{ github.repository }}/releases/download/v${{ steps.version_calc.outputs.final_version }}/Talmud-Formulas.exe)
+          * [**גרסת התקנה (Setup)**](https://github.com/${{ github.repository }}/releases/download/v${{ steps.version_calc.outputs.final_version }}/Talmud-Formulas-Setup.exe)
+          * [**גרסה ניידת (Portable)**](https://github.com/${{ github.repository }}/releases/download/v${{ steps.version_calc.outputs.final_version }}/Talmud-Formulas.exe)
+          
+           **שימו לב:** יש להוריד את קובץ ה-DB (בסיס הנתונים) בנפרד ולבחור אותו בהפעלה הראשונה.
         draft: false
         prerelease: false
         make_latest: true
         files: |
           dist/Talmud-Formulas.exe
           Output/Talmud-Formulas-Setup.exe
+          talmud.db  # <--- הפקודה שמושכת את ה-DB מה-Repo ומעלה אותו כקובץ נפרד לריליס
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
