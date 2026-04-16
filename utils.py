@@ -47,13 +47,13 @@ def _diff_highlight(source_text: str, reference_text: str, highlight_style: str)
 
 def build_highlighted_html(witness_text: str, base_text: str) -> str:
     """מדגיש מילים בעד הנוסח שאינן מופיעות ברצף המתאים בטקסט הבסיס (וילנא)."""
-    style = "background-color:#FFD700;color:#3A1A00;border-radius:3px;padding:0 2px;font-weight:bold;"
+    style = "background-color:#FFD700;color:#1A202C;border-radius:3px;padding:0 2px;font-weight:bold;"
     return _diff_highlight(witness_text, base_text, style)
 
 
 def build_vilna_diff_html(base_text: str, witness_text: str) -> str:
     """מדגיש מילים בטקסט וילנא שאינן מופיעות ברצף המתאים בעד הנוסח."""
-    style = "background-color:#FF6B35;color:#FFFFFF;border-radius:3px;padding:0 2px;font-weight:bold;"
+    style = "background-color:#E53E3E;color:#FFFFFF;border-radius:3px;padding:0 2px;font-weight:bold;"
     return _diff_highlight(base_text, witness_text, style)
 
 
