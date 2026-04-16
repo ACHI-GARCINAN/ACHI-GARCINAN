@@ -19,7 +19,7 @@ jobs:
       id: version_calc
       run: |
         $runNumber = ${{ github.run_number }}
-        $newVersion = $runNumber - 27
+        $newVersion = "1." + ($runNumber - 20) # יתחיל מ-1.8 בערך
         echo "final_version=$newVersion" >> $env:GITHUB_OUTPUT
       shell: powershell
 
@@ -36,9 +36,11 @@ jobs:
     - name: Build Portable EXE
       run: |
         pyinstaller --onefile --windowed `
+        --icon="icon.ico" `
         --name="Talmud-Formulas" `
         --add-data "widgets;widgets" `
         --add-data "talmud.db;." `
+        --add-data "icon.ico;." `
         --collect-all PyQt6 `
         --clean `
         main.py
@@ -48,18 +50,20 @@ jobs:
 
     - name: Build Installer
       run: |
+        # עדכון גרסה אוטומטי בתוך קובץ ה-ISS לפני הבנייה
+        (Get-Content "יצירת תוכנה.iss") -replace 'AppVersion=.*', 'AppVersion=${{ steps.version_calc.outputs.final_version }}' | Set-Content "יצירת תוכנה.iss"
         mkdir Output -ErrorAction SilentlyContinue
         & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "יצירת תוכנה.iss"
 
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
       with:
-        tag_name: 1.${{ steps.version_calc.outputs.final_version }}
-        name: נוסחאות התלמוד גירסה 1.${{ steps.version_calc.outputs.final_version }}
+        tag_name: v${{ steps.version_calc.outputs.final_version }}
+        name: נוסחאות התלמוד גרסה ${{ steps.version_calc.outputs.final_version }}
         body: |
           ###  הורדה ישירה:
-          *  [לחצו כאן להורדת גירסת ההתקנה - Talmud-Formulas-Setup.exe](https://github.com/${{ github.repository }}/releases/download/1.${{ steps.version_calc.outputs.final_version }}/Talmud-Formulas-Setup.exe)
-          *  [לחצו כאן להורדת גירסה ניידת - Talmud-Formulas.exe](https://github.com/${{ github.repository }}/releases/download/1.${{ steps.version_calc.outputs.final_version }}/Talmud-Formulas.exe)
+          *  [**גרסת התקנה (Setup)**](https://github.com/${{ github.repository }}/releases/download/v${{ steps.version_calc.outputs.final_version }}/Talmud-Formulas-Setup.exe)
+          *  [**גרסה ניידת (Portable)**](https://github.com/${{ github.repository }}/releases/download/v${{ steps.version_calc.outputs.final_version }}/Talmud-Formulas.exe)
         draft: false
         prerelease: false
         make_latest: true
