@@ -1,60 +1,60 @@
 STYLE = """
 QMainWindow, QWidget {
-    background-color: #F7F3EC;
+    background-color: #F0F4F7;
     font-family: 'David', 'Arial', sans-serif;
 }
 QListWidget#page_list {
-    background-color: #2B1A0F;
+    background-color: #E1E8ED;
     border: none;
-    color: #C8A87A;
+    color: #4A5568;
     outline: none;
     padding: 6px 0;
 }
 QListWidget#page_list::item {
     padding: 9px 6px;
     text-align: center;
-    border-bottom: 1px solid #3A2418;
+    border-bottom: 1px solid #D1D9E0;
     font-size: 15px;
 }
 QListWidget#page_list::item:selected {
-    background-color: #7A3810;
-    color: #FFF5E6;
+    background-color: #B0C4DE;
+    color: #2D3748;
     font-weight: bold;
 }
 QListWidget#page_list::item:hover:!selected {
-    background-color: #3A2418;
+    background-color: #DDE4E9;
 }
 QListWidget#masechet_list {
-    background-color: #1A2B1A;
+    background-color: #D9E1E8;
     border: none;
-    color: #A8C87A;
+    color: #4A5568;
     outline: none;
     padding: 6px 0;
 }
 QListWidget#masechet_list::item {
     padding: 9px 6px;
     text-align: center;
-    border-bottom: 1px solid #243424;
+    border-bottom: 1px solid #CBD5E0;
     font-size: 14px;
 }
 QListWidget#masechet_list::item:selected {
-    background-color: #2E6010;
-    color: #F0FFE6;
+    background-color: #A0B4CC;
+    color: #2D3748;
     font-weight: bold;
 }
 QListWidget#masechet_list::item:hover:!selected {
-    background-color: #243424;
+    background-color: #CFD9E1;
 }
 QScrollBar:vertical {
-    background: #EDE8DF; width: 7px; border-radius: 3px;
+    background: #EBF0F5; width: 7px; border-radius: 3px;
 }
 QScrollBar::handle:vertical {
-    background: #C0A87A; border-radius: 3px; min-height: 24px;
+    background: #A0B4CC; border-radius: 3px; min-height: 24px;
 }
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }
-QSplitter::handle { background-color: #D5C8B0; }
+QSplitter::handle { background-color: #CBD5E0; }
 QCheckBox {
-    color: #F0DFC0;
+    color: #4A5568;
     font-size: 12px;
     spacing: 6px;
 }
@@ -62,22 +62,23 @@ QCheckBox::indicator {
     width: 15px;
     height: 15px;
     border-radius: 3px;
-    border: 1px solid #C8A060;
-    background: #2B1A0F;
+    border: 1px solid #A0B4CC;
+    background: #F0F4F7;
 }
 QCheckBox::indicator:checked {
-    background: #C8A060;
-    border: 1px solid #E8C080;
+    background: #A0B4CC;
+    border: 1px solid #718096;
 }
 """
 
+# ערכת צבעים אחידה לעדי הנוסח - גווני כחול-אפור
 WITNESS_COLORS = [
-    ("#5B3A8A", "#F0ECF8"),
-    ("#1A5E8A", "#EAF3FA"),
-    ("#2E7A4A", "#E8F5EE"),
-    ("#8A4A1A", "#FBF0E8"),
-    ("#7A1A3A", "#F8EAF0"),
-    ("#2A6A6A", "#E8F5F5"),
-    ("#5A6A1A", "#F2F5E8"),
-    ("#6A2A6A", "#F5E8F5"),
+    ("#5A6A82", "#E8EEF4"),
+    ("#5A6A82", "#E8EEF4"),
+    ("#5A6A82", "#E8EEF4"),
+    ("#5A6A82", "#E8EEF4"),
+    ("#5A6A82", "#E8EEF4"),
+    ("#5A6A82", "#E8EEF4"),
+    ("#5A6A82", "#E8EEF4"),
+    ("#5A6A82", "#E8EEF4"),
 ]

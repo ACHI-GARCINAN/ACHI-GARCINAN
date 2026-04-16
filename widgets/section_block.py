@@ -19,10 +19,10 @@ class SectionBlock(QFrame):
         self._plain_text = ''
         self._text_lbl = None
 
-        self._normal_style   = "QFrame#section_block{background-color:#FFFDF8;border:1px solid #E0D8C8;border-radius:8px;margin:3px 8px;}"
-        self._hover_style    = "QFrame#section_block{background-color:#FFF5E6;border:1px solid #C8A060;border-right:4px solid #8B4513;border-radius:8px;margin:3px 8px;}"
-        self._selected_style = "QFrame#section_block{background-color:#FFF0DC;border:1px solid #8B4513;border-right:4px solid #5A1A00;border-radius:8px;margin:3px 8px;}"
-        self._diff_style     = "QFrame#section_block{background-color:#FFF8F0;border:1px solid #FF6B35;border-right:4px solid #CC3300;border-radius:8px;margin:3px 8px;}"
+        self._normal_style   = "QFrame#section_block{background-color:#FFFFFF;border:1px solid #CBD5E0;border-radius:8px;margin:3px 8px;}"
+        self._hover_style    = "QFrame#section_block{background-color:#F7FAFC;border:1px solid #A0B4CC;border-right:4px solid #5A6A82;border-radius:8px;margin:3px 8px;}"
+        self._selected_style = "QFrame#section_block{background-color:#EBF4FF;border:1px solid #5A6A82;border-right:4px solid #2D3748;border-radius:8px;margin:3px 8px;}"
+        self._diff_style     = "QFrame#section_block{background-color:#FFF5F5;border:1px solid #E53E3E;border-right:4px solid #C53030;border-radius:8px;margin:3px 8px;}"
 
         self.setObjectName("section_block")
         self.setStyleSheet(self._normal_style)
@@ -33,7 +33,7 @@ class SectionBlock(QFrame):
 
         tag = QLabel(section['section'])
         tag.setFont(QFont("Arial", 10, QFont.Weight.Bold))
-        tag.setStyleSheet("color:#8B4513;background-color:#F2E8D8;border-radius:4px;padding:2px 8px;")
+        tag.setStyleSheet("color:#4A5568;background-color:#EDF2F7;border-radius:4px;padding:2px 8px;")
         tag.setAlignment(Qt.AlignmentFlag.AlignRight)
         tag.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
         self._layout.addWidget(tag, alignment=Qt.AlignmentFlag.AlignRight)
@@ -47,7 +47,7 @@ class SectionBlock(QFrame):
         self._text_lbl.setWordWrap(True)
         self._text_lbl.setFont(QFont("David", 16))
         self._text_lbl.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
-        self._text_lbl.setStyleSheet("color:#1A0800;background:transparent;")
+        self._text_lbl.setStyleSheet("color:#2D3748;background:transparent;")
         self._layout.addWidget(self._text_lbl)
 
         shadow = QGraphicsDropShadowEffect()
@@ -73,7 +73,7 @@ class SectionBlock(QFrame):
             html = build_vilna_diff_html(self._plain_text, witness_text)
             self._text_lbl.setTextFormat(Qt.TextFormat.RichText)
             self._text_lbl.setText(
-                f'<div dir="rtl" style="font-family:David,serif;font-size:16pt;color:#1A0800;">{html}</div>'
+                f'<div dir="rtl" style="font-family:David,serif;font-size:16pt;color:#2D3748;">{html}</div>'
             )
         self.setStyleSheet(self._diff_style)
 

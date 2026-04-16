@@ -23,12 +23,12 @@ class WitnessCard(QFrame):
 
         if text:
             self.setStyleSheet(
-                f"QFrame{{background-color:{bg};border:1px solid {accent}35;"
+                f"QFrame{{background-color:{bg};border:1px solid #CBD5E0;"
                 f"border-top:3px solid {accent};border-radius:10px;margin:4px 8px;}}"
             )
         else:
             self.setStyleSheet(
-                "QFrame{background-color:#F0EDE6;border:1px dashed #C5B89A;"
+                "QFrame{background-color:#EBF0F5;border:1px dashed #CBD5E0;"
                 "border-radius:10px;margin:4px 8px;}"
             )
 
@@ -46,8 +46,8 @@ class WitnessCard(QFrame):
             )
         else:
             name_lbl.setStyleSheet(
-                "color:#A09080;background:transparent;"
-                "border:1px solid #C5B89A;border-radius:5px;padding:3px 8px;"
+                "color:#718096;background:transparent;"
+                "border:1px solid #CBD5E0;border-radius:5px;padding:3px 8px;"
             )
         layout.addWidget(name_lbl)
 
@@ -59,9 +59,9 @@ class WitnessCard(QFrame):
                 txt_widget.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
                 txt_widget.setHtml(
                     f'<div dir="rtl" style="font-family:David,serif;font-size:15pt;'
-                    f'color:#1A0A00;text-align:right;">{html_content}</div>'
+                    f'color:#2D3748;text-align:right;">{html_content}</div>'
                 )
-                txt_widget.setStyleSheet("QTextBrowser{background:transparent;border:none;color:#1A0A00;}")
+                txt_widget.setStyleSheet("QTextBrowser{background:transparent;border:none;color:#2D3748;}")
                 txt_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
                 txt_widget.document().adjustSize()
                 h = int(txt_widget.document().size().height()) + 16
@@ -73,12 +73,12 @@ class WitnessCard(QFrame):
                 txt_lbl.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
                 txt_lbl.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
                 txt_lbl.setFont(QFont("David", 15))
-                txt_lbl.setStyleSheet("color:#1A0A00;background:transparent;")
+                txt_lbl.setStyleSheet("color:#2D3748;background:transparent;")
                 layout.addWidget(txt_lbl)
         else:
             miss = QLabel("אין עד נוסח לקטע זה")
             miss.setAlignment(Qt.AlignmentFlag.AlignRight)
-            miss.setStyleSheet("color:#B0A090;font-style:italic;font-size:12px;background:transparent;")
+            miss.setStyleSheet("color:#A0AEC0;font-style:italic;font-size:12px;background:transparent;")
             layout.addWidget(miss)
 
         shadow = QGraphicsDropShadowEffect()
