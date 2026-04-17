@@ -10,6 +10,7 @@ class _ClickableWord(QLabel):
     _NORMAL   = "background:transparent;color:#2D3748;padding:1px 1px;border-radius:3px;"
     _HOVER    = "background:#E1E8ED;color:#2D3748;padding:1px 1px;border-radius:3px;"
     _SELECTED = "background:#A0B4CC;color:#1A202C;padding:1px 1px;border-radius:3px;font-weight:bold;"
+    _SEARCH_MATCH = "background:#FFD700;color:#1A202C;padding:1px 1px;border-radius:3px;"
     _MISSING  = "background:transparent;color:#A0AEC0;padding:1px 1px;border-radius:3px;font-style:italic;"
 
     def __init__(self, text: str, idx: int, is_present: bool, parent=None):
@@ -17,6 +18,7 @@ class _ClickableWord(QLabel):
         self.idx = idx
         self.is_present = is_present
         self.is_selected = False
+        self.is_search_match = False
         self.setFont(QFont("David", 16))
         self.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self._apply_style()
@@ -24,6 +26,8 @@ class _ClickableWord(QLabel):
     def _apply_style(self):
         if self.is_selected:
             self.setStyleSheet(self._SELECTED)
+        elif self.is_search_match:
+            self.setStyleSheet(self._SEARCH_MATCH)
         elif not self.is_present:
             self.setStyleSheet(self._MISSING)
         else:
@@ -31,6 +35,10 @@ class _ClickableWord(QLabel):
 
     def set_selected(self, val: bool):
         self.is_selected = val
+        self._apply_style()
+
+    def set_search_match(self, val: bool):
+        self.is_search_match = val
         self._apply_style()
 
     def enterEvent(self, e):
@@ -131,6 +139,28 @@ class _FlowWidget(QWidget):
     def sizeHint(self):
         return QSize(self.width(), self.minimumHeight())
 
+    def search_highlight(self, term: str) -> bool:
+        """Highlight all occurrences of term in the words. Returns True if any found."""
+        if not term:
+            return False
+        found = False
+        import re
+        pattern = re.compile(re.escape(term), re.IGNORECASE)
+        for lbl in self._labels:
+            if pattern.search(lbl.text()):
+                lbl.set_search_match(True)
+                found = True
+            else:
+                lbl.set_search_match(False)
+        return found
+
+    def clear_search_highlight(self):
+        for lbl in self._labels:
+            lbl.set_search_match(False)
+
+    def get_match_widgets(self) -> list:
+        return [lbl for lbl in self._labels if lbl.is_search_match]
+
 
 class WordsView(QWidget):
     """
@@ -168,3 +198,15 @@ class WordsView(QWidget):
     def clear_selection(self):
         self._flow_widget.select_word(-1)
         self.selected_idx = -1
+
+    def search_highlight(self, term: str) -> bool:
+        return self._flow_widget.search_highlight(term)
+
+    def clear_search_highlight(self):
+        self._flow_widget.clear_search_highlight()
+
+    def has_search_match(self) -> bool:
+        return len(self._flow_widget.get_match_widgets()) > 0
+
+    def get_match_widgets(self) -> list:
+        return self._flow_widget.get_match_widgets()

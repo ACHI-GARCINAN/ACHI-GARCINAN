@@ -6,18 +6,25 @@ DB_PATH = ''
 
 
 def get_base_dir() -> str:
+    # זיהוי אם התוכנה רצה כקובץ EXE ארוז (PyInstaller) או כסקריפט
     if getattr(sys, 'frozen', False):
-        return os.path.dirname(sys.executable)
+        # בגרסת onefile, הקבצים הפנימיים נפרסים לתיקייה זמנית שכתובתה ב-_MEIPASS
+        return sys._MEIPASS
     return os.path.dirname(os.path.abspath(__file__))
 
 
 def load_masechet_list(folder: str) -> list:
     global DB_PATH
+    # ניסיון טעינה מהתיקייה שהתקבלה (למשל הגדרות משתמש)
     db_path = os.path.join(folder, "talmud.db")
+    
+    # אם לא קיים שם, חיפוש בתיקיית הבסיס (בתוך ה-EXE או ליד הסקריפט)
     if not os.path.exists(db_path):
         db_path = os.path.join(get_base_dir(), "talmud.db")
+        
     if not os.path.exists(db_path):
         return []
+        
     DB_PATH = db_path
     con = sqlite3.connect(db_path)
     rows = con.execute("SELECT id, num, name FROM masechtot ORDER BY num").fetchall()
@@ -61,7 +68,7 @@ def fetch_page(page_id: int) -> list:
 def fetch_page_words(page_id: int) -> list:
     """
     מחזיר רשימת מילים עבור דף נתון — כל פריט הוא dict עם 'section' ו-'witnesses'.
-    שולף מטבלת sections_words / sections_words_texts (המקבילה ל-sections_words ב-JSON).
+    שולף מטבלת sections_words / sections_words_texts.
     """
     con = sqlite3.connect(DB_PATH)
 
@@ -71,19 +78,19 @@ def fetch_page_words(page_id: int) -> list:
     ).fetchone()
 
     if has_sw_table:
-        # שלוף את כל השורות של הדף בשאילתה אחת, ממוינות לפי סדר המילה ואחר-כך עד הנוסח
         rows = con.execute(
-            "SELECT sw.id, sw.section_label, w.name, swt.content "
+            "SELECT sw.id, s.section_label, w.name, wd.word "
             "FROM sections_words sw "
+            "JOIN sections s ON s.id = sw.section_id "
             "JOIN sections_words_texts swt ON swt.sections_word_id = sw.id "
             "JOIN witnesses w ON w.id = swt.witness_id "
+            "JOIN words wd ON wd.id = swt.word_id "
             "WHERE sw.page_id = ? "
             "ORDER BY sw.id, w.position",
             (page_id,)
         ).fetchall()
         con.close()
 
-        # קיבוץ לפי מזהה מילה (sw.id) תוך שמירת הסדר
         from collections import OrderedDict
         word_map: OrderedDict = OrderedDict()
         for sw_id, sec_label, wit_name, content in rows:

@@ -48,6 +48,8 @@ class MainWindow(QMainWindow):
         self.section_blocks = []
         self._current_words_data = []
         self._current_word_idx = -1
+        self._page_search_term = ''
+        self._page_search_idx = -1
 
         self.setWindowTitle("סינופסיס תלמוד בבלי")
         self.setMinimumSize(1100, 650)
@@ -202,13 +204,13 @@ class MainWindow(QMainWindow):
         h_outer.addLayout(center_layout)
         h_outer.addStretch(1)
 
-        # Right Side: Search Box
-        self.search_box = QLineEdit()
-        self.search_box.setPlaceholderText('חפש מסכת ודף...')
-        self.search_box.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
-        self.search_box.setFont(QFont('David', 12))
-        self.search_box.setFixedWidth(200)
-        self.search_box.setStyleSheet("""
+        # Right Side: Page Search Box
+        self.page_search_box = QLineEdit()
+        self.page_search_box.setPlaceholderText('חפש בדף...')
+        self.page_search_box.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
+        self.page_search_box.setFont(QFont('David', 12))
+        self.page_search_box.setFixedWidth(200)
+        self.page_search_box.setStyleSheet("""
             QLineEdit {
                 background-color: #F0F4F7;
                 color: #2D3748;
@@ -225,8 +227,9 @@ class MainWindow(QMainWindow):
                 color: #A0AEC0;
             }
         """)
-        self.search_box.returnPressed.connect(self._quick_nav)
-        h_outer.addWidget(self.search_box)
+        self.page_search_box.textChanged.connect(self._search_in_page)
+        self.page_search_box.returnPressed.connect(self._search_in_page_next)
+        h_outer.addWidget(self.page_search_box)
 
         ma_layout.addWidget(header)
 
@@ -252,12 +255,6 @@ class MainWindow(QMainWindow):
         pp_layout.setContentsMargins(0, 0, 0, 0)
         pp_layout.setSpacing(0)
 
-        pg_hdr = QLabel("דפים")
-        pg_hdr.setFont(QFont("Arial", 10))
-        pg_hdr.setStyleSheet("color:#4A5568;padding:10px 6px 8px 6px;letter-spacing:2px;border-bottom:1px solid #D1D9E0;")
-        pg_hdr.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        pp_layout.addWidget(pg_hdr)
-
         self.page_list = QListWidget()
         self.page_list.setObjectName("page_list")
         self.page_list.setFont(QFont("David", 14))
@@ -270,12 +267,6 @@ class MainWindow(QMainWindow):
         mp_layout = QVBoxLayout(masechet_panel)
         mp_layout.setContentsMargins(0, 0, 0, 0)
         mp_layout.setSpacing(0)
-
-        ms_hdr = QLabel("מסכתות")
-        ms_hdr.setFont(QFont("Arial", 10))
-        ms_hdr.setStyleSheet("color:#4A5568;padding:10px 6px 8px 6px;letter-spacing:2px;border-bottom:1px solid #243424;")
-        ms_hdr.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        mp_layout.addWidget(ms_hdr)
 
         self.masechet_list = QListWidget()
         self.masechet_list.setObjectName("masechet_list")
@@ -290,15 +281,53 @@ class MainWindow(QMainWindow):
         self.masechet_list.currentRowChanged.connect(self._load_masechet)
         mp_layout.addWidget(self.masechet_list, 1)
 
-        self.splitter.addWidget(masechet_panel)
-        self.splitter.addWidget(page_panel)
+        # Combined nav panel with search box above both columns
+        nav_panel = QWidget()
+        nav_panel.setStyleSheet("background-color:#D9E1E8;")
+        nav_layout = QVBoxLayout(nav_panel)
+        nav_layout.setContentsMargins(0, 0, 0, 0)
+        nav_layout.setSpacing(0)
+
+        # Search box above both lists
+        self.search_box = QLineEdit()
+        self.search_box.setPlaceholderText('חפש מסכת ודף...')
+        self.search_box.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
+        self.search_box.setFont(QFont('David', 11))
+        self.search_box.setStyleSheet("""
+            QLineEdit {
+                background-color: #F0F4F7;
+                color: #2D3748;
+                border: none;
+                border-bottom: 1px solid #CBD5E0;
+                padding: 7px 10px;
+            }
+            QLineEdit:focus {
+                background-color: #FFFFFF;
+                border-bottom: 2px solid #5A6A82;
+            }
+            QLineEdit::placeholder {
+                color: #A0AEC0;
+            }
+        """)
+        self.search_box.returnPressed.connect(self._quick_nav)
+        nav_layout.addWidget(self.search_box)
+
+        lists_row = QWidget()
+        lists_row.setStyleSheet("background:transparent;")
+        lists_h = QHBoxLayout(lists_row)
+        lists_h.setContentsMargins(0, 0, 0, 0)
+        lists_h.setSpacing(0)
+        lists_h.addWidget(masechet_panel)
+        lists_h.addWidget(page_panel)
+        nav_layout.addWidget(lists_row, 1)
+
+        self.splitter.addWidget(nav_panel)
         self.splitter.addWidget(main_area)
         self.splitter.addWidget(self.witness_panel)
-        self.splitter.setSizes([130, 85, 780, 420])
+        self.splitter.setSizes([215, 780, 420])
         self.splitter.setStretchFactor(0, 0)
-        self.splitter.setStretchFactor(1, 0)
-        self.splitter.setStretchFactor(2, 1)
-        self.splitter.setStretchFactor(3, 0)
+        self.splitter.setStretchFactor(1, 1)
+        self.splitter.setStretchFactor(2, 0)
 
     def _go_prev_page(self):
         row = self.page_list.currentRow()
@@ -325,7 +354,7 @@ class MainWindow(QMainWindow):
         m = re.match(
             r'^([\u05d0-\u05ea]+(?:\s[\u05d0-\u05ea]+)*)'
             r'(?:\s+\u05d3\u05e3)?'
-            r'\s+([\u05d0-\u05ea"\u05f4\u05f3\u2019\']+|\d+)$',
+            r'\s+([\u05d0-\u05ea"\u05f4\u05f3\2019\']+|\d+)$',
             raw
         )
         if not m:
@@ -354,17 +383,129 @@ class MainWindow(QMainWindow):
         self.search_box.clear()
         self.search_box.setStyleSheet("""
             QLineEdit {
-                background-color: #3A2418; color: #FFF5E6;
-                border: 1px solid #6A4020; border-radius: 6px;
-                padding: 5px 10px; selection-background-color: #7A3810;
+                background-color: #F0F4F7;
+                color: #2D3748;
+                border: none;
+                border-bottom: 2px solid #48BB78;
+                padding: 7px 10px;
             }
-            QLineEdit:focus { border: 1px solid #C8A060; background-color: #4A2E1A; }
+            QLineEdit:focus {
+                background-color: #FFFFFF;
+                border-bottom: 2px solid #48BB78;
+            }
+            QLineEdit::placeholder {
+                color: #A0AEC0;
+            }
         """)
 
     def _search_error(self):
-        self.search_box.setStyleSheet(
-            self.search_box.styleSheet() + 'QLineEdit { border: 1px solid #CC3300; }'
-        )
+        self.search_box.setStyleSheet("""
+            QLineEdit {
+                background-color: #F0F4F7;
+                color: #2D3748;
+                border: none;
+                border-bottom: 2px solid #CC3300;
+                padding: 7px 10px;
+            }
+        """)
+
+    def _search_in_page(self):
+        """Search text in current page and highlight results."""
+        term = self.page_search_box.text().strip()
+        self._page_search_term = term
+        self._page_search_idx = -1
+        
+        # Clear existing highlights
+        if self.display_mode == 'words' and self._words_view:
+            self._words_view.clear_search_highlight()
+        else:
+            for block in self.section_blocks:
+                block.clear_search_highlight()
+        
+        if not term:
+            self.page_search_box.setStyleSheet("""
+                QLineEdit {
+                    background-color: #F0F4F7;
+                    color: #2D3748;
+                    border: 1px solid #CBD5E0;
+                    border-radius: 6px;
+                    padding: 5px 10px;
+                    selection-background-color: #A0B4CC;
+                }
+                QLineEdit:focus {
+                    border: 1px solid #5A6A82;
+                    background-color: #FFFFFF;
+                }
+            """)
+            return
+        
+        # Find and highlight all matches
+        found = False
+        if self.display_mode == 'words' and self._words_view:
+            found = self._words_view.search_highlight(term)
+        else:
+            for block in self.section_blocks:
+                if block.search_highlight(term):
+                    found = True
+        
+        if found:
+            self.page_search_box.setStyleSheet("""
+                QLineEdit {
+                    background-color: #F0F4F7;
+                    color: #2D3748;
+                    border: 1px solid #48BB78;
+                    border-radius: 6px;
+                    padding: 5px 10px;
+                }
+                QLineEdit:focus {
+                    border: 1px solid #48BB78;
+                    background-color: #FFFFFF;
+                }
+            """)
+            # Scroll to first match
+            self._page_search_idx = 0
+            self._scroll_to_search_result(0)
+        else:
+            self.page_search_box.setStyleSheet("""
+                QLineEdit {
+                    background-color: #F0F4F7;
+                    color: #2D3748;
+                    border: 1px solid #CC3300;
+                    border-radius: 6px;
+                    padding: 5px 10px;
+                }
+                QLineEdit:focus {
+                    border: 1px solid #CC3300;
+                    background-color: #FFFFFF;
+                }
+            """)
+
+    def _search_in_page_next(self):
+        """Jump to next search result."""
+        if not hasattr(self, '_page_search_term') or not self._page_search_term:
+            return
+        
+        if self.display_mode == 'words' and self._words_view:
+            matching = self._words_view.get_match_widgets()
+        else:
+            matching = [b for b in self.section_blocks if b.has_search_match()]
+            
+        if not matching:
+            return
+        self._page_search_idx = (self._page_search_idx + 1) % len(matching)
+        self._scroll_to_search_result(self._page_search_idx)
+
+    def _scroll_to_search_result(self, result_idx: int):
+        """Scroll to the result_idx-th matching block or word."""
+        if self.display_mode == 'words' and self._words_view:
+            matching = self._words_view.get_match_widgets()
+        else:
+            matching = [b for b in self.section_blocks if b.has_search_match()]
+            
+        if 0 <= result_idx < len(matching):
+            widget = matching[result_idx]
+            # Scroll so widget is visible
+            self.text_scroll.ensureWidgetVisible(widget)
 
     def _load_masechet(self, idx: int):
         if idx < 0 or idx >= len(self.masechtot):
@@ -407,6 +548,24 @@ class MainWindow(QMainWindow):
         self.selected_block = None
         self.section_blocks = []
         self._words_view = None
+        # Clear page search
+        self._page_search_term = ''
+        self._page_search_idx = -1
+        self.page_search_box.clear()
+        self.page_search_box.setStyleSheet("""
+            QLineEdit {
+                background-color: #F0F4F7;
+                color: #2D3748;
+                border: 1px solid #CBD5E0;
+                border-radius: 6px;
+                padding: 5px 10px;
+                selection-background-color: #A0B4CC;
+            }
+            QLineEdit:focus {
+                border: 1px solid #5A6A82;
+                background-color: #FFFFFF;
+            }
+        """)
         page = self.pages[idx]
         self.page_title.setText(f"{self.current_masechet_name} · דף {page['page']}")
         self._update_nav_buttons(idx)

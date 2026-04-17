@@ -59,14 +59,22 @@ class WitnessPanel(QWidget):
         self.highlight_cb.setFont(QFont("Arial", 10))
         self.highlight_cb.setChecked(False)
         self.highlight_cb.stateChanged.connect(self._on_highlight_changed)
-        header_layout.addWidget(self.highlight_cb, alignment=Qt.AlignmentFlag.AlignRight)
 
         self.hide_empty_cb = QCheckBox("הסתר עדי נוסח ריקים")
         self.hide_empty_cb.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
         self.hide_empty_cb.setFont(QFont("Arial", 10))
         self.hide_empty_cb.setChecked(True)
         self.hide_empty_cb.stateChanged.connect(self._on_hide_empty_changed)
-        header_layout.addWidget(self.hide_empty_cb, alignment=Qt.AlignmentFlag.AlignRight)
+
+        from PyQt6.QtWidgets import QHBoxLayout
+        cb_row = QWidget()
+        cb_row.setStyleSheet("background:transparent;border:none;")
+        cb_layout = QHBoxLayout(cb_row)
+        cb_layout.setContentsMargins(0, 0, 0, 0)
+        cb_layout.setSpacing(10)
+        cb_layout.addWidget(self.hide_empty_cb)
+        cb_layout.addWidget(self.highlight_cb)
+        header_layout.addWidget(cb_row, alignment=Qt.AlignmentFlag.AlignRight)
 
         self.hint_label = QLabel("לחץ על קטע כדי לראות את השינויים בטקסט המרכזי")
         self.hint_label.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
