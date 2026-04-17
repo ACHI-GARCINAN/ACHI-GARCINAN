@@ -94,6 +94,36 @@ class SectionBlock(QFrame):
         if event.button() == Qt.MouseButton.LeftButton:
             self.clicked.emit()
 
+    def search_highlight(self, term: str) -> bool:
+        """Highlight all occurrences of term in the text. Returns True if found."""
+        if not self._plain_text or not term:
+            return False
+        import re
+        pattern = re.compile(re.escape(term), re.IGNORECASE)
+        if not pattern.search(self._plain_text):
+            self._has_search_match = False
+            return False
+        highlighted = pattern.sub(
+            lambda m: f'<span style="background-color:#FFD700;color:#1A202C;border-radius:2px;padding:0 2px;">{m.group()}</span>',
+            self._plain_text
+        )
+        self._text_lbl.setTextFormat(Qt.TextFormat.RichText)
+        self._text_lbl.setText(
+            f'<div dir="rtl" style="font-family:David,serif;font-size:16pt;color:#2D3748;">{highlighted}</div>'
+        )
+        self._has_search_match = True
+        return True
+
+    def clear_search_highlight(self):
+        """Remove search highlighting."""
+        self._has_search_match = False
+        if not self._active_diff_witness:
+            self._text_lbl.setTextFormat(Qt.TextFormat.AutoText)
+            self._text_lbl.setText(self._plain_text if self._plain_text else '(אין טקסט)')
+
+    def has_search_match(self) -> bool:
+        return getattr(self, '_has_search_match', False)
+
     def enterEvent(self, event):
         if not self.is_selected and not self._active_diff_witness:
             self.setStyleSheet(self._hover_style)

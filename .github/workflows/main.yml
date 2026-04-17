@@ -13,17 +13,19 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       with:
-        lfs: true # מוודא שגיטהאב מושך את הקובץ האמיתי מה-LFS
+        lfs: true 
 
     - name: Pull LFS objects
-      run: git lfs pull # וידוא סופי שהקובץ פיזית על שרת הבנייה
+      run: git lfs pull 
 
     - name: Calculate Version
       id: version_calc
       run: |
         $runNumber = ${{ github.run_number }}
-        $newVersion = "1." + ($runNumber - 20)
-        echo "final_version=$newVersion" >> $env:GITHUB_OUTPUT
+        # מכיוון שהריצה האחרונה הייתה 40, נחסיר 40 כדי לקבל 1.1
+        $versionMinor = $runNumber - 40
+        $finalVersion = "1.$versionMinor"
+        echo "final_version=$finalVersion" >> $env:GITHUB_OUTPUT
       shell: powershell
 
     - name: Set up Python
@@ -43,10 +45,10 @@ jobs:
         --name="Talmud-Formulas" `
         --add-data "widgets;widgets" `
         --add-data "icon.ico;." `
+        --add-data "talmud.db;." `
         --collect-all PyQt6 `
         --clean `
         main.py
-      # שים לב: הסרתי את talmud.db מה-pyinstaller כדי שה-EXE יהיה קטן ומהיר
 
     - name: Install Inno Setup
       run: choco install innosetup --no-progress
@@ -63,17 +65,14 @@ jobs:
         tag_name: v${{ steps.version_calc.outputs.final_version }}
         name: נוסחאות התלמוד גרסה ${{ steps.version_calc.outputs.final_version }}
         body: |
-          ###  הורדה ישירה:
-          * [**גרסת התקנה (Setup)**](https://github.com/${{ github.repository }}/releases/download/v${{ steps.version_calc.outputs.final_version }}/Talmud-Formulas-Setup.exe)
-          * [**גרסה ניידת (Portable)**](https://github.com/${{ github.repository }}/releases/download/v${{ steps.version_calc.outputs.final_version }}/Talmud-Formulas.exe)
-          
-           **שימו לב:** יש להוריד את קובץ ה-DB (בסיס הנתונים) בנפרד ולבחור אותו בהפעלה הראשונה.
+          ### גרסה 1.1 שוחררה!
+          * **התקנה מלאה:** בסיס הנתונים כבר בפנים.
+          * **שיפור:** פתרון שגיאת גישה למסד הנתונים ב-Windows.
         draft: false
         prerelease: false
         make_latest: true
         files: |
           dist/Talmud-Formulas.exe
           Output/Talmud-Formulas-Setup.exe
-          talmud.db  # <--- הפקודה שמושכת את ה-DB מה-Repo ומעלה אותו כקובץ נפרד לריליס
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
