@@ -1,11 +1,11 @@
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QScrollArea, QLabel, QCheckBox,
-    QFrame, QSizePolicy, QGraphicsDropShadowEffect, QTextBrowser
+    QFrame, QSizePolicy, QGraphicsDropShadowEffect, QTextBrowser, QHBoxLayout
 )
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QFont, QColor
 
-from styles import WITNESS_COLORS
+from styles import WITNESS_COLORS, get_theme_styles, get_theme_config
 from widgets.witness_card import WitnessCard
 
 
@@ -20,12 +20,15 @@ def normalize_word(w: str) -> str:
 class WitnessPanel(QWidget):
     witness_clicked = pyqtSignal(str)
 
-    def __init__(self, witnesses: list, parent=None):
+    def __init__(self, witnesses: list, font_family: str = 'David', font_size: int = 15, theme: str = 'classic', parent=None):
         super().__init__(parent)
         self.witnesses = witnesses
         self.highlight_diffs = False
         self.hide_empty_witnesses = True
-        
+        self._font_family = font_family
+        self._font_size = font_size
+        self._theme = theme
+
         # State for re-rendering
         self._current_section = None
         self._current_page = ''
@@ -36,23 +39,20 @@ class WitnessPanel(QWidget):
         self._main_witness = ''
 
         self.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
-        self.setStyleSheet("background-color:#F0F4F7;")
 
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
+        self.main_layout = QVBoxLayout(self)
+        self.main_layout.setContentsMargins(0, 0, 0, 0)
+        self.main_layout.setSpacing(0)
 
-        header_widget = QWidget()
-        header_widget.setStyleSheet("background-color:#E1E8ED;border-bottom:2px solid #A0B4CC;")
-        header_layout = QVBoxLayout(header_widget)
-        header_layout.setContentsMargins(16, 10, 16, 8)
-        header_layout.setSpacing(5)
+        self.header_widget = QWidget()
+        self.header_layout = QVBoxLayout(self.header_widget)
+        self.header_layout.setContentsMargins(16, 10, 16, 8)
+        self.header_layout.setSpacing(5)
 
-        self.header = QLabel("בחר קטע לעדי נוסח")
-        self.header.setFont(QFont("David", 14, QFont.Weight.Bold))
-        self.header.setStyleSheet("color:#2D3748;background:transparent;border:none;")
-        self.header.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-        header_layout.addWidget(self.header)
+        self.header_label = QLabel("בחר קטע לעדי נוסח")
+        self.header_label.setFont(QFont("David", 14, QFont.Weight.Bold))
+        self.header_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        self.header_layout.addWidget(self.header_label)
 
         self.highlight_cb = QCheckBox("הדגש שינויים מוילנא")
         self.highlight_cb.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
@@ -66,7 +66,6 @@ class WitnessPanel(QWidget):
         self.hide_empty_cb.setChecked(True)
         self.hide_empty_cb.stateChanged.connect(self._on_hide_empty_changed)
 
-        from PyQt6.QtWidgets import QHBoxLayout
         cb_row = QWidget()
         cb_row.setStyleSheet("background:transparent;border:none;")
         cb_layout = QHBoxLayout(cb_row)
@@ -74,42 +73,64 @@ class WitnessPanel(QWidget):
         cb_layout.setSpacing(10)
         cb_layout.addWidget(self.hide_empty_cb)
         cb_layout.addWidget(self.highlight_cb)
-        header_layout.addWidget(cb_row, alignment=Qt.AlignmentFlag.AlignRight)
+        self.header_layout.addWidget(cb_row, alignment=Qt.AlignmentFlag.AlignRight)
 
         self.hint_label = QLabel("לחץ על קטע כדי לראות את השינויים בטקסט המרכזי")
         self.hint_label.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
         self.hint_label.setAlignment(Qt.AlignmentFlag.AlignRight)
         self.hint_label.setFont(QFont("Arial", 9))
-        self.hint_label.setStyleSheet("color:#718096;background:transparent;border:none;font-style:italic;")
         self.hint_label.setVisible(False)
-        header_layout.addWidget(self.hint_label, alignment=Qt.AlignmentFlag.AlignRight)
+        self.header_layout.addWidget(self.hint_label, alignment=Qt.AlignmentFlag.AlignRight)
 
-        layout.addWidget(header_widget)
+        self.main_layout.addWidget(self.header_widget)
 
         self.scroll = QScrollArea()
         self.scroll.setWidgetResizable(True)
         self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.scroll.setStyleSheet("QScrollArea{border:none;background:#F0F4F7;}")
 
         self.container = QWidget()
         self.container.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
-        self.container.setStyleSheet("background-color:#F0F4F7;")
         self.inner_layout = QVBoxLayout(self.container)
         self.inner_layout.setContentsMargins(4, 10, 4, 20)
         self.inner_layout.setSpacing(4)
 
+        self.scroll.setWidget(self.container)
+        self.main_layout.addWidget(self.scroll, 1)
+        
+        self._update_ui_colors()
         self._show_placeholder()
 
-        self.scroll.setWidget(self.container)
-        layout.addWidget(self.scroll, 1)
+    def _update_ui_colors(self):
+        cfg = get_theme_config(self._theme)
+        self.header_widget.setStyleSheet(f"background-color:{cfg['panel_header_bg']};border-bottom:2px solid {cfg['panel_header_border']};")
+        self.header_label.setStyleSheet(f"color:{cfg['panel_header_text']};background:transparent;border:none;")
+        self.hint_label.setStyleSheet(f"color:{cfg['panel_hint_text']};background:transparent;border:none;font-style:italic;")
+        self.scroll.setStyleSheet(f"QScrollArea{{border:none;background:{cfg['main_bg']};}}")
+        self.container.setStyleSheet(f"background-color:{cfg['main_bg']};")
+        
+        cb_style = f"color: {cfg['panel_header_text'] if self._theme == 'colorful' else '#4A5568'};"
+        self.highlight_cb.setStyleSheet(cb_style)
+        self.hide_empty_cb.setStyleSheet(cb_style)
 
     def update_witnesses(self, witnesses: list):
         self.witnesses = witnesses
 
+    def update_font(self, font_family: str, font_size: int, theme: str = None):
+        self._font_family = font_family
+        self._font_size = font_size
+        if theme:
+            self._theme = theme
+            self._update_ui_colors()
+        
+        if self._word_mode and self._current_section is not None:
+            self.show_word(self._current_section, self._current_page, self._main_witness,
+                           self._words_data, self._word_idx)
+        elif not self._word_mode and self._current_section is not None:
+            self.show_section(self._current_section, self._current_page, self._base_text)
+
     def _on_highlight_changed(self, state):
-        # Handle both int (from signal) and bool
         if isinstance(state, int):
-            self.highlight_diffs = (state == Qt.CheckState.Checked.value or state == 2)
+            self.highlight_diffs = (state == 2)
         else:
             self.highlight_diffs = bool(state)
             
@@ -122,7 +143,7 @@ class WitnessPanel(QWidget):
 
     def _on_hide_empty_changed(self, state):
         if isinstance(state, int):
-            self.hide_empty_witnesses = (state == Qt.CheckState.Checked.value or state == 2)
+            self.hide_empty_witnesses = (state == 2)
         else:
             self.hide_empty_witnesses = bool(state)
             
@@ -133,9 +154,11 @@ class WitnessPanel(QWidget):
             self.show_section(self._current_section, self._current_page, self._base_text)
 
     def _show_placeholder(self):
+        self._clear()
+        cfg = get_theme_config(self._theme)
         ph = QLabel("←  לחץ על קטע בטקסט\nכדי לראות את עדי הנוסח")
         ph.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        ph.setStyleSheet("color:#718096;font-size:14px;padding:50px 20px;background:transparent;")
+        ph.setStyleSheet(f"color:{cfg['panel_hint_text']};font-size:14px;padding:50px 20px;background:transparent;")
         self.inner_layout.addStretch()
         self.inner_layout.addWidget(ph)
         self.inner_layout.addStretch()
@@ -148,6 +171,10 @@ class WitnessPanel(QWidget):
             else:
                 self.inner_layout.removeItem(item)
 
+    def reset(self):
+        self._current_section = None
+        self._show_placeholder()
+
     def show_section(self, section: dict, page: str, base_text: str = ''):
         self._current_section = section
         self._current_page = page
@@ -157,22 +184,25 @@ class WitnessPanel(QWidget):
         self._word_idx = -1
         self._clear()
 
-        self.header.setText(f"דף {page}  ·  {section['section']}")
+        self.header_label.setText(f"דף {page}  ·  {section['section']}")
 
         witness_data = section.get('witnesses', {})
 
+        _, theme_colors = get_theme_styles(self._theme)
         for i, witness in enumerate(self.witnesses):
             text = witness_data.get(witness)
             if text == 'None' or text == '':
                 text = None
             if text is None and self.hide_empty_witnesses:
                 continue
-            color = WITNESS_COLORS[i % len(WITNESS_COLORS)]
+            color = theme_colors[i % len(theme_colors)]
             card = WitnessCard(
                 witness, text, color,
                 base_text=base_text,
                 highlight=self.highlight_diffs,
-                clickable=self.highlight_diffs
+                clickable=self.highlight_diffs,
+                font_family=self._font_family,
+                font_size=self._font_size
             )
             if self.highlight_diffs and text:
                 card.clicked.connect(self.witness_clicked.emit)
@@ -183,7 +213,6 @@ class WitnessPanel(QWidget):
 
     def show_word(self, word_entry: dict, page: str, main_witness: str,
                   words_data: list = None, word_idx: int = -1):
-        """מציג את עדי הנוסח למילה בודדת עם הקשר של 12 מילים לפני ואחרי."""
         self._current_section = word_entry
         self._current_page = page
         self._base_text = ''
@@ -198,7 +227,7 @@ class WitnessPanel(QWidget):
         if main_text == 'None':
             main_text = ''
 
-        self.header.setText(f"דף {page}  ·  {section_label}  ·  מילה: {main_text or '—'}")
+        self.header_label.setText(f"דף {page}  ·  {section_label}  ·  מילה: {main_text or '—'}")
 
         CONTEXT = 12
         vilna_word = (word_entry['witnesses'].get(main_witness) or '').strip()
@@ -210,23 +239,19 @@ class WitnessPanel(QWidget):
                 before_parts = []
                 for j in range(max(0, word_idx - CONTEXT), word_idx):
                     t = words_data[j]['witnesses'].get(witness) or ''
-                    if t == 'None':
-                        t = ''
+                    if t == 'None': t = ''
                     before_parts.append(t if t else '—')
 
                 sel_text = words_data[word_idx]['witnesses'].get(witness) or ''
-                if sel_text == 'None':
-                    sel_text = ''
+                if sel_text == 'None': sel_text = ''
                 selected_word = sel_text if sel_text else '—'
 
                 after_parts = []
                 for j in range(word_idx + 1, min(len(words_data), word_idx + CONTEXT + 1)):
                     t = words_data[j]['witnesses'].get(witness) or ''
-                    if t == 'None':
-                        t = ''
+                    if t == 'None': t = ''
                     after_parts.append(t if t else '—')
 
-                # Check if this witness has any text in the context window
                 has_any_in_context = bool(sel_text) or any(
                     (words_data[j]['witnesses'].get(witness) or '').strip() not in ('', 'None')
                     for j in range(max(0, word_idx - CONTEXT), min(len(words_data), word_idx + CONTEXT + 1))
@@ -241,138 +266,21 @@ class WitnessPanel(QWidget):
                     norm_vil = normalize_word(vilna_word)
                     word_differs = bool(sel_text) and (norm_sel != norm_vil)
                     if word_differs:
-                        highlight_style = (
-                            "background-color:#E53E3E;"
-                            "color:#FFFFFF;"
-                            "border-radius:3px;"
-                            "padding:0 3px;"
-                            "font-weight:600;"
-                        )
-                    else:
-                        highlight_style = (
-                            "background-color:#FFD700;"
-                            "color:#1A202C;"
-                            "border-radius:3px;"
-                            "padding:0 3px;"
-                            "font-weight:600;"
-                        )
-                else:
-                    highlight_style = (
-                        "background-color:#FFD700;"
-                        "color:#1A202C;"
-                        "border-radius:3px;"
-                        "padding:0 3px;"
-                        "font-weight:600;"
-                    )
-                
-                highlighted_word = f'<span style="{highlight_style}">{selected_word}</span>'
+                        highlight_style = "background-color: #FFD700; color: #000000; font-weight: bold; border-radius: 2px;"
+                        selected_word = f'<span style="{highlight_style}">{selected_word}</span>'
 
-                before_html = ' '.join(before_parts)
-                after_html = ' '.join(after_parts)
-                context_html = ''
-                if before_html:
-                    context_html += before_html + ' '
-                context_html += highlighted_word
-                if after_html:
-                    context_html += ' ' + after_html
+                before_str = " ".join(before_parts)
+                after_str = " ".join(after_parts)
+                full_html = f'<div dir="rtl" style="font-family:{self._font_family},serif; font-size:{self._font_size}pt; line-height:1.4;">'
+                full_html += f'<span style="color:#888888;">{before_str}</span> '
+                full_html += f'<b>{selected_word}</b> '
+                full_html += f'<span style="color:#888888;">{after_str}</span>'
+                full_html += '</div>'
 
-                color = WITNESS_COLORS[i % len(WITNESS_COLORS)]
-                accent, bg = color
-
-                card_frame = QFrame()
-                card_frame.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
-                
-                # Check if current word exists
-                has_current = bool(sel_text) and sel_text != '—'
-                
-                if has_any_in_context:
-                    card_frame.setStyleSheet(
-                        f"QFrame{{background-color:{bg};"
-                        f"border:1px solid {accent}35;"
-                        f"border-top:3px solid {accent};"
-                        f"border-radius:10px;margin:4px 8px;}}"
-                    )
-                else:
-                    card_frame.setStyleSheet(
-                        "QFrame{background-color:#F0EDE6;"
-                        "border:1px dashed #C5B89A;"
-                        "border-radius:10px;margin:4px 8px;}"
-                    )
-                card_layout = QVBoxLayout(card_frame)
-                card_layout.setContentsMargins(14, 10, 14, 12)
-                card_layout.setSpacing(6)
-
-                name_lbl = QLabel(witness)
-                name_lbl.setAlignment(Qt.AlignmentFlag.AlignRight)
-                name_lbl.setFont(QFont("Arial", 10, QFont.Weight.Bold))
-                if has_any_in_context:
-                    name_lbl.setStyleSheet(
-                        f"color:{accent};background:transparent;"
-                        f"border:1px solid {accent};border-radius:5px;padding:3px 8px;"
-                    )
-                else:
-                    name_lbl.setStyleSheet(
-                        "color:#A09080;background:transparent;"
-                        "border:1px solid #C5B89A;border-radius:5px;padding:3px 8px;"
-                    )
-                card_layout.addWidget(name_lbl)
-
-                if has_any_in_context:
-                    txt_browser = QTextBrowser()
-                    txt_browser.setOpenLinks(False)
-                    txt_browser.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
-                    txt_browser.setHtml(
-                        f'<div dir="rtl" style="font-family:David,serif;font-size:15pt;'
-                        f'color:#1A0A00;text-align:right;">{context_html}</div>'
-                    )
-                    txt_browser.setStyleSheet(
-                        "QTextBrowser{background:transparent;border:none;color:#1A0A00;}"
-                    )
-                    txt_browser.setSizePolicy(
-                        QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum
-                    )
-                    txt_browser.document().adjustSize()
-                    h = int(txt_browser.document().size().height()) + 16
-                    txt_browser.setFixedHeight(max(50, h))
-                    card_layout.addWidget(txt_browser)
-                else:
-                    miss = QLabel("אין עד נוסח לקטע זה")
-                    miss.setAlignment(Qt.AlignmentFlag.AlignRight)
-                    miss.setStyleSheet(
-                        "color:#B0A090;font-style:italic;font-size:12px;background:transparent;"
-                    )
-                    card_layout.addWidget(miss)
-
-                shadow = QGraphicsDropShadowEffect()
-                shadow.setBlurRadius(8)
-                shadow.setColor(QColor(0, 0, 0, 18))
-                shadow.setOffset(0, 2)
-                card_frame.setGraphicsEffect(shadow)
-
-                self.inner_layout.addWidget(card_frame)
-
-            else:
-                # fallback for missing words_data
-                text = word_entry.get('witnesses', {}).get(witness)
-                if text == 'None' or text == '':
-                    text = None
-                if text is None and self.hide_empty_witnesses:
-                    continue
-                color = WITNESS_COLORS[i % len(WITNESS_COLORS)]
-                card = WitnessCard(witness, text, color, base_text='', highlight=False, clickable=False)
+                _, theme_colors = get_theme_styles(self._theme)
+                color = theme_colors[i % len(theme_colors)]
+                card = WitnessCard(witness, full_html, color, is_html=True, font_family=self._font_family, font_size=self._font_size)
                 self.inner_layout.addWidget(card)
 
         self.inner_layout.addStretch()
         self.scroll.verticalScrollBar().setValue(0)
-
-    def reset(self):
-        self._current_section = None
-        self._current_page = ''
-        self._base_text = ''
-        self._word_mode = False
-        self._words_data = None
-        self._word_idx = -1
-        self._main_witness = ''
-        self._clear()
-        self.header.setText("בחר קטע לעדי נוסח")
-        self._show_placeholder()

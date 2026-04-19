@@ -6,25 +6,18 @@ DB_PATH = ''
 
 
 def get_base_dir() -> str:
-    # זיהוי אם התוכנה רצה כקובץ EXE ארוז (PyInstaller) או כסקריפט
     if getattr(sys, 'frozen', False):
-        # בגרסת onefile, הקבצים הפנימיים נפרסים לתיקייה זמנית שכתובתה ב-_MEIPASS
-        return sys._MEIPASS
+        return os.path.dirname(sys.executable)
     return os.path.dirname(os.path.abspath(__file__))
 
 
 def load_masechet_list(folder: str) -> list:
     global DB_PATH
-    # ניסיון טעינה מהתיקייה שהתקבלה (למשל הגדרות משתמש)
     db_path = os.path.join(folder, "talmud.db")
-    
-    # אם לא קיים שם, חיפוש בתיקיית הבסיס (בתוך ה-EXE או ליד הסקריפט)
     if not os.path.exists(db_path):
         db_path = os.path.join(get_base_dir(), "talmud.db")
-        
     if not os.path.exists(db_path):
         return []
-        
     DB_PATH = db_path
     con = sqlite3.connect(db_path)
     rows = con.execute("SELECT id, num, name FROM masechtot ORDER BY num").fetchall()

@@ -1,10 +1,10 @@
 from PyQt6.QtWidgets import (
-    QFrame, QVBoxLayout, QLabel, QSizePolicy, QGraphicsDropShadowEffect, QTextBrowser
+    QFrame, QVBoxLayout, QLabel, QSizePolicy, QGraphicsDropShadowEffect
 )
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QFont, QColor, QCursor
 
-from utils import build_highlighted_html
+from utils import build_vilna_diff_html
 
 
 class WitnessCard(QFrame):
@@ -12,80 +12,100 @@ class WitnessCard(QFrame):
 
     def __init__(self, name: str, text, color_pair: tuple,
                  base_text: str = '', highlight: bool = False,
-                 clickable: bool = False, parent=None):
+                 clickable: bool = False, is_html: bool = False,
+                 font_family: str = 'David', font_size: int = 15,
+                 parent=None):
         super().__init__(parent)
-        accent, bg = color_pair
+        self.accent, self.bg = color_pair
         self.witness_name = name
         self.clickable = clickable
+        self.text = text
+        self.base_text = base_text
+        self.highlight = highlight
+        self.is_html = is_html
+        self._font_family = font_family
+        self._font_size = font_size
+        
         self.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
         if clickable and text:
             self.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
-        if text:
-            self.setStyleSheet(
-                f"QFrame{{background-color:{bg};border:1px solid #CBD5E0;"
-                f"border-top:3px solid {accent};border-radius:10px;margin:4px 8px;}}"
-            )
-        else:
-            self.setStyleSheet(
-                "QFrame{background-color:#EBF0F5;border:1px dashed #CBD5E0;"
-                "border-radius:10px;margin:4px 8px;}"
-            )
+        self.setObjectName("witness_card")
+        self._apply_style()
 
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(14, 10, 14, 12)
-        layout.setSpacing(6)
+        self.layout = QVBoxLayout(self)
+        self.layout.setContentsMargins(14, 10, 14, 12)
+        self.layout.setSpacing(6)
 
-        name_lbl = QLabel(name)
-        name_lbl.setAlignment(Qt.AlignmentFlag.AlignRight)
-        name_lbl.setFont(QFont("Arial", 10, QFont.Weight.Bold))
-        if text:
-            name_lbl.setStyleSheet(
-                f"color:{accent};background:transparent;"
-                f"border:1px solid {accent};border-radius:5px;padding:3px 8px;"
-            )
-        else:
-            name_lbl.setStyleSheet(
-                "color:#718096;background:transparent;"
-                "border:1px solid #CBD5E0;border-radius:5px;padding:3px 8px;"
-            )
-        layout.addWidget(name_lbl)
+        self.name_lbl = QLabel(name)
+        self.name_lbl.setAlignment(Qt.AlignmentFlag.AlignRight)
+        self.name_lbl.setFont(QFont("Arial", 10, QFont.Weight.Bold))
+        self.layout.addWidget(self.name_lbl)
 
-        if text:
-            if highlight and base_text:
-                html_content = build_highlighted_html(text, base_text)
-                txt_widget = QTextBrowser()
-                txt_widget.setOpenLinks(False)
-                txt_widget.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
-                txt_widget.setHtml(
-                    f'<div dir="rtl" style="font-family:David,serif;font-size:15pt;'
-                    f'color:#2D3748;text-align:right;">{html_content}</div>'
-                )
-                txt_widget.setStyleSheet("QTextBrowser{background:transparent;border:none;color:#2D3748;}")
-                txt_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-                txt_widget.document().adjustSize()
-                h = int(txt_widget.document().size().height()) + 16
-                txt_widget.setFixedHeight(max(50, h))
-                layout.addWidget(txt_widget)
-            else:
-                txt_lbl = QLabel(text)
-                txt_lbl.setWordWrap(True)
-                txt_lbl.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
-                txt_lbl.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-                txt_lbl.setFont(QFont("David", 15))
-                txt_lbl.setStyleSheet("color:#2D3748;background:transparent;")
-                layout.addWidget(txt_lbl)
-        else:
-            miss = QLabel("אין עד נוסח לקטע זה")
-            miss.setAlignment(Qt.AlignmentFlag.AlignRight)
-            miss.setStyleSheet("color:#A0AEC0;font-style:italic;font-size:12px;background:transparent;")
-            layout.addWidget(miss)
+        self.text_lbl = QLabel()
+        self.text_lbl.setWordWrap(True)
+        self.text_lbl.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
+        self.text_lbl.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        self.text_lbl.setFont(QFont(font_family, font_size))
+        self.text_lbl.setTextFormat(Qt.TextFormat.RichText)
+        self.layout.addWidget(self.text_lbl)
+        
+        self._update_content()
 
         shadow = QGraphicsDropShadowEffect()
         shadow.setBlurRadius(8)
         shadow.setColor(QColor(0, 0, 0, 18))
         shadow.setOffset(0, 2)
         self.setGraphicsEffect(shadow)
+
+    def _apply_style(self):
+        if self.text:
+            self.setStyleSheet(
+                f"QFrame#witness_card{{background-color:{self.bg};border:1px solid #CBD5E0;"
+                f"border-top:3px solid {self.accent};border-radius:10px;margin:4px 8px;}}"
+            )
+            if hasattr(self, 'name_lbl'):
+                self.name_lbl.setStyleSheet(
+                    f"color:{self.accent};background:transparent;"
+                    f"border:1px solid {self.accent};border-radius:5px;padding:3px 8px;"
+                )
+        else:
+            self.setStyleSheet(
+                "QFrame#witness_card{background-color:#EBF0F5;border:1px dashed #CBD5E0;"
+                "border-radius:10px;margin:4px 8px;}"
+            )
+            if hasattr(self, 'name_lbl'):
+                self.name_lbl.setStyleSheet(
+                    "color:#718096;background:transparent;"
+                    "border:1px solid #CBD5E0;border-radius:5px;padding:3px 8px;"
+                )
+
+    def _update_content(self):
+        if self.text:
+            if self.is_html:
+                self.text_lbl.setText(self.text)
+            elif self.highlight and self.base_text:
+                html_content = build_vilna_diff_html(self.base_text, self.text)
+                self.text_lbl.setText(
+                    f'<div dir="rtl" style="font-family:{self._font_family},serif;font-size:{self._font_size}pt;'
+                    f'color:#2D3748;text-align:justify;">{html_content}</div>'
+                )
+            else:
+                display = self.text if self.text else '(אין טקסט)'
+                self.text_lbl.setText(
+                    f'<div dir="rtl" style="font-family:{self._font_family},serif;'
+                    f'font-size:{self._font_size}pt;color:#2D3748;text-align:justify;">{display}</div>'
+                )
+        else:
+            self.text_lbl.setText('<div dir="rtl" style="color:#A0AEC0;font-style:italic;font-size:12px;">אין עד נוסח לקטע זה</div>')
+        
+        self._apply_style()
+
+    def update_theme(self, color_pair: tuple, font_family: str, font_size: int):
+        self.accent, self.bg = color_pair
+        self._font_family = font_family
+        self._font_size = font_size
+        self._update_content()
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton and self.clickable:
