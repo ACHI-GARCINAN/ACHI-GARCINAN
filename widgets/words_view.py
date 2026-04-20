@@ -202,6 +202,7 @@ class _FlowWidget(QWidget):
         return [lbl for lbl in self._labels if lbl.is_search_match]
 
 
+
 class WordsView(QWidget):
     """
     מציג את כל המילים של דף ברצף.
@@ -216,7 +217,8 @@ class WordsView(QWidget):
         self.main_witness = main_witness
         self.selected_idx = -1
         self._theme = theme
-
+        self._font_family = font_family
+        self._font_size = font_size
         self.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
         self._update_ui_colors()
 
@@ -240,13 +242,13 @@ class WordsView(QWidget):
     def clear_selection(self):
         self._flow_widget.select_word(-1)
         self.selected_idx = -1
-
     def update_font(self, font_family: str, font_size: int, theme: str = None):
+        self._font_family = font_family
+        self._font_size = font_size
         if theme:
             self._theme = theme
             self._update_ui_colors()
         self._flow_widget.update_font(font_family, font_size, theme)
-
     def search_highlight(self, term: str) -> bool:
         return self._flow_widget.search_highlight(term)
 

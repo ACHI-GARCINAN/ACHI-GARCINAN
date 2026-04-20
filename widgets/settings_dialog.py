@@ -9,9 +9,14 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, pyqtSignal, QSize
 from PyQt6.QtGui import QFont, QFontDatabase, QIntValidator, QPixmap
 
+_hebrew_fonts_cache: list = []
 
 def get_hebrew_fonts() -> list:
-    """מחזיר רשימת גופנים שתומכים בעברית, ממוין לפי שם."""
+    """מחזיר רשימת גופנים שתומכים בעברית, ממוין לפי שם. מטמון בזיכרון."""
+    global _hebrew_fonts_cache
+    if _hebrew_fonts_cache:
+        return _hebrew_fonts_cache
+
     try:
         all_families = QFontDatabase.families()
     except Exception:
@@ -34,8 +39,8 @@ def get_hebrew_fonts() -> list:
             if not known or f in known:
                 hebrew_fonts.append(f)
 
-    return sorted(set(hebrew_fonts))
-
+    _hebrew_fonts_cache = sorted(set(hebrew_fonts))
+    return _hebrew_fonts_cache
 
 class SettingsDialog(QDialog):
     # font_family, font_size, theme_name
@@ -47,74 +52,88 @@ class SettingsDialog(QDialog):
         self.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
         self.setMinimumWidth(500)
         self.setModal(True)
+        self._current_theme = current_theme
 
-        self.setStyleSheet("""
-            QDialog { background-color: #F0F4F7; }
-            QLabel { color: #2D3748; }
-            QComboBox {
-                background-color: #FFFFFF;
-                border: 1px solid #CBD5E0;
+        is_colorful = (current_theme == 'colorful')
+        bg         = "#2B1A0F" if is_colorful else "#F0F4F7"
+        text       = "#FFF5E6" if is_colorful else "#2D3748"
+        border     = "#7A5030" if is_colorful else "#CBD5E0"
+        input_bg   = "#3A2418" if is_colorful else "#FFFFFF"
+        input_text = "#FFF5E6" if is_colorful else "#2D3748"
+        focus_col  = "#C8A060" if is_colorful else "#5A6A82"
+        ok_bg      = "#C8A060" if is_colorful else "#5A6A82"
+        ok_hover   = "#A07840" if is_colorful else "#4A5A72"
+        cancel_bg  = "#3A2418" if is_colorful else "#E1E8ED"
+        cancel_txt = "#FFF5E6" if is_colorful else "#4A5568"
+        size_bg    = "#3A2418" if is_colorful else "#E1E8ED"
+        size_txt   = "#FFF5E6" if is_colorful else "#2D3748"
+        radio_col  = "#FFF5E6" if is_colorful else "#2D3748"
+
+        self.setStyleSheet(f"""
+            QDialog {{ background-color: {bg}; }}
+            QLabel {{ color: {text}; text-align: right; }}
+            QComboBox {{
+                background-color: {input_bg};
+                border: 1px solid {border};
                 border-radius: 6px;
                 padding: 5px 10px;
-                color: #2D3748;
+                color: {input_text};
                 font-size: 13px;
                 min-height: 30px;
-            }
-            QComboBox:focus { border-color: #5A6A82; }
-            QComboBox::drop-down { border: none; padding-left: 5px; }
-            QLineEdit {
-                background-color: #FFFFFF;
-                border: 1px solid #CBD5E0;
+            }}
+            QComboBox:focus {{ border-color: {focus_col}; }}
+            QComboBox::drop-down {{ border: none; padding-left: 5px; }}
+            QLineEdit {{
+                background-color: {input_bg};
+                border: 1px solid {border};
                 border-radius: 6px;
                 padding: 4px 8px;
-                color: #2D3748;
+                color: {input_text};
                 font-size: 14px;
                 min-height: 30px;
-            }
-            QLineEdit:focus { border-color: #5A6A82; }
-            QPushButton#ok_btn {
-                background-color: #5A6A82;
+            }}
+            QLineEdit:focus {{ border-color: {focus_col}; }}
+            QPushButton#ok_btn {{
+                background-color: {ok_bg};
                 color: white;
                 border: none;
                 border-radius: 6px;
                 padding: 8px 24px;
                 font-size: 13px;
                 font-weight: bold;
-            }
-            QPushButton#ok_btn:hover { background-color: #4A5A72; }
-            QPushButton#cancel_btn {
-                background-color: #E1E8ED;
-                color: #4A5568;
-                border: 1px solid #CBD5E0;
+            }}
+            QPushButton#ok_btn:hover {{ background-color: {ok_hover}; }}
+            QPushButton#cancel_btn {{
+                background-color: {cancel_bg};
+                color: {cancel_txt};
+                border: 1px solid {border};
                 border-radius: 6px;
                 padding: 8px 24px;
                 font-size: 13px;
-            }
-            QPushButton#cancel_btn:hover { background-color: #D1D9E0; }
-            QPushButton#size_btn {
-                background-color: #E1E8ED;
-                color: #2D3748;
-                border: 1px solid #CBD5E0;
+            }}
+            QPushButton#cancel_btn:hover {{ background-color: {size_bg}; }}
+            QPushButton#size_btn {{
+                background-color: {size_bg};
+                color: {size_txt};
+                border: 1px solid {border};
                 border-radius: 6px;
                 min-width: 38px;
                 min-height: 34px;
                 font-weight: bold;
-            }
-            QPushButton#size_btn:hover {
-                background-color: #CBD5E0;
-                border-color: #5A6A82;
-            }
-            QPushButton#size_btn:pressed { background-color: #A0B4CC; }
-            
-            QRadioButton {
-                color: #2D3748;
+            }}
+            QPushButton#size_btn:hover {{
+                border-color: {focus_col};
+            }}
+            QPushButton#size_btn:pressed {{ background-color: {focus_col}; }}
+            QRadioButton {{
+                color: {radio_col};
                 font-size: 13px;
                 spacing: 8px;
-            }
-            QRadioButton::indicator {
+            }}
+            QRadioButton::indicator {{
                 width: 18px;
                 height: 18px;
-            }
+            }}
         """)
 
         layout = QVBoxLayout(self)
@@ -125,6 +144,7 @@ class SettingsDialog(QDialog):
         title = QLabel("הגדרות תצוגה")
         title.setFont(QFont("David", 16, QFont.Weight.Bold))
         title.setAlignment(Qt.AlignmentFlag.AlignRight)
+        title.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
         layout.addWidget(title)
 
         sep = QFrame()
@@ -143,30 +163,40 @@ class SettingsDialog(QDialog):
         font_label.setFixedWidth(85)
         font_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
 
+        self._font_size = current_size
+        self._all_hebrew_fonts = get_hebrew_fonts()
+        if not self._all_hebrew_fonts:
+            self._all_hebrew_fonts = ['David']
+
+        # שדה חיפוש פונטים
+        self.font_search = QLineEdit()
+        self.font_search.setPlaceholderText("חפש פונט...")
+        self.font_search.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
+        self.font_search.setFixedHeight(30)
+        self.font_search.textChanged.connect(self._filter_fonts)
+
         self.font_combo = QComboBox()
         self.font_combo.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
-
-        hebrew_fonts = get_hebrew_fonts()
-        if not hebrew_fonts:
-            hebrew_fonts = ['David']
-
-        for f in hebrew_fonts:
-            self.font_combo.addItem(f)
-            idx = self.font_combo.count() - 1
-            self.font_combo.setItemData(idx, QFont(f, 12), Qt.ItemDataRole.FontRole)
-
-        idx = self.font_combo.findText(current_font)
-        if idx >= 0:
-            self.font_combo.setCurrentIndex(idx)
-
+        self._populate_font_combo(self._all_hebrew_fonts, current_font)
         self.font_combo.currentTextChanged.connect(self._update_preview)
-
         font_layout.addWidget(self.font_combo, 1)
         font_layout.addWidget(font_label)
         layout.addWidget(font_row)
 
+        # שורת חיפוש פונטים
+        search_row = QWidget()
+        search_layout = QHBoxLayout(search_row)
+        search_layout.setContentsMargins(0, 0, 0, 0)
+        search_layout.setSpacing(12)
+        search_label = QLabel("חיפוש פונט:")
+        search_label.setFont(QFont("David", 13))
+        search_label.setFixedWidth(85)
+        search_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        search_layout.addWidget(self.font_search, 1)
+        search_layout.addWidget(search_label)
+        layout.addWidget(search_row)
+        
         # ── שורת גודל גופן ──
-        self._font_size = current_size
 
         size_row = QWidget()
         size_layout = QHBoxLayout(size_row)
@@ -263,9 +293,12 @@ class SettingsDialog(QDialog):
         self.preview.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
         self.preview.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         self.preview.setWordWrap(True)
+        preview_bg  = "#3A2418" if is_colorful else "#FFFFFF"
+        preview_brd = "#7A5030" if is_colorful else "#CBD5E0"
+        preview_txt = "#FFF5E6" if is_colorful else "#2D3748"
         self.preview.setStyleSheet(
-            "background:#FFFFFF;border:1px solid #CBD5E0;border-radius:6px;"
-            "padding:12px 14px;color:#2D3748;min-height:55px;"
+            f"background:{preview_bg};border:1px solid {preview_brd};border-radius:6px;"
+            f"padding:12px 14px;color:{preview_txt};min-height:55px;"
         )
         layout.addWidget(self.preview)
 
@@ -310,6 +343,28 @@ class SettingsDialog(QDialog):
             label.setFont(QFont("David", 12))
             label.setStyleSheet(label.styleSheet() + "color: #718096;")
 
+    def _populate_font_combo(self, fonts: list, select: str = ''):
+        self.font_combo.blockSignals(True)
+        self.font_combo.clear()
+        for f in fonts:
+            self.font_combo.addItem(f)
+        idx = self.font_combo.findText(select)
+        if idx >= 0:
+            self.font_combo.setCurrentIndex(idx)
+        elif self.font_combo.count() > 0:
+            self.font_combo.setCurrentIndex(0)
+        self.font_combo.blockSignals(False)
+        if hasattr(self, 'preview'):
+            self._update_preview()
+
+    def _filter_fonts(self, text: str):
+        term = text.strip()
+        if not term:
+            filtered = self._all_hebrew_fonts
+        else:
+            filtered = [f for f in self._all_hebrew_fonts if term.lower() in f.lower()]
+        current = self.font_combo.currentText()
+        self._populate_font_combo(filtered, current)
     def _clamp_size(self, val: int) -> int:
         return max(8, min(36, val))
 
@@ -338,10 +393,14 @@ class SettingsDialog(QDialog):
     def _update_preview(self):
         family = self.font_combo.currentText()
         size = self._font_size
+        is_colorful = (self._current_theme == 'colorful')
+        preview_bg  = "#3A2418" if is_colorful else "#FFFFFF"
+        preview_brd = "#7A5030" if is_colorful else "#CBD5E0"
+        preview_txt = "#FFF5E6" if is_colorful else "#2D3748"
         self.preview.setFont(QFont(family, size))
         self.preview.setStyleSheet(
-            f"background:#FFFFFF;border:1px solid #CBD5E0;border-radius:6px;"
-            f"padding:12px 14px;color:#2D3748;min-height:55px;"
+            f"background:{preview_bg};border:1px solid {preview_brd};border-radius:6px;"
+            f"padding:12px 14px;color:{preview_txt};min-height:55px;"
             f"font-family:'{family}';font-size:{size}pt;"
         )
 
