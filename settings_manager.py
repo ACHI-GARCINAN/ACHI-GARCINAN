@@ -14,11 +14,12 @@ def get_settings_path() -> str:
         base = os.path.dirname(os.path.abspath(__file__))
     return os.path.join(base, 'settings.json')
 
-
 DEFAULTS = {
     'font_family': 'David',
     'font_size': 16,
-    'theme': 'classic',  # 'classic' or 'colorful'
+    'theme': 'classic',
+    'highlight_diffs': False,
+    'hide_empty_witnesses': True,
 }
 
 

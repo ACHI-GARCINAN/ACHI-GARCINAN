@@ -23,8 +23,10 @@ class WitnessPanel(QWidget):
     def __init__(self, witnesses: list, font_family: str = 'David', font_size: int = 15, theme: str = 'classic', parent=None):
         super().__init__(parent)
         self.witnesses = witnesses
-        self.highlight_diffs = False
-        self.hide_empty_witnesses = True
+        from settings_manager import load_settings
+        _saved = load_settings()
+        self.highlight_diffs = _saved.get('highlight_diffs', False)
+        self.hide_empty_witnesses = _saved.get('hide_empty_witnesses', True)
         self._font_family = font_family
         self._font_size = font_size
         self._theme = theme
@@ -57,15 +59,14 @@ class WitnessPanel(QWidget):
         self.highlight_cb = QCheckBox("הדגש שינויים מוילנא")
         self.highlight_cb.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
         self.highlight_cb.setFont(QFont("Arial", 10))
-        self.highlight_cb.setChecked(False)
+        self.highlight_cb.setChecked(self.highlight_diffs)
         self.highlight_cb.stateChanged.connect(self._on_highlight_changed)
 
         self.hide_empty_cb = QCheckBox("הסתר עדי נוסח ריקים")
         self.hide_empty_cb.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
         self.hide_empty_cb.setFont(QFont("Arial", 10))
-        self.hide_empty_cb.setChecked(True)
+        self.hide_empty_cb.setChecked(self.hide_empty_witnesses)
         self.hide_empty_cb.stateChanged.connect(self._on_hide_empty_changed)
-
         cb_row = QWidget()
         cb_row.setStyleSheet("background:transparent;border:none;")
         cb_layout = QHBoxLayout(cb_row)
@@ -133,6 +134,8 @@ class WitnessPanel(QWidget):
             self.highlight_diffs = (state == 2)
         else:
             self.highlight_diffs = bool(state)
+        from settings_manager import save_settings
+        save_settings({'highlight_diffs': self.highlight_diffs})
             
         self.hint_label.setVisible(self.highlight_diffs and not self._word_mode)
         if self._word_mode and self._words_data is not None:
@@ -146,6 +149,8 @@ class WitnessPanel(QWidget):
             self.hide_empty_witnesses = (state == 2)
         else:
             self.hide_empty_witnesses = bool(state)
+        from settings_manager import save_settings
+        save_settings({'hide_empty_witnesses': self.hide_empty_witnesses})
             
         if self._word_mode and self._words_data is not None:
             self.show_word(self._current_section, self._current_page, self._main_witness,

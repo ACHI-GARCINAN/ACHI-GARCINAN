@@ -58,7 +58,6 @@ class MainWindow(QMainWindow):
         self._font_family = settings['font_family']
         self._font_size = settings['font_size']
         self._theme = settings.get('theme', 'classic')
-
         self.setWindowTitle("סינופסיס תלמוד בבלי")
         self.setMinimumSize(1100, 650)
         self.showMaximized()
@@ -76,8 +75,9 @@ class MainWindow(QMainWindow):
         self._build_ui()
 
         if self.masechtot:
-            self.masechet_list.setCurrentRow(0)
-
+            from PyQt6.QtCore import QTimer
+            QTimer.singleShot(0, lambda: self.masechet_list.setCurrentRow(0))
+            
     def _show_copyright_notice(self):
         popup = CopyrightPopup(self.centralWidget())
         popup.exec()
@@ -128,7 +128,6 @@ class MainWindow(QMainWindow):
         self.splitter = QSplitter(Qt.Orientation.Horizontal)
         self.splitter.setHandleWidth(2)
         root.addWidget(self.splitter)
-
         self.witness_panel = WitnessPanel([], self._font_family, self._font_size, theme=self._theme)
         self.witness_panel.setMinimumWidth(280)
         self.witness_panel.witness_clicked.connect(self._on_witness_card_clicked)
@@ -147,6 +146,14 @@ class MainWindow(QMainWindow):
         left_layout = QHBoxLayout()
         left_layout.setSpacing(10)
 
+        self.hamburger_btn = QPushButton("▶")
+        self.hamburger_btn.setToolTip("הצג/הסתר ניווט")
+        self.hamburger_btn.setFixedSize(30, 30)
+        self.hamburger_btn.setFont(QFont("Arial", 13))
+        self.hamburger_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        self.hamburger_btn.clicked.connect(self._toggle_nav_panel)
+        left_layout.addWidget(self.hamburger_btn)
+        
         self.warn_btn = QPushButton("¡")
         self.warn_btn.setToolTip("הערת שימוש")
         self.warn_btn.setFixedSize(30, 30)
@@ -337,7 +344,8 @@ class MainWindow(QMainWindow):
             }}
         """
         self.warn_btn.setStyleSheet(btn_style)
-        
+        self.hamburger_btn.setStyleSheet(btn_style)
+
         self.settings_btn.setStyleSheet(f"""
             QPushButton {{ color: {cfg['btn_color']}; background: transparent; border: none; padding-bottom: 1px; }}
             QPushButton:hover {{ color: {cfg['btn_text_hover']}; }}
@@ -415,6 +423,14 @@ class MainWindow(QMainWindow):
             }}
         """)
 
+    def _toggle_nav_panel(self):
+        if self.nav_panel.isVisible():
+            self.nav_panel.hide()
+            self.hamburger_btn.setText("◀")
+        else:
+            self.nav_panel.show()
+            self.hamburger_btn.setText("▶")
+            
     def _go_prev_page(self):
         row = self.page_list.currentRow()
         if row > 0:
@@ -460,8 +476,8 @@ class MainWindow(QMainWindow):
                 block.search_highlight(self._page_search_term)
             matching = [b for b in self.section_blocks if b.has_search_match()]
 
+        cfg = get_theme_config(self._theme)
         if matching:
-            cfg = get_theme_config(self._theme)
             self.page_search_box.setStyleSheet(f"""
                 QLineEdit {{
                     background-color: {cfg['search_bg']};
