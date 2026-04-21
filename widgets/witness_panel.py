@@ -97,11 +97,15 @@ class WitnessPanel(QWidget):
 
         self.scroll.setWidget(self.container)
         self.main_layout.addWidget(self.scroll, 1)
-        
+
+        if not hasattr(self, 'highlight_cb'):
+            return
         self._update_ui_colors()
         self._show_placeholder()
 
     def _update_ui_colors(self):
+        if not hasattr(self, 'highlight_cb'):
+            return
         cfg = get_theme_config(self._theme)
         self.header_widget.setStyleSheet(f"background-color:{cfg['panel_header_bg']};border-bottom:2px solid {cfg['panel_header_border']};")
         self.header_label.setStyleSheet(f"color:{cfg['panel_header_text']};background:transparent;border:none;")

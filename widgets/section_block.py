@@ -139,13 +139,33 @@ class SectionBlock(QFrame):
             self.clicked.emit()
 
     def search_highlight(self, term: str) -> bool:
+        import html as _html
         if not self._plain_text or not term:
             self._has_search_match = False
             self._update_ui_colors()
             return False
-        
+
+        escaped_term = _html.escape(term)
         if term in self._plain_text:
-            highlighted = self._plain_text.replace(term, f'<span style="background-color: yellow; color: black;">{term}</span>')
+            highlighted = _html.escape(self._plain_text).replace(
+                escaped_term,
+                f'<span style="background-color: yellow; color: black;">{escaped_term}</span>'
+            )
+            self._text_lbl.setTextFormat(Qt.TextFormat.RichText)
+            self._text_lbl.setText(self._make_justified_html(highlighted))
+            self._has_search_match = True
+            return True
+        else:
+            self._has_search_match = False
+            self._update_ui_colors()
+            return False
+
+        escaped_term = _html.escape(term)
+        if term in self._plain_text:
+            highlighted = _html.escape(self._plain_text).replace(
+                escaped_term,
+                f'<span style="background-color: yellow; color: black;">{escaped_term}</span>'
+            )
             self._text_lbl.setTextFormat(Qt.TextFormat.RichText)
             self._text_lbl.setText(self._make_justified_html(highlighted))
             self._has_search_match = True

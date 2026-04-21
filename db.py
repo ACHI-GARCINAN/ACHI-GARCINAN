@@ -7,7 +7,7 @@ DB_PATH = ''
 
 def get_base_dir() -> str:
     if getattr(sys, 'frozen', False):
-        return os.path.dirname(sys.executable)
+        return sys._MEIPASS
     return os.path.dirname(os.path.abspath(__file__))
 
 

@@ -60,7 +60,6 @@ class MainWindow(QMainWindow):
         self._theme = settings.get('theme', 'classic')
         self.setWindowTitle("סינופסיס תלמוד בבלי")
         self.setMinimumSize(1100, 650)
-        self.showMaximized()
         self.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
         
         # החל עיצוב לפי ערכת הנושא
@@ -467,7 +466,16 @@ class MainWindow(QMainWindow):
     def _search_in_page(self, text: str):
         self._page_search_term = text.strip()
         self._page_search_idx = -1
-        
+
+        if not self._page_search_term:
+            if self.display_mode == 'words' and self._words_view:
+                self._words_view.search_highlight('')
+            else:
+                for block in self.section_blocks:
+                    block.search_highlight('')
+            self._update_ui_colors()
+            return
+
         if self.display_mode == 'words' and self._words_view:
             self._words_view.search_highlight(self._page_search_term)
             matching = self._words_view.get_match_widgets()
@@ -683,6 +691,15 @@ class MainWindow(QMainWindow):
         if not self.selected_block:
             return
         self.selected_block.show_witness_diff(witness_name)
+
+    def changeEvent(self, event):
+        from PyQt6.QtCore import QEvent
+        # מניעת רינדור כפול אחרי יקיצה משינה
+        if event.type() == QEvent.Type.WindowStateChange:
+            if self.windowState() & Qt.WindowState.WindowMaximized:
+                # וודא שהחלון לא מרונדר פעמיים
+                self.repaint()
+        super().changeEvent(event)
 
     def keyPressEvent(self, event: QKeyEvent):
         if self.display_mode == 'words' and self._current_words_data:
