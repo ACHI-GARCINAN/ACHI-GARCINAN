@@ -85,7 +85,7 @@ class WitnessCard(QFrame):
             if self.is_html:
                 self.text_lbl.setText(self.text)
             elif self.highlight and self.base_text:
-                html_content = build_vilna_diff_html(self.base_text, self.text)
+                html_content = build_vilna_diff_html(self.text, self.base_text)
                 self.text_lbl.setText(
                     f'<div dir="rtl" style="font-family:{self._font_family},serif;font-size:{self._font_size}pt;'
                     f'color:#2D3748;text-align:justify;">{html_content}</div>'

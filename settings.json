@@ -1,7 +1,7 @@
 {
-  "font_family": "Akitza",
+  "font_family": "ShefaClassic",
   "font_size": 16,
-  "theme": "colorful",
+  "theme": "classic",
   "highlight_diffs": true,
   "hide_empty_witnesses": true
 }

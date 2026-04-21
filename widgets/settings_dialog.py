@@ -331,7 +331,7 @@ class SettingsDialog(QDialog):
     def _set_placeholder_image(self, label: QLabel, filename: str, text: str):
         """מנסה לטעון תמונה, אם לא קיים מציג טקסט זמני."""
         # נתיב יחסי לתיקיית התוכנה
-        base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        base = os.path.dirname(os.path.abspath(__file__))
         path = os.path.join(base, "assets", filename)
         
         if os.path.exists(path):
