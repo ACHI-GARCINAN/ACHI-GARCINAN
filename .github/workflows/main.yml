@@ -2,11 +2,19 @@ name: Build and Release
 on:
   push:
     branches: [ "main" ]
+    paths-ignore:
+      - 'README.md'
+      - 'LICENSE'
+      - '.gitignore'
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: windows-latest
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest]
     permissions:
       contents: write
     steps:
@@ -20,13 +28,12 @@ jobs:
 
     - name: Calculate Version
       id: version_calc
+      shell: bash
       run: |
-        $runNumber = ${{ github.run_number }}
-        # מכיוון שהריצה האחרונה הייתה 40, נחסיר 40 כדי לקבל 1.1
-        $versionMinor = $runNumber - 40
-        $finalVersion = "1.$versionMinor"
-        echo "final_version=$finalVersion" >> $env:GITHUB_OUTPUT
-      shell: powershell
+        RUN_NUMBER=${{ github.run_number }}
+        # שינוי כאן ל-44 כדי שהתוצאה תהיה 6 (גרסה 1.6)
+        VERSION_MINOR=$((RUN_NUMBER - 44))
+        echo "final_version=1.$VERSION_MINOR" >> $GITHUB_OUTPUT
 
     - name: Set up Python
       uses: actions/setup-python@v5
@@ -38,40 +45,45 @@ jobs:
         python -m pip install --upgrade pip
         pip install pyinstaller PyQt6
 
-    - name: Build Portable EXE
+    - name: Build Windows
+      if: matrix.os == 'windows-latest'
+      shell: powershell
       run: |
-        pyinstaller --onefile --windowed `
-        --icon="icon.ico" `
-        --name="Talmud-Formulas" `
-        --add-data "widgets;widgets" `
-        --add-data "assets;assets" `
-        --add-data "icon.ico;." `
-        --add-data "talmud.db;." `
-        --collect-all PyQt6 `
-        --clean `
-        main.py
-
-    - name: Install Inno Setup
-      run: choco install innosetup --no-progress
-
-    - name: Build Installer
-      run: |
+        pyinstaller --noconfirm --onefile --windowed --icon="icon.ico" --name="Talmudic-Formulas-Portable" --add-data "widgets;widgets" --add-data "assets;assets" --add-data "talmud.db;." --add-data "license.txt;." --add-data "comments.txt;." --collect-all PyQt6 main.py
+        pyinstaller --noconfirm --onedir --windowed --icon="icon.ico" --name="Talmudic-Formulas" --add-data "widgets;widgets" --add-data "assets;assets" --add-data "talmud.db;." --add-data "license.txt;." --add-data "comments.txt;." --collect-all PyQt6 main.py
+        choco install innosetup --no-progress
         (Get-Content "יצירת תוכנה.iss") -replace 'AppVersion=.*', 'AppVersion=${{ steps.version_calc.outputs.final_version }}' | Set-Content "יצירת תוכנה.iss"
-        mkdir Output -ErrorAction SilentlyContinue
         & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "יצירת תוכנה.iss"
+
+    - name: Build macOS
+      if: matrix.os == 'macos-latest'
+      run: |
+        pyinstaller --noconfirm --windowed --name="Talmudic-Formulas-Mac" --add-data "widgets:widgets" --add-data "assets:assets" --add-data "talmud.db:." --collect-all PyQt6 main.py
+        cd dist
+        zip -r ../Talmudic-Formulas-Mac-Portable.zip Talmudic-Formulas-Mac.app
+        cd ..
+        mkdir dmg_root
+        cp -R "dist/Talmudic-Formulas-Mac.app" dmg_root/
+        hdiutil create -volname "Talmudic Formulas" -srcfolder dmg_root -ov -format UDZO "Talmudic-Formulas-Mac-Installer.dmg"
 
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       with:
         tag_name: v${{ steps.version_calc.outputs.final_version }}
         name: גרסה ${{ steps.version_calc.outputs.final_version }}
         body: |
-          שחרור גרסה אוטומטי ${{ steps.version_calc.outputs.final_version }}
-        draft: false
-        prerelease: false
-        make_latest: true
+          ### וינדוס:
+          * **גירסה ניידת** - [לחץ כאן להורדה](https://github.com/${{ github.repository }}/releases/download/v${{ steps.version_calc.outputs.final_version }}/Talmudic-Formulas-Portable.exe)
+          * **גירסת התקנה** - [לחץ כאן להורדה](https://github.com/${{ github.repository }}/releases/download/v${{ steps.version_calc.outputs.final_version }}/Talmudic-Formulas-Setup-Win.exe)
+          
+          ### מק:
+          * **גירסה ניידת (APP)** - [לחץ כאן להורדה](https://github.com/${{ github.repository }}/releases/download/v${{ steps.version_calc.outputs.final_version }}/Talmudic-Formulas-Mac-Portable.zip)
+          * **גירסת התקנה (DMG)** - [לחץ כאן להורדה](https://github.com/${{ github.repository }}/releases/download/v${{ steps.version_calc.outputs.final_version }}/Talmudic-Formulas-Mac-Installer.dmg)
         files: |
-          dist/Talmud-Formulas.exe
-          Output/Talmud-Formulas-Setup.exe
+          dist/Talmudic-Formulas-Portable.exe
+          Output/Talmudic-Formulas-Setup-Win.exe
+          Talmudic-Formulas-Mac-Portable.zip
+          ./Talmudic-Formulas-Mac-Installer.dmg
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
