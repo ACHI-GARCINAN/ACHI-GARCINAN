@@ -2,10 +2,10 @@ name: Build and Release
 on:
   push:
     branches: [ "main" ]
-    # התעלמות משינויים במסמכים כדי לא לבזבז מספרי גרסאות
     paths-ignore:
       - 'README.md'
       - '.gitignore'
+      - 'index.html'
   workflow_dispatch:
 
 jobs:
@@ -48,29 +48,22 @@ jobs:
       if: matrix.os == 'windows-latest'
       shell: powershell
       run: |
-        # בניית גרסה ניידת (Portable) הכוללת את ה-DB ואת ה-assets
+        # בניית קבצי ה-EXE
         pyinstaller --noconfirm --onefile --windowed --icon="icon.ico" --name="Talmudic-Formulas-Portable" --add-data "widgets;widgets" --add-data "assets;assets" --add-data "talmud.db;." --collect-all PyQt6 main.py
-        
-        # בניית גרסה מפורקת (Directory) עבור ה-Installer
         pyinstaller --noconfirm --onedir --windowed --icon="icon.ico" --name="Talmudic-Formulas" --add-data "widgets;widgets" --add-data "assets;assets" --add-data "talmud.db;." --collect-all PyQt6 main.py
         
-        # יצירת קובץ התקנה (Setup)
+        # הרצת Inno Setup עם השם החדש והבאנגלית
         choco install innosetup --no-progress
-        (Get-Content "יצירת תוכנה.iss") -replace 'AppVersion=.*', 'AppVersion=${{ steps.version_calc.outputs.final_version }}' | Set-Content "יצירת תוכנה.iss"
-        & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "יצירת תוכנה.iss"
+        (Get-Content "setup_script.iss") -replace 'AppVersion=.*', 'AppVersion=${{ steps.version_calc.outputs.final_version }}' | Set-Content "setup_script.iss"
+        & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "setup_script.iss"
 
     - name: Build macOS
       if: matrix.os == 'macos-latest'
       run: |
-        # בנייה למק - שים לב לשימוש בנקודתיים בנתיבים
         pyinstaller --noconfirm --windowed --name="Talmudic-Formulas-Mac" --add-data "widgets:widgets" --add-data "assets:assets" --add-data "talmud.db:." --collect-all PyQt6 main.py
-        
-        # חובה לארוז ב-ZIP כי אי אפשר להעלות תיקיית .app ישירות ל-Release
         cd dist
         zip -r ../Talmudic-Formulas-Mac-Portable.zip Talmudic-Formulas-Mac.app
         cd ..
-        
-        # יצירת קובץ DMG
         mkdir dmg_root
         cp -R "dist/Talmudic-Formulas-Mac.app" dmg_root/
         hdiutil create -volname "Talmudic Formulas" -srcfolder dmg_root -ov -format UDZO "Talmudic-Formulas-Mac-Installer.dmg"
@@ -81,14 +74,6 @@ jobs:
       with:
         tag_name: v${{ steps.version_calc.outputs.final_version }}
         name: גרסה ${{ steps.version_calc.outputs.final_version }}
-        body: |
-          ### וינדוס:
-          * **גירסה ניידת (EXE)** - [לחץ כאן להורדה](https://github.com/${{ github.repository }}/releases/download/v${{ steps.version_calc.outputs.final_version }}/Talmudic-Formulas-Portable.exe)
-          * **גירסת התקנה (Setup)** - [לחץ כאן להורדה](https://github.com/${{ github.repository }}/releases/download/v${{ steps.version_calc.outputs.final_version }}/Talmudic-Formulas-Setup-Win.exe)
-          
-          ### מק:
-          * **גירסה ניידת (ZIP)** - [לחץ כאן להורדה](https://github.com/${{ github.repository }}/releases/download/v${{ steps.version_calc.outputs.final_version }}/Talmudic-Formulas-Mac-Portable.zip)
-          * **גירסת התקנה (DMG)** - [לחץ כאן להורדה](https://github.com/${{ github.repository }}/releases/download/v${{ steps.version_calc.outputs.final_version }}/Talmudic-Formulas-Mac-Installer.dmg)
         files: |
           dist/Talmudic-Formulas-Portable.exe
           Output/Talmudic-Formulas-Setup-Win.exe
