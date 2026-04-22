@@ -205,6 +205,48 @@ class _FlowWidget(QWidget):
     def get_match_widgets(self) -> list:
         return [lbl for lbl in self._labels if lbl.is_search_match]
 
+    def get_word_at_adjacent_row(self, current_idx: int, direction: int) -> int:
+        """
+        מחזיר את האינדקס של המילה בשורה מעל (direction=-1) או מתחת (direction=1)
+        הקרובה ביותר אופקית. מחזיר -1 אם אין שורה כזו.
+        """
+        if current_idx < 0 or current_idx >= len(self._labels):
+            return -1
+        cur_lbl = self._labels[current_idx]
+        cur_geo = cur_lbl.geometry()
+        if cur_geo.height() == 0:
+            return -1
+        cur_center_x = cur_geo.x() + cur_geo.width() / 2
+        row_threshold = max(cur_geo.height() * 0.6, 5)
+
+        # בנה רשימת שורות לפי y
+        rows: list[list] = []
+        current_row: list = []
+        last_y = None
+        for lbl in self._labels:
+            g = lbl.geometry()
+            if last_y is None or abs(g.y() - last_y) > row_threshold:
+                if current_row:
+                    rows.append(current_row)
+                current_row = [lbl]
+                last_y = g.y()
+            else:
+                current_row.append(lbl)
+        if current_row:
+            rows.append(current_row)
+
+        cur_row_idx = next((ri for ri, row in enumerate(rows) if any(lbl is cur_lbl for lbl in row)), None)
+        if cur_row_idx is None:
+            return -1
+
+        target_row_idx = cur_row_idx + direction
+        if not (0 <= target_row_idx < len(rows)):
+            return -1
+
+        target_row = rows[target_row_idx]
+        best_lbl = min(target_row, key=lambda lbl: abs((lbl.geometry().x() + lbl.geometry().width() / 2) - cur_center_x))
+        return self._labels.index(best_lbl)
+
 
 class WordsView(QWidget):
     """
@@ -256,3 +298,6 @@ class WordsView(QWidget):
 
     def get_match_widgets(self) -> list:
         return self._flow_widget.get_match_widgets()
+
+    def get_word_at_adjacent_row(self, current_idx: int, direction: int) -> int:
+        return self._flow_widget.get_word_at_adjacent_row(current_idx, direction)

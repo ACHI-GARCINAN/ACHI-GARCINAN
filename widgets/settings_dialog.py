@@ -124,6 +124,22 @@ class SettingsDialog(QDialog):
             QRadioButton::indicator {
                 width: 18px;
                 height: 18px;
+                border-radius: 9px;
+                border: 2px solid #718096;
+                background-color: #FFFFFF;
+            }
+            QRadioButton::indicator:unchecked {
+                border: 2px solid #A0AEC0;
+                background-color: #FFFFFF;
+            }
+            QRadioButton::indicator:unchecked:hover {
+                border: 2px solid #5A6A82;
+                background-color: #EDF2F7;
+            }
+            QRadioButton::indicator:checked {
+                border: 2px solid #2D3748;
+                background-color: #2D3748;
+                image: none;
             }
         """)
 
@@ -241,30 +257,34 @@ class SettingsDialog(QDialog):
 
         # ערכה קלאסית
         classic_box = QVBoxLayout()
-        self.radio_classic = QRadioButton("קלאסי (v11)")
+        self.radio_classic = QRadioButton("קלאסי")
         self.radio_classic.setChecked(current_theme == 'classic')
         self.theme_group.addButton(self.radio_classic)
-        
+
         self.img_classic = QLabel()
         self.img_classic.setFixedSize(180, 110)
-        self.img_classic.setStyleSheet("border: 2px solid #CBD5E0; background: #E1E8ED; border-radius: 4px;")
+        self.img_classic.setStyleSheet("border: 2px solid #CBD5E0; background: #E1E8ED; border-radius: 4px; cursor: pointer;")
+        self.img_classic.setCursor(Qt.CursorShape.PointingHandCursor)
         self._set_placeholder_image(self.img_classic, "classic_preview.png", "תצוגה קלאסית")
-        
+        self.img_classic.mousePressEvent = lambda e: self.radio_classic.setChecked(True)
+
         classic_box.addWidget(self.img_classic)
         classic_box.addWidget(self.radio_classic, 0, Qt.AlignmentFlag.AlignCenter)
         theme_container.addLayout(classic_box)
 
         # ערכה צבעונית
         colorful_box = QVBoxLayout()
-        self.radio_colorful = QRadioButton("צבעוני (v8)")
+        self.radio_colorful = QRadioButton("צבעוני")
         self.radio_colorful.setChecked(current_theme == 'colorful')
         self.theme_group.addButton(self.radio_colorful)
-        
+
         self.img_colorful = QLabel()
         self.img_colorful.setFixedSize(180, 110)
-        self.img_colorful.setStyleSheet("border: 2px solid #CBD5E0; background: #2B1A0F; border-radius: 4px;")
+        self.img_colorful.setStyleSheet("border: 2px solid #CBD5E0; background: #2B1A0F; border-radius: 4px; cursor: pointer;")
+        self.img_colorful.setCursor(Qt.CursorShape.PointingHandCursor)
         self._set_placeholder_image(self.img_colorful, "colorful_preview.png", "תצוגה צבעונית")
-        
+        self.img_colorful.mousePressEvent = lambda e: self.radio_colorful.setChecked(True)
+
         colorful_box.addWidget(self.img_colorful)
         colorful_box.addWidget(self.radio_colorful, 0, Qt.AlignmentFlag.AlignCenter)
         theme_container.addLayout(colorful_box)

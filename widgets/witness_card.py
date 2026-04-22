@@ -46,7 +46,7 @@ class WitnessCard(QFrame):
 
         self.text_lbl = QLabel()
         self.text_lbl.setWordWrap(True)
-        self.text_lbl.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
+        self.text_lbl.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
         self.text_lbl.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self.text_lbl.setFont(QFont(font_family, font_size))
         self.text_lbl.setTextFormat(Qt.TextFormat.RichText)
@@ -86,13 +86,13 @@ class WitnessCard(QFrame):
                 html_content = build_highlighted_html(self.text, self.base_text, hide_minor=getattr(self, 'hide_minor', False))
                 self.text_lbl.setText(
                     f'<div dir="rtl" style="font-family:{self._font_family},serif;font-size:{self._font_size}pt;'
-                    f'color:#2D3748;text-align:justify;">{html_content}</div>'
+                    f'color:#2D3748;text-align:left;">{html_content}</div>'
                 )
             else:
                 display = self.text if self.text else '(אין טקסט)'
                 self.text_lbl.setText(
                     f'<div dir="rtl" style="font-family:{self._font_family},serif;'
-                    f'font-size:{self._font_size}pt;color:#2D3748;text-align:justify;">{display}</div>'
+                    f'font-size:{self._font_size}pt;color:#2D3748;text-align:left;">{display}</div>'
                 )
         else:
             self.text_lbl.setText('<div dir="rtl" style="color:#A0AEC0;font-style:italic;font-size:12px;">אין עד נוסח לקטע זה</div>')
