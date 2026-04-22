@@ -70,9 +70,8 @@ jobs:
       run: |
         pyinstaller --noconfirm --onefile --windowed --icon="icon.ico" --name="Talmudic-Formulas-Portable" --add-data "widgets;widgets" --add-data "assets;assets" --add-data "talmud.db;." --collect-all PyQt6 main.py
         pyinstaller --noconfirm --onedir --windowed --icon="icon.ico" --name="Talmudic-Formulas" --add-data "widgets;widgets" --add-data "assets;assets" --add-data "talmud.db;." --collect-all PyQt6 main.py
-        choco install innosetup --no-progress
-        (Get-Content "יצירת תוכנה.iss") -replace 'AppVersion=.*', 'AppVersion=${{ steps.version_calc.outputs.final_version }}' | Set-Content "יצירת תוכנה.iss"
-        & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "יצירת תוכנה.iss"
+        (Get-Content "setup_script.iss") -replace 'AppVersion=.*', 'AppVersion=${{ steps.version_calc.outputs.final_version }}' | Set-Content "setup_script.iss"
+        iscc "setup_script.iss"
 
     - name: Build macOS
       if: matrix.os == 'macos-latest'
