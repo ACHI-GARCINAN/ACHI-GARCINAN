@@ -4,9 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>נוסחאות התלמוד - דף הבית</title>
-    
-    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/ACHI-GARCINAN/ACHI-GARCINAN/main/assets/logo.png">
-    
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700&display=swap" rel="stylesheet">
     <script>
@@ -27,6 +24,8 @@
     </script>
     <style>
         body { font-family: 'Assistant', sans-serif; transition: background-color 0.3s, color 0.3s; }
+        .hero-icon { transition: transform 0.5s ease; }
+        .hero-icon:hover { transform: scale(1.05); }
     </style>
 </head>
 <body class="bg-white text-gray-900 dark:bg-black dark:text-gray-100">
@@ -36,9 +35,12 @@
             <a href="https://github.com/ACHI-GARCINAN/ACHI-GARCINAN" target="_blank" class="text-brand dark:text-blue-400 hover:opacity-70 transition" title="GitHub">
                 <svg class="w-7 h-7 fill-current" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.041-1.416-4.041-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
             </a>
-            <a href="https://mitmachim.top/topic/95870/" target="_blank" class="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-blue-600 transition" title="פורום מתמחים טופ">
-                <svg class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L1 21h22L12 2zm0 4l7.5 13h-15L12 6z"/></svg>
-                <span>מתמחים טופ</span>
+            
+            <a href="https://mitmachim.top/topic/95870/" target="_blank" class="flex items-center gap-2 group transition" title="פורום מתמחים טופ">
+                <svg class="h-6 w-6 text-[#0066ff] transition group-hover:scale-110" viewBox="0 0 100 100" fill="currentColor">
+                    <path d="M50 5C25.1 5 5 25.1 5 50c0 10.4 3.5 20 9.5 27.6L10 90l13.1-4.1C30.9 91.6 40.1 95 50 95c24.9 0 45-20.1 45-45S74.9 5 50 5zm18.3 62.5H60V48.1l-10 10-10-10v19.4h-8.3V32.5h8.3l10 10 10-10h8.3v35z"/>
+                </svg>
+                <span class="text-sm font-bold text-gray-500 group-hover:text-[#0066ff] transition">מתמחים טופ</span>
             </a>
         </div>
         <button onclick="toggleDarkMode()" class="p-2 bg-gray-100 dark:bg-gray-800 rounded-full transition shadow-sm">
@@ -47,7 +49,13 @@
     </div>
 
     <header class="text-center py-14 px-4">
-        <img src="https://raw.githubusercontent.com/ACHI-GARCINAN/ACHI-GARCINAN/main/assets/logo.png" alt="לוגו" class="mx-auto w-56 mb-8 drop-shadow-xl" onerror="this.src='https://github.com/fluidicon.png'">
+        <div class="mb-10">
+            <img src="https://github.com/user-attachments/assets/93be22a1-8343-4c03-95df-3aed93bc23d0" 
+                 width="220" 
+                 height="217" 
+                 alt="לוגו נוסחאות התלמוד" 
+                 class="mx-auto hero-icon drop-shadow-2xl">
+        </div>
         
         <h1 class="text-5xl font-bold mb-4 text-brand dark:text-blue-400">נוסחאות התלמוד</h1>
         <p class="text-xl max-w-3xl mx-auto opacity-80 mb-10 leading-relaxed">
@@ -78,21 +86,21 @@
 
     <section class="max-w-6xl mx-auto px-4 pb-16">
         <h2 class="text-3xl font-bold text-center mb-12 text-brand dark:text-blue-400">מה התוכנה כוללת?</h2>
-        
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
             <div class="bg-brand text-white p-10 rounded-3xl shadow-xl">
                 <h3 class="text-xl font-bold mb-4 border-b border-blue-400 pb-2">כל הש"ס אופליין</h3>
-                <p class="opacity-90 leading-relaxed">אין צורך בחיבור לאינטרנט, הכל נמצא בתוך התוכנה וזמין בכל רגע לעבודה רציפה.</p>
+                <p class="opacity-90 leading-relaxed">אין צורך בחיבור לאינטרנט, הכל נמצא בתוך התוכנה וזמין בכל רגע ללימוד ולעבודה רציפה.</p>
             </div>
             <div class="bg-brand text-white p-10 rounded-3xl shadow-xl">
                 <h3 class="text-xl font-bold mb-4 border-b border-blue-400 pb-2">השוואה חכמה</h3>
-                <p class="opacity-90 leading-relaxed font-light">סימון והדגשה אוטומטית של מילים חסרות, יתירות או שונות מהנוסח המייצג בצורה ויזואלית ברורה.</p>
+                <p class="opacity-90 leading-relaxed font-light">סימון והדגשה אוטומטית של מילים חסרות, יתירות או שונות מהנוסח ומציג הכל בצורה ויזואלית ברורה.</p>
             </div>
             <div class="bg-brand text-white p-10 rounded-3xl shadow-xl">
                 <h3 class="text-xl font-bold mb-4 border-b border-blue-400 pb-2">מצב תצוגת מילים</h3>
-                <p class="opacity-90 leading-relaxed font-light text-base">אפשרות לעבור מילה-מילה ולערוך השוואה מדויקת ומדוקדקת בין הנוסחאות השונות.</p>
+                <p class="opacity-90 leading-relaxed font-light text-base">אפשרות לעבור מילה - מילה ולערוך השוואה מדויקת ומדוקדקת בין הנוסחאות השונות.</p>
             </div>
         </div>
+    </section>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8 bg-gray-50 dark:bg-gray-900 p-8 md:p-12 rounded-3xl border border-gray-100 dark:border-gray-800">
             <div class="flex items-start gap-4"><div class="text-brand dark:text-blue-400 mt-1">●</div><p><strong>ממשק מודרני:</strong> עיצוב נקי ונוח לעין, תמיכה מלאה בעברית וגלילה מותאמת למסכי מגע.</p></div>
@@ -106,9 +114,9 @@
         </div>
     </section>
 
-    <div class="max-w-5xl mx-auto text-center py-10 px-4 border-t border-gray-100 dark:border-gray-900">
+    <div class="max-w-5xl mx-auto text-center py-10 px-4">
         <p class="text-2xl font-bold text-gray-800 dark:text-gray-200">
-            פרויקט זה נועד להנגיש את אוצרת הרוח של חכמי ישראל ללומדי התורה ולחוקריה
+            פרויקט זה נועד להנגיש את אוצרות הרוח של חכמי ישראל ללומדי התורה ולחוקריה
         </p>
         <div class="mt-8 p-6 bg-blue-50 dark:bg-gray-800 rounded-2xl border-r-4 border-brand shadow-sm">
             <p class="text-lg font-bold">
@@ -117,7 +125,7 @@
             </p>
         </div>
     </div>
-
+    
     <footer class="bg-gray-100 dark:bg-gray-800 py-10 px-4 border-t border-gray-200 dark:border-gray-900">
         <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
             <div class="text-right">
@@ -130,6 +138,5 @@
             </div>
         </div>
     </footer>
-
 </body>
 </html>
