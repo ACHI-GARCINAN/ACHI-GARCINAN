@@ -45,7 +45,3 @@
 * **[להורדת גרסת התקנה (Setup)](https://github.com/ACHI-GARCINAN/ACHI-GARCINAN/releases/latest/download/Talmud-Formulas-Setup.exe)**
 
 * **[להורדת גרסה ניידת - ללא התקנה (Portable)](https://github.com/ACHI-GARCINAN/ACHI-GARCINAN/releases/latest/download/Talmud-Formulas.exe)**
-
-=======
->>>>>>> 9e47ff43d922f230a40dafa14c35fc20484b646c
----
