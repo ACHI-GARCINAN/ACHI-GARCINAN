@@ -154,10 +154,10 @@ class MainWindow(QMainWindow):
         left_layout = QHBoxLayout()
         left_layout.setSpacing(10)
 
-        self.warn_btn = QPushButton("¡")
+        self.warn_btn = QPushButton("ℹ")
         self.warn_btn.setToolTip("הערת שימוש")
-        self.warn_btn.setFixedSize(35, 35)
-        self.warn_btn.setFont(QFont("Arial", 16, QFont.Weight.Bold))
+        self.warn_btn.setFixedSize(30, 30)
+        self.warn_btn.setFont(QFont("Arial", 14))
         self.warn_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.warn_btn.clicked.connect(self._show_copyright_notice)
         left_layout.addWidget(self.warn_btn)
@@ -165,8 +165,8 @@ class MainWindow(QMainWindow):
         # כפתור הגדרות
         self.settings_btn = QPushButton("⚙")
         self.settings_btn.setToolTip("הגדרות תצוגה")
-        self.settings_btn.setFixedSize(35, 35)
-        self.settings_btn.setFont(QFont("Arial", 15))
+        self.settings_btn.setFixedSize(30, 30)
+        self.settings_btn.setFont(QFont("Arial", 14))
         self.settings_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.settings_btn.clicked.connect(self._open_settings)
         left_layout.addWidget(self.settings_btn)
@@ -184,8 +184,8 @@ class MainWindow(QMainWindow):
         # כפתור הצגת/הסתרת סרגל צד — חץ מתחלף
         self.sidebar_toggle_btn = QPushButton("▶")
         self.sidebar_toggle_btn.setToolTip("הצג/הסתר סרגל מסכתות")
-        self.sidebar_toggle_btn.setFixedSize(35, 35)
-        self.sidebar_toggle_btn.setFont(QFont("Arial", 13))
+        self.sidebar_toggle_btn.setFixedSize(30, 30)
+        self.sidebar_toggle_btn.setFont(QFont("Arial", 12))
         self.sidebar_toggle_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.sidebar_toggle_btn.clicked.connect(self._toggle_sidebar)
         self.h_outer.insertWidget(0, self.sidebar_toggle_btn)
@@ -339,13 +339,13 @@ class MainWindow(QMainWindow):
         self.page_title.setStyleSheet(f"color:{cfg['header_text']};background:transparent;")
         self.page_sub.setStyleSheet(f"color:{cfg['header_subtext']};background:transparent;")
         
-        btn_style = f"""
+        icon_btn_style = f"""
             QPushButton {{
                 color: {cfg['btn_color']};
                 background: transparent;
                 border: 2px solid {cfg['btn_color']};
-                border-radius: 15px;
-                padding-bottom: 2px;
+                border-radius: 13px;
+                padding-bottom: 1px;
             }}
             QPushButton:hover {{
                 color: {cfg['btn_text_hover']};
@@ -353,12 +353,9 @@ class MainWindow(QMainWindow):
                 background: rgba(200,160,60,0.15);
             }}
         """
-        self.warn_btn.setStyleSheet(btn_style)
-        
-        self.settings_btn.setStyleSheet(f"""
-            QPushButton {{ color: {cfg['btn_color']}; background: transparent; border: none; padding-bottom: 1px; }}
-            QPushButton:hover {{ color: {cfg['btn_text_hover']}; }}
-        """)
+        self.warn_btn.setStyleSheet(icon_btn_style)
+        self.settings_btn.setStyleSheet(icon_btn_style)
+        self.sidebar_toggle_btn.setStyleSheet(icon_btn_style)
         
         self.mode_btn.setStyleSheet(f"""
             QPushButton {{
@@ -387,20 +384,7 @@ class MainWindow(QMainWindow):
         self.prev_btn.setStyleSheet(nav_btn_style)
         self.next_btn.setStyleSheet(nav_btn_style)
         
-        self.sidebar_toggle_btn.setStyleSheet(f"""
-            QPushButton {{
-                color: {cfg['btn_color']};
-                background: transparent;
-                border: 2px solid {cfg['btn_color']};
-                border-radius: 15px;
-                padding-bottom: 2px;
-            }}
-            QPushButton:hover {{
-                color: {cfg['btn_text_hover']};
-                border-color: {cfg['btn_text_hover']};
-                background: rgba(200,160,60,0.15);
-            }}
-        """)
+        
         
         self.page_search_box.setStyleSheet(f"""
             QLineEdit {{
@@ -472,23 +456,99 @@ class MainWindow(QMainWindow):
             self.splitter.setSizes([215, 780, 420])
 
     def _quick_nav(self):
-        text = self.search_box.text().strip()
-        if not text: return
-        m = re.match(r'^(.+?)\s+(.+)$', text)
-        if m:
-            q_ms, q_pg = m.groups()
-        else:
-            q_ms, q_pg = text, ''
+        raw = self.search_box.text().strip()
+        if not raw:
+            return
 
-        for i in range(self.masechet_list.count()):
-            if _masechet_matches(self.masechtot[i]['name'], q_ms):
-                self.masechet_list.setCurrentRow(i)
-                if q_pg:
-                    for j in range(self.page_list.count()):
-                        if _page_matches(self.pages[j]['page'], q_pg):
-                            self.page_list.setCurrentRow(j)
-                            break
-                return
+        # ניתוח הקלט: מחלצים שם מסכת ומספר דף
+        # תבנית: <מסכת> [דף] <מספר>
+        m = re.match(
+            r'^([\u05d0-\u05ea]+(?:\s[\u05d0-\u05ea]+)*)'
+            r'(?:\s+\u05d3\u05e3)?'
+            r'\s+([\u05d0-\u05ea"\u05f4\u05f3\u2019\']+|\d+)$',
+            raw
+        )
+        if not m:
+            # לא הצלחנו לפרש — סמן שגיאה בתיבת החיפוש
+            cfg = get_theme_config(self._theme)
+            self.search_box.setStyleSheet(f"""
+                QLineEdit {{
+                    background-color: {cfg['search_bg']};
+                    color: {cfg['search_text']};
+                    border: none;
+                    border-bottom: 2px solid #CC3300;
+                    padding: 7px 10px;
+                }}
+            """)
+            return
+
+        ms_query = m.group(1).strip()
+        pg_query = m.group(2).strip()
+
+        # מצא את המסכת
+        ms_idx = None
+        for i, ms in enumerate(self.masechtot):
+            if _masechet_matches(ms['name'], ms_query):
+                ms_idx = i
+                break
+
+        if ms_idx is None:
+            cfg = get_theme_config(self._theme)
+            self.search_box.setStyleSheet(f"""
+                QLineEdit {{
+                    background-color: {cfg['search_bg']};
+                    color: {cfg['search_text']};
+                    border: none;
+                    border-bottom: 2px solid #CC3300;
+                    padding: 7px 10px;
+                }}
+            """)
+            return
+
+        # טען את המסכת אם צריך
+        if self.masechet_list.currentRow() != ms_idx:
+            self.masechet_list.setCurrentRow(ms_idx)
+
+        # מצא את הדף
+        pg_idx = None
+        for i, pg in enumerate(self.pages):
+            if _page_matches(pg['page'], pg_query):
+                pg_idx = i
+                break
+
+        if pg_idx is None:
+            cfg = get_theme_config(self._theme)
+            self.search_box.setStyleSheet(f"""
+                QLineEdit {{
+                    background-color: {cfg['search_bg']};
+                    color: {cfg['search_text']};
+                    border: none;
+                    border-bottom: 2px solid #CC3300;
+                    padding: 7px 10px;
+                }}
+            """)
+            return
+
+        self.page_list.setCurrentRow(pg_idx)
+        self.search_box.clear()
+        # החזר סגנון רגיל
+        cfg = get_theme_config(self._theme)
+        self.search_box.setStyleSheet(f"""
+            QLineEdit {{
+                background-color: {cfg['search_bg']};
+                color: {cfg['search_text']};
+                border: none;
+                border-bottom: 1px solid {cfg['search_border']};
+                padding: 7px 10px;
+            }}
+            QLineEdit:focus {{
+                background-color: {cfg['search_bg'] if self._theme == 'classic' else '#4A2E1A'};
+                border-bottom: 2px solid {cfg['btn_color']};
+            }}
+            QLineEdit::placeholder {{
+                color: {cfg['search_placeholder']};
+            }}
+        """)
 
     def _search_in_page(self, text: str):
         self._page_search_term = text.strip()
@@ -705,13 +765,56 @@ class MainWindow(QMainWindow):
         )
 
     def _on_mode_toggled(self, checked: bool):
+        # שמור מיקום נוכחי לפני המעבר
+        prev_mode = self.display_mode
+        prev_section_label = None
+        prev_word_idx = self._current_word_idx
+
+        if prev_mode == 'sections' and self.selected_block:
+            prev_section_label = self.selected_block.section.get('section', '')
+        elif prev_mode == 'words' and prev_word_idx >= 0 and self._current_words_data:
+            prev_section_label = self._current_words_data[prev_word_idx].get('section', '')
+
         self.display_mode = 'words' if checked else 'sections'
         if checked:
             self.mode_btn.setText("\U0001f4dc תצוגת קטעים")
         else:
             self.mode_btn.setText("\U0001f520 תצוגת מילים")
+
         if self.pages:
             self._load_page(self.current_page_idx)
+
+        # עבור למיקום המתאים אחרי טעינה
+        if not prev_section_label:
+            # גם אם אין מיקום קודם, תן פוקוס לחלון הראשי בתצוגת מילים
+            if self.display_mode == 'words':
+                self.setFocus()
+            return
+
+        page = self.pages[self.current_page_idx]['page']
+
+        if self.display_mode == 'words' and self._current_words_data:
+            # מצא את המילה הראשונה של הקטע שבו היינו
+            for i, wd in enumerate(self._current_words_data):
+                if wd.get('section', '') == prev_section_label:
+                    self._select_word(i, self._current_words_data, page)
+                    # גלול למילה ומקד את החלון הראשי לקבלת אירועי מקלדת
+                    if self._words_view and self._words_view._flow_widget:
+                        lbl = self._words_view._flow_widget._labels[i]
+                        from PyQt6.QtCore import QTimer
+                        QTimer.singleShot(50, lambda w=lbl: self.text_scroll.ensureWidgetVisible(w))
+                    self.setFocus()
+                    break
+
+        elif self.display_mode == 'sections' and self.section_blocks:
+            # מצא את הקטע המתאים
+            for block in self.section_blocks:
+                if block.section.get('section', '') == prev_section_label:
+                    section = block.section
+                    self._select_section(section, block, page)
+                    from PyQt6.QtCore import QTimer
+                    QTimer.singleShot(50, lambda b=block: self.text_scroll.ensureWidgetVisible(b))
+                    break
 
     def _clear_text(self):
         while self.text_layout.count() > 1:
@@ -750,6 +853,18 @@ class MainWindow(QMainWindow):
                     new_idx = len(self._current_words_data) - 1
                 else:
                     new_idx = self._current_word_idx - 1
+            elif key == Qt.Key.Key_Down:
+                if self._current_word_idx < 0 or not self._words_view:
+                    new_idx = 0
+                else:
+                    adj = self._words_view.get_word_at_adjacent_row(self._current_word_idx, 1)
+                    new_idx = adj if adj >= 0 else self._current_word_idx
+            elif key == Qt.Key.Key_Up:
+                if self._current_word_idx < 0 or not self._words_view:
+                    new_idx = 0
+                else:
+                    adj = self._words_view.get_word_at_adjacent_row(self._current_word_idx, -1)
+                    new_idx = adj if adj >= 0 else self._current_word_idx
             else:
                 super().keyPressEvent(event)
                 return
@@ -757,5 +872,8 @@ class MainWindow(QMainWindow):
             if new_idx != self._current_word_idx:
                 page = self.pages[self.current_page_idx]['page']
                 self._select_word(new_idx, self._current_words_data, page)
+                if self._words_view:
+                    lbl = self._words_view._flow_widget._labels[new_idx]
+                    self.text_scroll.ensureWidgetVisible(lbl)
             return
         super().keyPressEvent(event)

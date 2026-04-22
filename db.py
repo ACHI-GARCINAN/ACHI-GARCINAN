@@ -4,45 +4,30 @@ import sys
 
 DB_PATH = ''
 
+
 def get_base_dir() -> str:
-    # תמיכה ב-PyInstaller
-    if hasattr(sys, '_MEIPASS'):
-        return sys._MEIPASS
     if getattr(sys, 'frozen', False):
         return os.path.dirname(sys.executable)
     return os.path.dirname(os.path.abspath(__file__))
+
 
 def load_masechet_list(folder: str) -> list:
     global DB_PATH
     db_path = os.path.join(folder, "talmud.db")
     if not os.path.exists(db_path):
         db_path = os.path.join(get_base_dir(), "talmud.db")
-    
     if not os.path.exists(db_path):
         return []
-    
     DB_PATH = db_path
-    
-    try:
-        # תיקון קריטי: פתיחה במצב קריאה בלבד (uri=True) כדי לעקוף בעיות הרשאות ב-Program Files
-        db_uri = f"file:{DB_PATH}?mode=ro"
-        con = sqlite3.connect(db_uri, uri=True)
-        rows = con.execute("SELECT id, num, name FROM masechtot ORDER BY num").fetchall()
-        con.close()
-        return [{'id': r[0], 'num': r[1], 'name': r[2]} for r in rows]
-    except Exception:
-        # ניסיון אחרון אם ה-URI נכשל
-        try:
-            con = sqlite3.connect(db_path)
-            rows = con.execute("SELECT id, num, name FROM masechtot ORDER BY num").fetchall()
-            con.close()
-            return [{'id': r[0], 'num': r[1], 'name': r[2]} for r in rows]
-        except:
-            return []
+    con = sqlite3.connect(db_path)
+    rows = con.execute("SELECT id, num, name FROM masechtot ORDER BY num").fetchall()
+    con.close()
+    return [{'id': r[0], 'num': r[1], 'name': r[2]} for r in rows]
+
 
 def fetch_masechet(ms_id: int) -> tuple:
-    """מחזיר (witnesses, pages) עבור מסכת נתונה."""
-    con = sqlite3.connect(f"file:{DB_PATH}?mode=ro", uri=True)
+    """מחזיר (witnesses, pages) עבור מסכת נתונה. pages הן רשימת {'page', '_id'}."""
+    con = sqlite3.connect(DB_PATH)
     witnesses = [r[0] for r in con.execute(
         "SELECT name FROM witnesses WHERE masechet_id=? ORDER BY position", (ms_id,)
     ).fetchall()]
@@ -53,9 +38,10 @@ def fetch_masechet(ms_id: int) -> tuple:
     pages = [{'page': r[1], '_id': r[0]} for r in page_rows]
     return witnesses, pages
 
+
 def fetch_page(page_id: int) -> list:
     """מחזיר רשימת קטעים עם עדי נוסח עבור דף נתון."""
-    con = sqlite3.connect(f"file:{DB_PATH}?mode=ro", uri=True)
+    con = sqlite3.connect(DB_PATH)
     sections_raw = con.execute(
         "SELECT id, section_label FROM sections WHERE page_id=? ORDER BY id",
         (page_id,)
@@ -71,9 +57,15 @@ def fetch_page(page_id: int) -> list:
     con.close()
     return sections
 
+
 def fetch_page_words(page_id: int) -> list:
-    """מחזיר רשימת מילים עבור דף נתון."""
-    con = sqlite3.connect(f"file:{DB_PATH}?mode=ro", uri=True)
+    """
+    מחזיר רשימת מילים עבור דף נתון — כל פריט הוא dict עם 'section' ו-'witnesses'.
+    שולף מטבלת sections_words / sections_words_texts.
+    """
+    con = sqlite3.connect(DB_PATH)
+
+    # בדוק אם קיימת טבלת sections_words
     has_sw_table = con.execute(
         "SELECT name FROM sqlite_master WHERE type='table' AND name='sections_words'"
     ).fetchone()
@@ -93,7 +85,7 @@ def fetch_page_words(page_id: int) -> list:
         con.close()
 
         from collections import OrderedDict
-        word_map = OrderedDict()
+        word_map: OrderedDict = OrderedDict()
         for sw_id, sec_label, wit_name, content in rows:
             if sw_id not in word_map:
                 word_map[sw_id] = {'section': sec_label, 'witnesses': {}}

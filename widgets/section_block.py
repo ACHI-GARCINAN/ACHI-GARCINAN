@@ -52,7 +52,7 @@ class SectionBlock(QFrame):
         self._text_lbl = QLabel()
         self._text_lbl.setWordWrap(True)
         self._text_lbl.setFont(QFont(font_family, font_size))
-        self._text_lbl.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
+        self._text_lbl.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
         self._text_lbl.setTextFormat(Qt.TextFormat.RichText)
         self._text_lbl.setStyleSheet("background:transparent;")
         self._layout.addWidget(self._text_lbl)
@@ -88,7 +88,7 @@ class SectionBlock(QFrame):
         cfg = get_theme_config(self._theme)
         return (
             f'<div dir="rtl" style="font-family:{self._font_family},serif;'
-            f'font-size:{self._font_size}pt;color:{cfg["section_text"]};text-align:justify;">'
+            f'font-size:{self._font_size}pt;color:{cfg["section_text"]};text-align:left;">'
             f'{text}</div>'
         )
 
@@ -125,7 +125,7 @@ class SectionBlock(QFrame):
             cfg = get_theme_config(self._theme)
             self._text_lbl.setText(
                 f'<div dir="rtl" style="font-family:{self._font_family},serif;'
-                f'font-size:{self._font_size}pt;color:{cfg["section_text"]};text-align:justify;">{html}</div>'
+                f'font-size:{self._font_size}pt;color:{cfg["section_text"]};text-align:left;">{html}</div>'
             )
         self.setStyleSheet(self._diff_style)
 

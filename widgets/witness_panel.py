@@ -300,8 +300,10 @@ class WitnessPanel(QWidget):
                     from utils import is_minor_diff
                     norm_sel = normalize_word(sel_text)
                     norm_vil = normalize_word(vilna_word)
-                    word_differs = bool(sel_text) and (norm_sel != norm_vil)
-                    if word_differs and self.hide_minor_diffs:
+                    # שינוי: גם כשיש מילה בוילנא אבל אין בעד הנוסח (קו) - זה שינוי
+                    missing_in_witness = bool(vilna_word) and not bool(sel_text)
+                    word_differs = missing_in_witness or (bool(sel_text) and (norm_sel != norm_vil))
+                    if word_differs and not missing_in_witness and self.hide_minor_diffs:
                         if is_minor_diff(sel_text, vilna_word):
                             word_differs = False
                     if word_differs:
@@ -310,7 +312,7 @@ class WitnessPanel(QWidget):
 
                 before_str = " ".join(before_parts)
                 after_str = " ".join(after_parts)
-                full_html = f'<div dir="rtl" style="font-family:{self._font_family},serif; font-size:{self._font_size}pt; line-height:1.4;">'
+                full_html = f'<div dir="rtl" style="font-family:{self._font_family},serif; font-size:{self._font_size}pt; line-height:1.4; text-align:left;">'
                 full_html += f'<span style="color:#888888;">{before_str}</span> '
                 full_html += f'<b>{selected_word}</b> '
                 full_html += f'<span style="color:#888888;">{after_str}</span>'
