@@ -28,22 +28,24 @@
 </head>
 <body class="bg-white text-gray-900 dark:bg-black dark:text-gray-100">
 
-    <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center border-b border-gray-100 dark:border-gray-900">
         <div class="flex gap-6 items-center">
             <a href="https://github.com/ACHI-GARCINAN/ACHI-GARCINAN" target="_blank" class="text-brand dark:text-blue-400 hover:opacity-70 transition" title="GitHub">
                 <svg class="w-7 h-7 fill-current" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.041-1.416-4.041-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
             </a>
-            <a href="https://mitmachim.top/topic/95870/" target="_blank" class="opacity-80 hover:opacity-100 transition" title="פורום מתמחים טופ">
-                <img src="https://mitmachim.top/assets/uploads/system/site-logo.png" class="h-6 dark:invert" alt="מתמחים טופ">
+            <a href="https://mitmachim.top/topic/95870/" target="_blank" class="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-blue-600 transition" title="פורום מתמחים טופ">
+                <img src="https://mitmachim.top/assets/uploads/system/site-logo.png" class="h-6 dark:invert opacity-70" alt="מתמחים טופ">
+                <span>מתמחים טופ</span>
             </a>
         </div>
-        <button onclick="toggleDarkMode()" class="p-2 bg-gray-100 dark:bg-gray-800 rounded-full transition shadow-sm" title="שינוי מצב צבע">
-            <svg id="moon" class="w-6 h-6 text-brand dark:text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+        <button onclick="toggleDarkMode()" class="p-2 bg-gray-100 dark:bg-gray-800 rounded-full transition shadow-sm">
+            <svg class="w-6 h-6 text-brand dark:text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
         </button>
     </div>
 
-    <header class="text-center py-10 px-4">
-        <img src="https://github.com/ACHI-GARCINAN/ACHI-GARCINAN/raw/main/assets/logo.png" alt="לוגו נוסחאות התלמוד" class="mx-auto w-48 mb-8 drop-shadow-md">
+    <header class="text-center py-14 px-4">
+        <img src="https://raw.githubusercontent.com/ACHI-GARCINAN/ACHI-GARCINAN/main/assets/logo.png" alt="לוגו נוסחאות התלמוד" class="mx-auto w-56 mb-8 drop-shadow-xl">
+        
         <h1 class="text-5xl font-bold mb-4 text-brand dark:text-blue-400">נוסחאות התלמוד</h1>
         <p class="text-xl max-w-3xl mx-auto opacity-80 mb-10 leading-relaxed">
             התוכנה המקצועית להצגת עדי נוסח ושינויי גרסאות בתלמוד הבבלי.
@@ -51,24 +53,22 @@
         </p>
 
         <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
-            <div class="bg-gray-50 dark:bg-gray-900 p-6 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm">
-                <h3 class="text-lg font-bold mb-4 flex items-center justify-center gap-2">
+            <div class="bg-gray-50 dark:bg-gray-900 p-8 rounded-3xl border border-gray-200 dark:border-gray-800 shadow-sm">
+                <h3 class="text-lg font-bold mb-6 flex items-center justify-center gap-2 border-b border-gray-200 pb-4">
                     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M0 3.449L9.75 2.1V11.7H0V3.449zm0 17.1L9.75 21.9V12.3H0V20.549zM10.5 2V11.7H24V0L10.5 2zm0 18.3l13.5 2V12.3H10.5V20.3z"/></svg>
                     גרסה לווינדוס (Windows)
                 </h3>
-                <div class="flex flex-col gap-3">
-                    <a href="https://github.com/ACHI-GARCINAN/ACHI-GARCINAN/releases/latest/download/Talmud-Formulas-Setup.exe" class="bg-brand hover:bg-brandLight text-white font-bold py-3 px-6 rounded-xl transition shadow-md">הורדת קובץ התקנה (Setup)</a>
-                    <a href="https://github.com/ACHI-GARCINAN/ACHI-GARCINAN/releases/latest/download/Talmud-Formulas.exe" class="bg-white dark:bg-gray-800 border border-brand text-brand dark:text-blue-300 font-semibold py-3 px-6 rounded-xl transition">הורדת גרסה ניידת (Portable)</a>
+                <div class="flex flex-col gap-4">
+                    <a href="https://github.com/ACHI-GARCINAN/ACHI-GARCINAN/releases/latest/download/Talmud-Formulas-Setup.exe" class="bg-brand hover:bg-brandLight text-white font-bold py-4 px-6 rounded-2xl transition shadow-lg text-lg">הורדת קובץ התקנה (Setup)</a>
+                    <a href="https://github.com/ACHI-GARCINAN/ACHI-GARCINAN/releases/latest/download/Talmud-Formulas.exe" class="bg-white dark:bg-gray-800 border-2 border-brand text-brand dark:text-blue-300 font-bold py-4 px-6 rounded-2xl transition">הורדת גרסה ניידת (Portable)</a>
                 </div>
             </div>
-            <div class="bg-gray-50 dark:bg-gray-900 p-6 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm opacity-80">
-                <h3 class="text-lg font-bold mb-4 flex items-center justify-center gap-2">
+            <div class="bg-gray-50 dark:bg-gray-900 p-8 rounded-3xl border border-gray-200 dark:border-gray-800 shadow-sm opacity-60">
+                <h3 class="text-lg font-bold mb-6 flex items-center justify-center gap-2 border-b border-gray-200 pb-4">
                     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.057 12.781c.032 2.588 2.254 3.462 2.287 3.477-.023.074-.351 1.203-1.151 2.366-.689.999-1.403 1.995-2.527 2.015-1.101.02-1.458-.649-2.716-.649-1.261 0-1.654.629-2.711.669-1.077.039-1.913-1.064-2.608-2.064-1.422-2.044-2.507-5.767-1.043-8.307.725-1.261 2.025-2.061 3.424-2.081 1.061-.02 2.061.714 2.712.714.653 0 1.854-.888 3.114-.761.53.021 2.018.213 2.975 1.614-.077.047-1.776 1.034-1.756 3.007m-2.864-7.514c.563-.682.946-1.631.841-2.579-.814.033-1.803.541-2.387 1.221-.524.605-.986 1.569-.863 2.497.904.07 1.846-.457 2.409-1.139"/></svg>
                     גרסה למאק (macOS)
                 </h3>
-                <div class="flex flex-col gap-3 text-center py-4 italic text-sm">
-                    בקרוב...
-                </div>
+                <div class="py-8 italic">בקרוב...</div>
             </div>
         </div>
     </header>
@@ -77,69 +77,53 @@
         <h2 class="text-3xl font-bold text-center mb-12 text-brand dark:text-blue-400">מה התוכנה כוללת?</h2>
         
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-            <div class="bg-gray-50 dark:bg-gray-900 p-8 rounded-2xl shadow-sm border border-transparent hover:border-brand transition">
-                <h3 class="text-xl font-bold mb-3">כל הש"ס אופליין</h3>
-                <p class="opacity-70 leading-relaxed">אין צורך בחיבור לאינטרנט, הכל נמצא בתוך התוכנה וזמין בכל רגע לעבודה רציפה.</p>
+            <div class="bg-brand text-white p-10 rounded-3xl shadow-xl">
+                <h3 class="text-xl font-bold mb-4 border-b border-blue-400 pb-2">כל הש"ס אופליין</h3>
+                <p class="opacity-90 leading-relaxed">אין צורך בחיבור לאינטרנט, הכל נמצא בתוך התוכנה וזמין בכל רגע לעבודה רציפה.</p>
             </div>
-            <div class="bg-brand text-white p-8 rounded-2xl shadow-lg transform md:-translate-y-2">
-                <h3 class="text-xl font-bold mb-3">השוואה חכמה</h3>
+            <div class="bg-brand text-white p-10 rounded-3xl shadow-xl">
+                <h3 class="text-xl font-bold mb-4 border-b border-blue-400 pb-2">השוואה חכמה</h3>
                 <p class="opacity-90 leading-relaxed font-light">סימון והדגשה אוטומטית של מילים חסרות, יתירות או שונות מהנוסח המייצג בצורה ויזואלית ברורה.</p>
             </div>
-            <div class="bg-gray-50 dark:bg-gray-900 p-8 rounded-2xl shadow-sm border border-transparent hover:border-brand transition">
-                <h3 class="text-xl font-bold mb-3">מצב תצוגת מילים</h3>
-                <p class="opacity-70 leading-relaxed">אפשרות לעבור מילה-מילה ולערוך השוואה מדויקת ומדוקדקת בין הנוסחאות השונות.</p>
+            <div class="bg-brand text-white p-10 rounded-3xl shadow-xl">
+                <h3 class="text-xl font-bold mb-4 border-b border-blue-400 pb-2">מצב תצוגת מילים</h3>
+                <p class="opacity-90 leading-relaxed font-light text-base">אפשרות לעבור מילה-מילה ולערוך השוואה מדויקת ומדוקדקת בין הנוסחאות השונות.</p>
             </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8 bg-gray-50 dark:bg-gray-900 p-8 md:p-12 rounded-3xl border border-gray-100 dark:border-gray-800">
-            <div class="flex items-start gap-4">
-                <div class="text-brand dark:text-blue-400 mt-1">●</div>
-                <p><strong>ממשק מודרני:</strong> עיצוב נקי ונוח לעין, תמיכה מלאה בעברית וגלילה מותאמת למסכי מגע.</p>
-            </div>
-            <div class="flex items-start gap-4">
-                <div class="text-brand dark:text-blue-400 mt-1">●</div>
-                <p><strong>ערכות נושא:</strong> תמיכה בשתי ערכות נושא (בהיר/כהה) להתאמה אישית של סביבת הלימוד.</p>
-            </div>
-            <div class="flex items-start gap-4">
-                <div class="text-brand dark:text-blue-400 mt-1">●</div>
-                <p><strong>חיפוש וניווט:</strong> מערכת ניווט קלה ומהירה בין מסכתות ודפים לחיסכון בזמן.</p>
-            </div>
-            <div class="flex items-start gap-4">
-                <div class="text-brand dark:text-blue-400 mt-1">●</div>
-                <p><strong>חלונית ניווט גמישה:</strong> אפשרות לצימצום החלונית למקסום שטח הקריאה על המסך.</p>
-            </div>
-            <div class="flex items-start gap-4">
-                <div class="text-brand dark:text-blue-400 mt-1">●</div>
-                <p><strong>תמיכה בגופנים:</strong> התוכנה תומכת בכל גופני העברית המותקנים במערכת ההפעלה.</p>
-            </div>
-            <div class="flex items-start gap-4">
-                <div class="text-brand dark:text-blue-400 mt-1">●</div>
-                <p><strong>מצב תצוגת קריאה:</strong> תצוגה מותאמת לקריאת טקסט הגמרא ללא חלוקה נוקשה למקטעים.</p>
-            </div>
-            <div class="flex items-start gap-4">
-                <div class="text-brand dark:text-blue-400 mt-1">●</div>
-                <p><strong>הסתרת תיקוני קיצורים:</strong> סינון הבדלי נוסח טכניים (כמו עי' = עיין) להתמקדות בשינויים מהותיים.</p>
-            </div>
-            <div class="flex items-start gap-4">
-                <div class="text-brand dark:text-blue-400 mt-1">●</div>
-                <p><strong>מסכי מגע:</strong> אופטימיזציה לממשק מגע (בשלבי שיפור).</p>
-            </div>
+            <div class="flex items-start gap-4"><div class="text-brand dark:text-blue-400 mt-1">●</div><p><strong>ממשק מודרני:</strong> עיצוב נקי ונוח לעין, תמיכה מלאה בעברית וגלילה מותאמת למסכי מגע.</p></div>
+            <div class="flex items-start gap-4"><div class="text-brand dark:text-blue-400 mt-1">●</div><p><strong>ערכות נושא:</strong> תמיכה בשתי ערכות נושא (בהיר/כהה) להתאמה אישית של סביבת הלימוד.</p></div>
+            <div class="flex items-start gap-4"><div class="text-brand dark:text-blue-400 mt-1">●</div><p><strong>חיפוש וניווט:</strong> מערכת ניווט קלה ומהירה בין מסכתות ודפים לחיסכון בזמן.</p></div>
+            <div class="flex items-start gap-4"><div class="text-brand dark:text-blue-400 mt-1">●</div><p><strong>חלונית ניווט גמישה:</strong> אפשרות לצימצום החלונית למקסום שטח הקריאה על המסך.</p></div>
+            <div class="flex items-start gap-4"><div class="text-brand dark:text-blue-400 mt-1">●</div><p><strong>תמיכה בגופנים:</strong> התוכנה תומכת בכל גופני העברית המותקנים במערכת ההפעלה.</p></div>
+            <div class="flex items-start gap-4"><div class="text-brand dark:text-blue-400 mt-1">●</div><p><strong>מצב תצוגת קריאה:</strong> תצוגה מותאמת לקריאת טקסט הגמרא ללא חלוקה נוקשה למקטעים.</p></div>
+            <div class="flex items-start gap-4"><div class="text-brand dark:text-blue-400 mt-1">●</div><p><strong>הסתרת תיקוני קיצורים:</strong> סינון הבדלי נוסח טכניים (כמו עי' = עיין) להתמקדות בשינויים מהותיים.</p></div>
+            <div class="flex items-start gap-4"><div class="text-brand dark:text-blue-400 mt-1">●</div><p><strong>מסכי מגע:</strong> אופטימיזציה לממשק מגע (בשלבי שיפור).</p></div>
         </div>
     </section>
 
-    <div class="max-w-4xl mx-auto text-center py-12 px-4 border-t border-gray-100 dark:border-gray-900">
-        <p class="text-lg italic opacity-70 italic font-light">"פרויקט זה נועד להנגיש את אוצרת הרוח של חכמי ישראל ללומדי התורה ולחוקריה"</p>
+    <div class="max-w-5xl mx-auto text-center py-10 px-4">
+        <p class="text-2xl font-bold text-gray-800 dark:text-gray-200">
+            פרויקט זה נועד להנגיש את אוצרת הרוח של חכמי ישראל ללומדי התורה ולחוקריה
+        </p>
+        <div class="mt-8 p-6 bg-blue-50 dark:bg-gray-800 rounded-2xl border-r-4 border-brand shadow-sm">
+            <p class="text-lg font-bold">
+                התוכנה מבוססת על פרויקט "הכי גרסינן" של דב פרידברג - שנמצאת היום תחת חסותה של "הספריה הלאומית" וניתן להיכנס לאתר שלהם 
+                <a href="https://fjms.genizah.org/?eraseCache=true" target="_blank" class="text-brand dark:text-blue-400 underline hover:text-indigo-700 transition">כאן</a>
+            </p>
+        </div>
     </div>
 
-    <footer class="bg-gray-100 dark:bg-gray-800 py-10 px-4">
-        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+    <footer class="bg-gray-100 dark:bg-gray-800 py-10 px-4 border-t border-gray-200 dark:border-gray-900">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
             <div class="text-right">
                 <p class="font-bold text-brand dark:text-blue-400 text-xl">נוסחאות התלמוד</p>
-                <p class="text-sm opacity-60 mt-1">© 2024 כל הזכויות שמורות לפרויקט ACHI-GARCINAN</p>
+                <p class="text-sm opacity-60 mt-1 text-gray-600 dark:text-gray-400">© 2026 כל הזכויות שמורות לפרויקט ACHI-GARCINAN</p>
             </div>
-            <div class="flex gap-6 items-center">
-                <a href="https://github.com/ACHI-GARCINAN" class="hover:text-brand dark:hover:text-blue-400 transition underline underline-offset-4">GitHub</a>
-                <a href="https://mitmachim.top/user/%D7%9הכ%D7%99-%D7%92%D7%A8%D7%A1%D7%99%D7%A0%D7%9F" target="_blank" class="bg-brand text-white py-3 px-8 rounded-full hover:bg-brandLight transition shadow-md font-bold">צור קשר</a>
+            <div class="flex gap-8 items-center">
+                <a href="https://github.com/ACHI-GARCINAN" class="font-semibold hover:text-brand transition">GitHub</a>
+                <a href="https://mitmachim.top/user/%D7%94%D7%9B%D7%99-%D7%92%D7%A8%D7%A1%D7%99%D7%A0%D7%9F" target="_blank" class="bg-brand text-white py-3 px-10 rounded-full hover:bg-brandLight transition shadow-lg font-bold">צור קשר</a>
             </div>
         </div>
     </footer>
