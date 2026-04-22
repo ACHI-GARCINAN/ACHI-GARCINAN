@@ -12,7 +12,37 @@ def normalize_word(w: str) -> str:
     return w.strip()
 
 
-def _diff_highlight(source_text: str, reference_text: str, highlight_style: str) -> str:
+def is_minor_diff(source_word: str, ref_word: str) -> bool:
+    """
+    בודק אם ההבדל בין שתי מילים הוא "שינוי קל" לפי הכללים:
+    1. אותה מילה ורק חסר אותיות ויש גרש (') במילה המקורית.
+    2. אותה מילה וחסר רק י', אפילו בלי גרש.
+    """
+    s = normalize_word(source_word)
+    r = normalize_word(ref_word)
+    if not s or not r:
+        return False
+    if s == r:
+        return True
+
+    # הסרת גרשים לצורך השוואה
+    s_no_quotes = s.replace("'", "").replace('"', '')
+    r_no_quotes = r.replace("'", "").replace('"', '')
+
+    # כלל 2: חסר רק י' (אפילו בלי גרש)
+    if s_no_quotes.replace('י', '') == r_no_quotes.replace('י', ''):
+        return True
+
+    # כלל 1: חסר אותיות ויש גרש במקור
+    # אם המילה המקורית מכילה גרש והיא מוכלת במילת הייחוס (או להיפך אחרי ניקוי גרשים)
+    if "'" in source_word or '"' in source_word:
+        if s_no_quotes in r_no_quotes or r_no_quotes in s_no_quotes:
+            return True
+
+    return False
+
+
+def _diff_highlight(source_text: str, reference_text: str, highlight_style: str, hide_minor: bool = False) -> str:
     """
     מחזיר HTML עם הדגשה של מילים בטקסט המקור שאינן תואמות לרצף בטקסט הייחוס.
     משתמש ב-difflib.SequenceMatcher כדי להשוות לפי סדר ותדירות, לא רק לפי הימצאות.
@@ -28,6 +58,16 @@ def _diff_highlight(source_text: str, reference_text: str, highlight_style: str)
     for a, b, size in matcher.get_matching_blocks():
         for i in range(size):
             matched[a + i] = True
+
+    # אם hide_minor מופעל, נסמן כ"תואמים" גם מילים שהן שינוי קל
+    if hide_minor:
+        # נמצא את כל ה-opcodes כדי לזהות מילים שלא הותאמו
+        for tag, i1, i2, j1, j2 in matcher.get_opcodes():
+            if tag == 'replace' and (i2 - i1) == (j2 - j1):
+                # החלפה של מילה במילה - נבדוק אם זה שינוי קל
+                for k in range(i2 - i1):
+                    if is_minor_diff(source_words[i1 + k], ref_words[j1 + k]):
+                        matched[i1 + k] = True
 
     parts = []
     word_idx = 0
@@ -45,13 +85,16 @@ def _diff_highlight(source_text: str, reference_text: str, highlight_style: str)
     return ''.join(parts)
 
 
-def build_highlighted_html(witness_text: str, base_text: str) -> str:
+def build_highlighted_html(witness_text: str, base_text: str, hide_minor: bool = False) -> str:
     """מדגיש מילים בעד הנוסח שאינן מופיעות ברצף המתאים בטקסט הבסיס (וילנא)."""
     style = "background-color:#FFD700;color:#1A202C;border-radius:3px;padding:0 2px;font-weight:bold;"
-    return _diff_highlight(witness_text, base_text, style)
+    return _diff_highlight(witness_text, base_text, style, hide_minor=hide_minor)
 
 
-def build_vilna_diff_html(base_text: str, witness_text: str) -> str:
+def build_vilna_diff_html(base_text: str, witness_text: str, hide_minor: bool = False) -> str:
+    """מדגיש מילים בטקסט וילנא שאינן מופיעות ברצף המתאים בעד הנוסח."""
+    style = "background-color:#E53E3E;color:#FFFFFF;border-radius:3px;padding:0 2px;font-weight:bold;"
+    return _diff_highlight(base_text, witness_text, style, hide_minor=hide_minor)
     """מדגיש מילים בטקסט וילנא שאינן מופיעות ברצף המתאים בעד הנוסח."""
     style = "background-color:#E53E3E;color:#FFFFFF;border-radius:3px;padding:0 2px;font-weight:bold;"
     return _diff_highlight(base_text, witness_text, style)

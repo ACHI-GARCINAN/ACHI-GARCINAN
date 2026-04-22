@@ -17,20 +17,22 @@ class _ClickableWord(QLabel):
         self.is_selected = False
         self.is_search_match = False
         self._theme = theme
-        self.setFont(QFont(font_family, font_size))
+        self._font_family = font_family
+        self._font_size = font_size
         self.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self._apply_style()
 
     def _apply_style(self):
         cfg = get_theme_config(self._theme)
+        font_css = f"font-family:'{self._font_family}',serif;font-size:{self._font_size}pt;"
         if self.is_selected:
-            style = f"background:{cfg['word_selected_bg']};color:{cfg['word_selected_text']};padding:1px 2px;border-radius:3px;font-weight:bold;"
+            style = f"{font_css}background:{cfg['word_selected_bg']};color:{cfg['word_selected_text']};padding:1px 2px;border-radius:3px;font-weight:bold;"
         elif self.is_search_match:
-            style = "background:#FFD700;color:#1A202C;padding:1px 2px;border-radius:3px;"
+            style = f"{font_css}background:#FFD700;color:#1A202C;padding:1px 2px;border-radius:3px;"
         elif not self.is_present:
-            style = f"background:transparent;color:{cfg['word_missing_text']};padding:1px 2px;border-radius:3px;font-style:italic;"
+            style = f"{font_css}background:transparent;color:{cfg['word_missing_text']};padding:1px 2px;border-radius:3px;font-style:italic;"
         else:
-            style = f"background:transparent;color:{cfg['word_normal_text']};padding:1px 2px;border-radius:3px;"
+            style = f"{font_css}background:transparent;color:{cfg['word_normal_text']};padding:1px 2px;border-radius:3px;"
         self.setStyleSheet(style)
 
     def set_selected(self, val: bool):
@@ -44,13 +46,15 @@ class _ClickableWord(QLabel):
     def update_font(self, font_family: str, font_size: int, theme: str = None):
         if theme:
             self._theme = theme
-        self.setFont(QFont(font_family, font_size))
+        self._font_family = font_family
+        self._font_size = font_size
         self._apply_style()
 
     def enterEvent(self, e):
         if not self.is_selected:
             cfg = get_theme_config(self._theme)
-            self.setStyleSheet(f"background:{cfg['word_hover_bg']};color:{cfg['word_hover_text']};padding:1px 2px;border-radius:3px;")
+            font_css = f"font-family:'{self._font_family}',serif;font-size:{self._font_size}pt;"
+            self.setStyleSheet(f"{font_css}background:{cfg['word_hover_bg']};color:{cfg['word_hover_text']};padding:1px 2px;border-radius:3px;")
         super().enterEvent(e)
 
     def leaveEvent(self, e):
@@ -202,7 +206,6 @@ class _FlowWidget(QWidget):
         return [lbl for lbl in self._labels if lbl.is_search_match]
 
 
-
 class WordsView(QWidget):
     """
     מציג את כל המילים של דף ברצף.
@@ -217,8 +220,7 @@ class WordsView(QWidget):
         self.main_witness = main_witness
         self.selected_idx = -1
         self._theme = theme
-        self._font_family = font_family
-        self._font_size = font_size
+
         self.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
         self._update_ui_colors()
 
@@ -242,13 +244,13 @@ class WordsView(QWidget):
     def clear_selection(self):
         self._flow_widget.select_word(-1)
         self.selected_idx = -1
+
     def update_font(self, font_family: str, font_size: int, theme: str = None):
-        self._font_family = font_family
-        self._font_size = font_size
         if theme:
             self._theme = theme
             self._update_ui_colors()
         self._flow_widget.update_font(font_family, font_size, theme)
+
     def search_highlight(self, term: str) -> bool:
         return self._flow_widget.search_highlight(term)
 

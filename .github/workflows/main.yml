@@ -44,6 +44,7 @@ jobs:
         --icon="icon.ico" `
         --name="Talmud-Formulas" `
         --add-data "widgets;widgets" `
+        --add-data "assets;assets" `
         --add-data "icon.ico;." `
         --add-data "talmud.db;." `
         --collect-all PyQt6 `
@@ -63,11 +64,9 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         tag_name: v${{ steps.version_calc.outputs.final_version }}
-        name: נוסחאות התלמוד גרסה ${{ steps.version_calc.outputs.final_version }}
+        name: גרסה ${{ steps.version_calc.outputs.final_version }}
         body: |
-          ### גרסה 1.1 שוחררה!
-          * **התקנה מלאה:** בסיס הנתונים כבר בפנים.
-          * **שיפור:** פתרון שגיאת גישה למסד הנתונים ב-Windows.
+          שחרור גרסה אוטומטי ${{ steps.version_calc.outputs.final_version }}
         draft: false
         prerelease: false
         make_latest: true

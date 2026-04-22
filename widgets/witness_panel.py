@@ -1,12 +1,13 @@
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QScrollArea, QLabel, QCheckBox,
-    QFrame, QSizePolicy, QGraphicsDropShadowEffect, QTextBrowser, QHBoxLayout
+    QFrame, QSizePolicy, QTextBrowser, QHBoxLayout
 )
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QFont, QColor
 
 from styles import WITNESS_COLORS, get_theme_styles, get_theme_config
 from widgets.witness_card import WitnessCard
+from settings_manager import load_settings, save_settings
 
 
 def normalize_word(w: str) -> str:
@@ -23,10 +24,11 @@ class WitnessPanel(QWidget):
     def __init__(self, witnesses: list, font_family: str = 'David', font_size: int = 15, theme: str = 'classic', parent=None):
         super().__init__(parent)
         self.witnesses = witnesses
-        from settings_manager import load_settings
+        # Load saved checkbox states
         _saved = load_settings()
         self.highlight_diffs = _saved.get('highlight_diffs', False)
         self.hide_empty_witnesses = _saved.get('hide_empty_witnesses', True)
+        self.hide_minor_diffs = _saved.get('hide_minor_diffs', False)
         self._font_family = font_family
         self._font_size = font_size
         self._theme = theme
@@ -67,11 +69,20 @@ class WitnessPanel(QWidget):
         self.hide_empty_cb.setFont(QFont("Arial", 10))
         self.hide_empty_cb.setChecked(self.hide_empty_witnesses)
         self.hide_empty_cb.stateChanged.connect(self._on_hide_empty_changed)
+
+        self.hide_minor_cb = QCheckBox("הסתר שינויים קלים")
+        self.hide_minor_cb.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
+        self.hide_minor_cb.setFont(QFont("Arial", 10))
+        self.hide_minor_cb.setChecked(self.hide_minor_diffs)
+        self.hide_minor_cb.setEnabled(self.highlight_diffs)
+        self.hide_minor_cb.stateChanged.connect(self._on_hide_minor_changed)
+
         cb_row = QWidget()
         cb_row.setStyleSheet("background:transparent;border:none;")
         cb_layout = QHBoxLayout(cb_row)
         cb_layout.setContentsMargins(0, 0, 0, 0)
         cb_layout.setSpacing(10)
+        cb_layout.addWidget(self.hide_minor_cb)
         cb_layout.addWidget(self.hide_empty_cb)
         cb_layout.addWidget(self.highlight_cb)
         self.header_layout.addWidget(cb_row, alignment=Qt.AlignmentFlag.AlignRight)
@@ -97,15 +108,11 @@ class WitnessPanel(QWidget):
 
         self.scroll.setWidget(self.container)
         self.main_layout.addWidget(self.scroll, 1)
-
-        if not hasattr(self, 'highlight_cb'):
-            return
+        
         self._update_ui_colors()
         self._show_placeholder()
 
     def _update_ui_colors(self):
-        if not hasattr(self, 'highlight_cb'):
-            return
         cfg = get_theme_config(self._theme)
         self.header_widget.setStyleSheet(f"background-color:{cfg['panel_header_bg']};border-bottom:2px solid {cfg['panel_header_border']};")
         self.header_label.setStyleSheet(f"color:{cfg['panel_header_text']};background:transparent;border:none;")
@@ -116,6 +123,7 @@ class WitnessPanel(QWidget):
         cb_style = f"color: {cfg['panel_header_text'] if self._theme == 'colorful' else '#4A5568'};"
         self.highlight_cb.setStyleSheet(cb_style)
         self.hide_empty_cb.setStyleSheet(cb_style)
+        self.hide_minor_cb.setStyleSheet(cb_style)
 
     def update_witnesses(self, witnesses: list):
         self.witnesses = witnesses
@@ -138,8 +146,9 @@ class WitnessPanel(QWidget):
             self.highlight_diffs = (state == 2)
         else:
             self.highlight_diffs = bool(state)
-        from settings_manager import save_settings
         save_settings({'highlight_diffs': self.highlight_diffs})
+        
+        self.hide_minor_cb.setEnabled(self.highlight_diffs)
             
         self.hint_label.setVisible(self.highlight_diffs and not self._word_mode)
         if self._word_mode and self._words_data is not None:
@@ -153,8 +162,20 @@ class WitnessPanel(QWidget):
             self.hide_empty_witnesses = (state == 2)
         else:
             self.hide_empty_witnesses = bool(state)
-        from settings_manager import save_settings
         save_settings({'hide_empty_witnesses': self.hide_empty_witnesses})
+            
+        if self._word_mode and self._words_data is not None:
+            self.show_word(self._current_section, self._current_page, self._main_witness,
+                           words_data=self._words_data, word_idx=self._word_idx)
+        elif self._current_section is not None:
+            self.show_section(self._current_section, self._current_page, self._base_text)
+
+    def _on_hide_minor_changed(self, state):
+        if isinstance(state, int):
+            self.hide_minor_diffs = (state == 2)
+        else:
+            self.hide_minor_diffs = bool(state)
+        save_settings({'hide_minor_diffs': self.hide_minor_diffs})
             
         if self._word_mode and self._words_data is not None:
             self.show_word(self._current_section, self._current_page, self._main_witness,
@@ -199,6 +220,8 @@ class WitnessPanel(QWidget):
 
         _, theme_colors = get_theme_styles(self._theme)
         for i, witness in enumerate(self.witnesses):
+            if i == 0:
+                continue  # העד הראשון (וילנא) הוא הטקסט המרכזי - אין ענין להציגו
             text = witness_data.get(witness)
             if text == 'None' or text == '':
                 text = None
@@ -211,7 +234,8 @@ class WitnessPanel(QWidget):
                 highlight=self.highlight_diffs,
                 clickable=self.highlight_diffs,
                 font_family=self._font_family,
-                font_size=self._font_size
+                font_size=self._font_size,
+                hide_minor=self.hide_minor_diffs
             )
             if self.highlight_diffs and text:
                 card.clicked.connect(self.witness_clicked.emit)
@@ -244,6 +268,8 @@ class WitnessPanel(QWidget):
             vilna_word = ''
 
         for i, witness in enumerate(self.witnesses):
+            if i == 0:
+                continue  # העד הראשון (וילנא) הוא הטקסט המרכזי - אין ענין להציגו
             if words_data is not None and word_idx >= 0:
                 before_parts = []
                 for j in range(max(0, word_idx - CONTEXT), word_idx):
@@ -271,9 +297,13 @@ class WitnessPanel(QWidget):
 
                 is_vilna = (witness == main_witness)
                 if self.highlight_diffs and not is_vilna:
+                    from utils import is_minor_diff
                     norm_sel = normalize_word(sel_text)
                     norm_vil = normalize_word(vilna_word)
                     word_differs = bool(sel_text) and (norm_sel != norm_vil)
+                    if word_differs and self.hide_minor_diffs:
+                        if is_minor_diff(sel_text, vilna_word):
+                            word_differs = False
                     if word_differs:
                         highlight_style = "background-color: #FFD700; color: #000000; font-weight: bold; border-radius: 2px;"
                         selected_word = f'<span style="{highlight_style}">{selected_word}</span>'

@@ -1,7 +1,9 @@
 {
   "font_family": "ShefaClassic",
-  "font_size": 16,
-  "theme": "classic",
-  "highlight_diffs": true,
-  "hide_empty_witnesses": true
+  "font_size": 17,
+  "theme": "colorful",
+  "highlight_diffs": false,
+  "hide_empty_witnesses": false,
+  "hide_minor_diffs": false,
+  "continuous_sections_view": true
 }
