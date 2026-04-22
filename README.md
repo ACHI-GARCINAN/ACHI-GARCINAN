@@ -1,118 +1,49 @@
-<!DOCTYPE html>
-<html lang="he" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>נוסחאות התלמוד - דף הבית</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        brand: '#002855',
-                        brandLight: '#004085'
-                    }
-                }
-            }
-        }
-        function toggleDarkMode() {
-            document.documentElement.classList.toggle('dark');
-        }
-    </script>
-    <style>
-        body { font-family: 'Assistant', sans-serif; transition: background-color 0.3s, color 0.3s; }
-        .hero-icon { transition: transform 0.5s ease; }
-        .hero-icon:hover { transform: scale(1.05); }
-    </style>
-</head>
-<body class="bg-white text-gray-900 dark:bg-black dark:text-gray-100">
+<img width="150" height="148" alt="שדג" src="https://github.com/user-attachments/assets/93be22a1-8343-4c03-95df-3aed93bc23d0" />
 
-    <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center border-b border-gray-100 dark:border-gray-900">
-        <div class="flex gap-6 items-center">
-            <a href="https://github.com/ACHI-GARCINAN/ACHI-GARCINAN" target="_blank" class="text-brand dark:text-blue-400 hover:opacity-70 transition" title="GitHub">
-                <svg class="w-7 h-7 fill-current" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.041-1.416-4.041-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-            </a>
-            
-            <a href="https://mitmachim.top/topic/95870/" target="_blank" class="flex items-center gap-2 group transition" title="פורום מתמחים טופ">
-                <svg class="h-6 w-6 text-[#0066ff] transition group-hover:scale-110" viewBox="0 0 100 100" fill="currentColor">
-                    <path d="M50 5C25.1 5 5 25.1 5 50c0 10.4 3.5 20 9.5 27.6L10 90l13.1-4.1C30.9 91.6 40.1 95 50 95c24.9 0 45-20.1 45-45S74.9 5 50 5zm18.3 62.5H60V48.1l-10 10-10-10v19.4h-8.3V32.5h8.3l10 10 10-10h8.3v35z"/>
-                </svg>
-                <span class="text-sm font-bold text-gray-500 group-hover:text-[#0066ff] transition">מתמחים טופ</span>
-            </a>
-        </div>
-        <button onclick="toggleDarkMode()" class="p-2 bg-gray-100 dark:bg-gray-800 rounded-full transition shadow-sm">
-            <svg class="w-6 h-6 text-brand dark:text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
-        </button>
-    </div>
+# נוסחאות התלמוד
 
-    <header class="text-center py-14 px-4">
-        <div class="mb-10">
-            <img src="https://github.com/user-attachments/assets/93be22a1-8343-4c03-95df-3aed93bc23d0" 
-                 width="220" 
-                 height="217" 
-                 alt="לוגו נוסחאות התלמוד" 
-                 class="mx-auto hero-icon drop-shadow-2xl">
-        </div>
-        
-        <h1 class="text-5xl font-bold mb-4 text-brand dark:text-blue-400">נוסחאות התלמוד</h1>
-        <p class="text-xl max-w-3xl mx-auto opacity-80 mb-10 leading-relaxed">
-            התוכנה המקצועית להצגת עדי נוסח ושינויי גרסאות בתלמוד הבבלי.
-            <br>חווית לימוד ומחקר מתקדמת בממשק מודרני ומהיר.
-        </p>
+**נוסחאות התלמוד** הינה תוכנה המיועדת להצגת שינויי נוסחאות בין מהדורות והוצאות שונות של דפי הגמרא.
 
-        <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
-            <div class="bg-gray-50 dark:bg-gray-900 p-8 rounded-3xl border border-gray-200 dark:border-gray-800 shadow-sm">
-                <h3 class="text-lg font-bold mb-6 flex items-center justify-center gap-2 border-b border-gray-200 pb-4">
-                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M0 3.449L9.75 2.1V11.7H0V3.449zm0 17.1L9.75 21.9V12.3H0V20.549zM10.5 2V11.7H24V0L10.5 2zm0 18.3l13.5 2V12.3H10.5V20.3z"/></svg>
-                    גרסה לווינדוס (Windows)
-                </h3>
-                <div class="flex flex-col gap-4">
-                    <a href="https://github.com/ACHI-GARCINAN/ACHI-GARCINAN/releases/latest/download/Talmudic-Formulas-Setup-Win.exe" class="bg-brand hover:bg-brandLight text-white font-bold py-4 px-6 rounded-2xl transition shadow-lg text-lg">הורדת קובץ התקנה (Setup)</a>
-                    <a href="https://github.com/ACHI-GARCINAN/ACHI-GARCINAN/releases/latest/download/Talmudic-Formulas-Portable.exe" class="bg-white dark:bg-gray-800 border-2 border-brand text-brand dark:text-blue-300 font-bold py-4 px-6 rounded-2xl transition">הורדת גרסה ניידת (Portable)</a>
-                </div>
-            </div>
-            <div class="bg-gray-50 dark:bg-gray-900 p-8 rounded-3xl border border-gray-200 dark:border-gray-800 shadow-sm opacity-60">
-                <h3 class="text-lg font-bold mb-6 flex items-center justify-center gap-2 border-b border-gray-200 pb-4">
-                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.057 12.781c.032 2.588 2.254 3.462 2.287 3.477-.023.074-.351 1.203-1.151 2.366-.689.999-1.403 1.995-2.527 2.015-1.101.02-1.458-.649-2.716-.649-1.261 0-1.654.629-2.711.669-1.077.039-1.913-1.064-2.608-2.064-1.422-2.044-2.507-5.767-1.043-8.307.725-1.261 2.025-2.061 3.424-2.081 1.061-.02 2.061.714 2.712.714.653 0 1.854-.888 3.114-.761.53.021 2.018.213 2.975 1.614-.077.047-1.776 1.034-1.756 3.007m-2.864-7.514c.563-.682.946-1.631.841-2.579-.814.033-1.803.541-2.387 1.221-.524.605-.986 1.569-.863 2.497.904.07 1.846-.457 2.409-1.139"/></svg>
-                    גרסה למאק (macOS)
-                </h3>
-                <div class="py-8 italic">בקרוב...</div>
-            </div>
-        </div>
-    </header>
+## אודות הפרויקט
+התוכנה מאפשרת עיון והשוואה בין עדי נוסח שונים בצורה נוחה וידידותית, תוך דגש על חוויית משתמש חלקה.
 
-    <section class="max-w-6xl mx-auto px-4 pb-16">
-        <h2 class="text-3xl font-bold text-center mb-12 text-brand dark:text-blue-400">מה התוכנה כוללת?</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-            <div class="bg-brand text-white p-10 rounded-3xl shadow-xl">
-                <h3 class="text-xl font-bold mb-4 border-b border-blue-400 pb-2">כל הש"ס אופליין</h3>
-                <p class="opacity-90 leading-relaxed">אין צורך בחיבור לאינטרנט, הכל נמצא בתוך התוכנה וזמין בכל רגע ללימוד ולעבודה רציפה.</p>
-            </div>
-            <div class="bg-brand text-white p-10 rounded-3xl shadow-xl">
-                <h3 class="text-xl font-bold mb-4 border-b border-blue-400 pb-2">השוואה חכמה</h3>
-                <p class="opacity-90 leading-relaxed font-light">סימון והדגשה אוטומטית של מילים חסרות, יתירות או שונות מהנוסח ומציג הכל בצורה ויזואלית ברורה.</p>
-            </div>
-            <div class="bg-brand text-white p-10 rounded-3xl shadow-xl">
-                <h3 class="text-xl font-bold mb-4 border-b border-blue-400 pb-2">מצב תצוגת מילים</h3>
-                <p class="opacity-90 leading-relaxed font-light text-base">אפשרות לעבור מילה - מילה ולערוך השוואה מדויקת ומדוקדקת בין הנוסחאות השונות.</p>
-            </div>
-        </div>
-    </section>
+### התוכנה מבוססת על פרוייקט "הכי גרסינן" של דב פרידברג - שנמצאת היום תחת חסותה של "הספריה הלאומית" וניתן להיכנס לאתר שלהם - [כאן](https://fjms.genizah.org/?eraseCache=true)
 
-    <footer class="bg-gray-100 dark:bg-gray-800 py-10 px-4 border-t border-gray-200 dark:border-gray-900">
-        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
-            <div class="text-right">
-                <p class="font-bold text-brand dark:text-blue-400 text-xl">נוסחאות התלמוד</p>
-                <p class="text-sm opacity-60 mt-1 text-gray-600 dark:text-gray-400">© 2026 כל הזכויות שמורות לפרויקט ACHI-GARCINAN</p>
-            </div>
-            <div class="flex gap-8 items-center">
-                <a href="https://github.com/ACHI-GARCINAN" class="font-semibold hover:text-brand transition">GitHub</a>
-                <a href="https://mitmachim.top/user/%D7%94%D7%9B%D7%99-%D7%92%D7%A8%D7%A1%D7%99%D7%A0%D7%9F" target="_blank" class="bg-brand text-white py-3 px-10 rounded-full hover:bg-brandLight transition shadow-lg font-bold">צור קשר</a>
-            </div>
-        </div>
-    </footer>
-</body>
-</html>
+## **שיפורים שיש בתוכנה כרגע (מתעדכן, בעז"ה):**
+
+- **כל הש"ס אופליין**: אין צורך בחיבור לאינטרנט, הכל נמצא בתוך התוכנה.
+
+- **השוואה חכמה**: סימון והדגשה של מילים חסרות, יתירות או שונות בהשוואה לנוסח המייצג.
+
+- **מצב תצוגת מילים** - נוספה אפשרות לתצוגת מילים - כך אפשר לעבור מילה מילה ולערוך השוואה מדוייקת יותר בין הנוסחאות
+
+- **ממשק מודרני**: עיצוב נקי ונוח לעין, תמיכה מלאה בעברית, גלילה מותאמת למסכי מגע.
+
+- **ערכות נושא** - ישנה תמיכה בשני ערכות נושא לתוכנה
+
+- **חיפוש מהיר**: ניווט קל בין מסכתות ודפים.
+
+- **צמצום חלונית הניווט** - נוסף כפתור לצימצום תצוגת הניווט - לנוחות קריאה ושימוש
+- **תמיכה בגופנים** - התוכנה תומכת בכל הגופנים בעברית המותקנים במחשב.
+
+- **מסכי מגע** - התוכנה תומכת במסכי מגע (- לא באופן מלא, בטיפול)
+
+- **מצב תצוגת קריאה** - לנוחות קריאה בטקסט הגמרא - ללא חלוקה גמורה למקטעים
+
+- **הסתרת תיקוני קיצורים** - נוסף כפתור להסתרת הבדלי נוסח שאינם משמעותיים בדרך כלל - כגון עי' = עיין. וכדומה.
+
+## על פרויקט "הכי גרסינן"
+"במימונו של דב פרידברג הוקם פרויקט **הכי גרסינן**, הכולל בתוכו את רוב רובם של כתבי היד שמוכרים כיום על התלמוד. הכל מסודר ומתוייק, בצורה שעל כל מילה בתלמוד בבלי אפשר לראות את כל עדי הנוסח לפי שמותם."
+
+---
+
+**פרויקט זה נועד להנגיש את אוצרות הרוח של חכמי ישראל ללומדי התורה ולחוקריה**
+
+---
+
+## הורדת התוכנה
+הקישורים הבאים תמיד יורידו את הגרסה האחרונה ביותר שיצאה:
+
+* **[להורדת גרסת התקנה (Setup)](https://github.com/ACHI-GARCINAN/ACHI-GARCINAN/releases/latest/download/Talmud-Formulas-Setup.exe)**
+
+* **[להורדת גרסה ניידת - ללא התקנה (Portable)](https://github.com/ACHI-GARCINAN/ACHI-GARCINAN/releases/latest/download/Talmud-Formulas.exe)**
