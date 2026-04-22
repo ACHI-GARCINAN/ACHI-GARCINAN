@@ -19,13 +19,14 @@ def main():
             "talmud.synopsis.viewer.1"
         )
 
-    # תיקון בעיית DPI ויקיצה משינה
+    # תיקון בעיית DPI - מונע מסך לבן בטעינה
     QApplication.setHighDpiScaleFactorRoundingPolicy(
         Qt.HighDpiScaleFactorRoundingPolicy.PassThrough
     )
 
     app = QApplication(sys.argv)
     app.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
+    QApplication.setStyle("Fusion")
 
     icon = get_icon()
     if not icon.isNull():
@@ -50,7 +51,7 @@ def main():
     # חיוני: הגדר אייקון גם ישירות על החלון אחרי היצירה
     if not icon.isNull():
         window.setWindowIcon(icon)
-    window.showMaximized()
+    window.show()
     sys.exit(app.exec())
 
 

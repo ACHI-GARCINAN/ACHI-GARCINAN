@@ -1,10 +1,10 @@
 from PyQt6.QtWidgets import (
-    QFrame, QVBoxLayout, QLabel, QSizePolicy, QGraphicsDropShadowEffect
+    QFrame, QVBoxLayout, QLabel, QSizePolicy
 )
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QFont, QColor, QCursor
+from PyQt6.QtGui import QFont, QCursor
 
-from utils import build_vilna_diff_html
+from utils import build_highlighted_html
 
 
 class WitnessCard(QFrame):
@@ -14,6 +14,7 @@ class WitnessCard(QFrame):
                  base_text: str = '', highlight: bool = False,
                  clickable: bool = False, is_html: bool = False,
                  font_family: str = 'David', font_size: int = 15,
+                 hide_minor: bool = False,
                  parent=None):
         super().__init__(parent)
         self.accent, self.bg = color_pair
@@ -25,6 +26,7 @@ class WitnessCard(QFrame):
         self.is_html = is_html
         self._font_family = font_family
         self._font_size = font_size
+        self.hide_minor = hide_minor
         
         self.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
         if clickable and text:
@@ -48,15 +50,10 @@ class WitnessCard(QFrame):
         self.text_lbl.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self.text_lbl.setFont(QFont(font_family, font_size))
         self.text_lbl.setTextFormat(Qt.TextFormat.RichText)
+        self.text_lbl.setStyleSheet("background:transparent;")
         self.layout.addWidget(self.text_lbl)
         
         self._update_content()
-
-        shadow = QGraphicsDropShadowEffect()
-        shadow.setBlurRadius(8)
-        shadow.setColor(QColor(0, 0, 0, 18))
-        shadow.setOffset(0, 2)
-        self.setGraphicsEffect(shadow)
 
     def _apply_style(self):
         if self.text:
@@ -85,7 +82,8 @@ class WitnessCard(QFrame):
             if self.is_html:
                 self.text_lbl.setText(self.text)
             elif self.highlight and self.base_text:
-                html_content = build_vilna_diff_html(self.text, self.base_text)
+                # We'll need to pass hide_minor here. Let's add it to WitnessCard.
+                html_content = build_highlighted_html(self.text, self.base_text, hide_minor=getattr(self, 'hide_minor', False))
                 self.text_lbl.setText(
                     f'<div dir="rtl" style="font-family:{self._font_family},serif;font-size:{self._font_size}pt;'
                     f'color:#2D3748;text-align:justify;">{html_content}</div>'
@@ -101,10 +99,12 @@ class WitnessCard(QFrame):
         
         self._apply_style()
 
-    def update_theme(self, color_pair: tuple, font_family: str, font_size: int):
+    def update_theme(self, color_pair: tuple, font_family: str, font_size: int, hide_minor: bool = None):
         self.accent, self.bg = color_pair
         self._font_family = font_family
         self._font_size = font_size
+        if hide_minor is not None:
+            self.hide_minor = hide_minor
         self._update_content()
 
     def mousePressEvent(self, event):

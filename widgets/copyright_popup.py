@@ -22,28 +22,14 @@ class CopyrightPopup(QWidget):
         self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, False)
         self.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
 
-        is_colorful = False
-        if parent and hasattr(parent, 'window'):
-            win = parent.window()
-            if hasattr(win, '_theme'):
-                is_colorful = (win._theme == 'colorful')
-
-
-        card_bg     = "#FFFFFF" if not is_colorful else "#2B1A0F"
-        card_border = "#A0B4CC" if not is_colorful else "#C8A060"
-        title_color = "#2D3748" if not is_colorful else "#FFF5E6"
-        body_color  = "#2D3748" if not is_colorful else "#F0DFC0"
-        sep_color   = "#CBD5E0" if not is_colorful else "#7A5030"
-        contact_color = "#4A5568" if not is_colorful else "#C8A87A"
-        
         self._card = QFrame(self)
         self._card.setObjectName("popup_frame")
-        self._card.setStyleSheet(f"""
-            QFrame#popup_frame {{
-                background-color: {card_bg};
-                border: 2px solid {card_border};
+        self._card.setStyleSheet("""
+            QFrame#popup_frame {
+                background-color: #FFFDF8;
+                border: 2px solid #C8A060;
                 border-radius: 16px;
-            }}
+            }
         """)
         self._card.setFixedWidth(480)
 
@@ -59,13 +45,13 @@ class CopyrightPopup(QWidget):
 
         title = QLabel("הערת שימוש")
         title.setFont(QFont("David", 15, QFont.Weight.Bold))
-        title.setStyleSheet(f"color:{title_color};background:transparent;")
+        title.setStyleSheet("color:#5A1A00;background:transparent;")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         inner.addWidget(title)
 
         sep = QFrame()
         sep.setFrameShape(QFrame.Shape.HLine)
-        sep.setStyleSheet(f"background:{sep_color};max-height:1px;border:none;")
+        sep.setStyleSheet("background:#D5C8A0;max-height:1px;border:none;")
         inner.addWidget(sep)
 
         body = QLabel(
@@ -74,14 +60,14 @@ class CopyrightPopup(QWidget):
             "והשימוש בו מותר אך ורק לצורך שימוש פרטי ולא לצורך מסחרי!"
         )
         body.setFont(QFont("David", 13))
-        body.setStyleSheet(f"color:{body_color};background:transparent;")
+        body.setStyleSheet("color:#2A1000;background:transparent;")
         body.setAlignment(Qt.AlignmentFlag.AlignCenter)
         body.setWordWrap(True)
         inner.addWidget(body)
 
         sep2 = QFrame()
         sep2.setFrameShape(QFrame.Shape.HLine)
-        sep2.setStyleSheet(f"background:{sep_color};max-height:1px;border:none;")
+        sep2.setStyleSheet("background:#D5C8A0;max-height:1px;border:none;")
         inner.addWidget(sep2)
 
         contact_row = QHBoxLayout()
@@ -89,7 +75,7 @@ class CopyrightPopup(QWidget):
 
         contact_lbl = QLabel("תגובות והערות ניתן לכתוב במייל")
         contact_lbl.setFont(QFont("David", 12))
-        contact_lbl.setStyleSheet(f"color:{contact_color};background:transparent;")
+        contact_lbl.setStyleSheet("color:#5A3A10;background:transparent;")
         contact_row.addWidget(contact_lbl, 0, Qt.AlignmentFlag.AlignVCenter)
 
         mail_btn = QPushButton(self.MAIL)
@@ -147,8 +133,7 @@ class CopyrightPopup(QWidget):
             super().mousePressEvent(event)
 
     def exec(self):
-        from PyQt6.QtCore import QEventLoop
-        loop = QEventLoop()
+        loop = __import__('PyQt6.QtCore', fromlist=['QEventLoop']).QEventLoop()
         self.destroyed.connect(loop.quit)
         loop.exec()
 

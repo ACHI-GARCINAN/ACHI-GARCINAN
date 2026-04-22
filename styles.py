@@ -8,6 +8,9 @@ QMainWindow, QWidget {
     background-color: #F0F4F7;
     font-family: 'David', 'Arial', sans-serif;
 }
+QLabel {
+    background: transparent;
+}
 QListWidget#page_list {
     background-color: #E1E8ED;
     border: none;
@@ -92,6 +95,9 @@ STYLE_COLORFUL = """
 QMainWindow, QWidget {
     background-color: #F7F3EC;
     font-family: 'David', 'Arial', sans-serif;
+}
+QLabel {
+    background: transparent;
 }
 QListWidget#page_list {
     background-color: #2B1A0F;

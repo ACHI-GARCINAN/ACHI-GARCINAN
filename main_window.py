@@ -58,8 +58,11 @@ class MainWindow(QMainWindow):
         self._font_family = settings['font_family']
         self._font_size = settings['font_size']
         self._theme = settings.get('theme', 'classic')
+        self._continuous_sections_view = settings.get('continuous_sections_view', False)
+
         self.setWindowTitle("סינופסיס תלמוד בבלי")
         self.setMinimumSize(1100, 650)
+        self.showMaximized()
         self.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
         
         # החל עיצוב לפי ערכת הנושא
@@ -74,29 +77,31 @@ class MainWindow(QMainWindow):
         self._build_ui()
 
         if self.masechtot:
-            from PyQt6.QtCore import QTimer
-            QTimer.singleShot(0, lambda: self.masechet_list.setCurrentRow(0))
-            
+            self.masechet_list.setCurrentRow(0)
+
     def _show_copyright_notice(self):
         popup = CopyrightPopup(self.centralWidget())
         popup.exec()
 
     def _open_settings(self):
-        dlg = SettingsDialog(self._font_family, self._font_size, self._theme, self)
+        dlg = SettingsDialog(self._font_family, self._font_size, self._theme, self._continuous_sections_view, self)
         dlg.settings_changed.connect(self._apply_settings)
         dlg.exec()
 
-    def _apply_settings(self, font_family: str, font_size: int, theme: str):
+    def _apply_settings(self, font_family: str, font_size: int, theme: str, continuous_sections_view: bool = False):
         self._font_family = font_family
         self._font_size = font_size
         theme_changed = (self._theme != theme)
+        continuous_changed = (self._continuous_sections_view != continuous_sections_view)
         self._theme = theme
+        self._continuous_sections_view = continuous_sections_view
         
         # שמור להגדרות
         save_settings({
             'font_family': font_family, 
             'font_size': font_size,
-            'theme': theme
+            'theme': theme,
+            'continuous_sections_view': continuous_sections_view,
         })
         
         # עדכן עיצוב אם ערכת הנושא השתנתה
@@ -107,6 +112,9 @@ class MainWindow(QMainWindow):
             # רענון הדף הנוכחי כדי להחיל צבעים חדשים
             if self.pages:
                 self._load_page(self.current_page_idx)
+        elif continuous_changed and self.pages:
+            # רענון הדף הנוכחי כדי להחיל שינוי תצוגה רציפה
+            self._load_page(self.current_page_idx)
         
         # עדכן גופן בפאנל עדי הנוסח
         self.witness_panel.update_font(font_family, font_size, theme=self._theme)
@@ -127,6 +135,7 @@ class MainWindow(QMainWindow):
         self.splitter = QSplitter(Qt.Orientation.Horizontal)
         self.splitter.setHandleWidth(2)
         root.addWidget(self.splitter)
+
         self.witness_panel = WitnessPanel([], self._font_family, self._font_size, theme=self._theme)
         self.witness_panel.setMinimumWidth(280)
         self.witness_panel.witness_clicked.connect(self._on_witness_card_clicked)
@@ -145,17 +154,9 @@ class MainWindow(QMainWindow):
         left_layout = QHBoxLayout()
         left_layout.setSpacing(10)
 
-        self.hamburger_btn = QPushButton("▶")
-        self.hamburger_btn.setToolTip("הצג/הסתר ניווט")
-        self.hamburger_btn.setFixedSize(30, 30)
-        self.hamburger_btn.setFont(QFont("Arial", 13))
-        self.hamburger_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        self.hamburger_btn.clicked.connect(self._toggle_nav_panel)
-        left_layout.addWidget(self.hamburger_btn)
-        
         self.warn_btn = QPushButton("¡")
         self.warn_btn.setToolTip("הערת שימוש")
-        self.warn_btn.setFixedSize(30, 30)
+        self.warn_btn.setFixedSize(35, 35)
         self.warn_btn.setFont(QFont("Arial", 16, QFont.Weight.Bold))
         self.warn_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.warn_btn.clicked.connect(self._show_copyright_notice)
@@ -164,7 +165,7 @@ class MainWindow(QMainWindow):
         # כפתור הגדרות
         self.settings_btn = QPushButton("⚙")
         self.settings_btn.setToolTip("הגדרות תצוגה")
-        self.settings_btn.setFixedSize(30, 30)
+        self.settings_btn.setFixedSize(35, 35)
         self.settings_btn.setFont(QFont("Arial", 15))
         self.settings_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.settings_btn.clicked.connect(self._open_settings)
@@ -179,6 +180,15 @@ class MainWindow(QMainWindow):
         left_layout.addWidget(self.mode_btn)
 
         self.h_outer.addLayout(left_layout)
+
+        # כפתור הצגת/הסתרת סרגל צד — חץ מתחלף
+        self.sidebar_toggle_btn = QPushButton("▶")
+        self.sidebar_toggle_btn.setToolTip("הצג/הסתר סרגל מסכתות")
+        self.sidebar_toggle_btn.setFixedSize(35, 35)
+        self.sidebar_toggle_btn.setFont(QFont("Arial", 13))
+        self.sidebar_toggle_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        self.sidebar_toggle_btn.clicked.connect(self._toggle_sidebar)
+        self.h_outer.insertWidget(0, self.sidebar_toggle_btn)
 
         # Center: Navigation and Title
         self.h_outer.addStretch(1)
@@ -278,7 +288,8 @@ class MainWindow(QMainWindow):
         self.masechet_list = QListWidget()
         self.masechet_list.setObjectName("masechet_list")
         self.masechet_list.setFont(QFont("David", 13))
-        self.masechet_list.setFixedWidth(130)
+        self.masechet_list.setFixedWidth(148)
+        self.masechet_list.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
         for ms in self.masechtot:
             item = QListWidgetItem(ms['name'])
@@ -343,8 +354,7 @@ class MainWindow(QMainWindow):
             }}
         """
         self.warn_btn.setStyleSheet(btn_style)
-        self.hamburger_btn.setStyleSheet(btn_style)
-
+        
         self.settings_btn.setStyleSheet(f"""
             QPushButton {{ color: {cfg['btn_color']}; background: transparent; border: none; padding-bottom: 1px; }}
             QPushButton:hover {{ color: {cfg['btn_text_hover']}; }}
@@ -376,6 +386,21 @@ class MainWindow(QMainWindow):
         """
         self.prev_btn.setStyleSheet(nav_btn_style)
         self.next_btn.setStyleSheet(nav_btn_style)
+        
+        self.sidebar_toggle_btn.setStyleSheet(f"""
+            QPushButton {{
+                color: {cfg['btn_color']};
+                background: transparent;
+                border: 2px solid {cfg['btn_color']};
+                border-radius: 15px;
+                padding-bottom: 2px;
+            }}
+            QPushButton:hover {{
+                color: {cfg['btn_text_hover']};
+                border-color: {cfg['btn_text_hover']};
+                background: rgba(200,160,60,0.15);
+            }}
+        """)
         
         self.page_search_box.setStyleSheet(f"""
             QLineEdit {{
@@ -422,14 +447,6 @@ class MainWindow(QMainWindow):
             }}
         """)
 
-    def _toggle_nav_panel(self):
-        if self.nav_panel.isVisible():
-            self.nav_panel.hide()
-            self.hamburger_btn.setText("◀")
-        else:
-            self.nav_panel.show()
-            self.hamburger_btn.setText("▶")
-            
     def _go_prev_page(self):
         row = self.page_list.currentRow()
         if row > 0:
@@ -443,6 +460,16 @@ class MainWindow(QMainWindow):
     def _update_nav_buttons(self, idx: int):
         self.prev_btn.setEnabled(idx > 0)
         self.next_btn.setEnabled(idx < len(self.pages) - 1)
+
+    def _toggle_sidebar(self):
+        if self.nav_panel.isVisible():
+            self.nav_panel.hide()
+            self.sidebar_toggle_btn.setText("◀")
+            self.splitter.setSizes([0, 995, 420])
+        else:
+            self.nav_panel.show()
+            self.sidebar_toggle_btn.setText("▶")
+            self.splitter.setSizes([215, 780, 420])
 
     def _quick_nav(self):
         text = self.search_box.text().strip()
@@ -467,14 +494,7 @@ class MainWindow(QMainWindow):
         self._page_search_term = text.strip()
         self._page_search_idx = -1
 
-        if not self._page_search_term:
-            if self.display_mode == 'words' and self._words_view:
-                self._words_view.search_highlight('')
-            else:
-                for block in self.section_blocks:
-                    block.search_highlight('')
-            self._update_ui_colors()
-            return
+        cfg = get_theme_config(self._theme)
 
         if self.display_mode == 'words' and self._words_view:
             self._words_view.search_highlight(self._page_search_term)
@@ -484,7 +504,23 @@ class MainWindow(QMainWindow):
                 block.search_highlight(self._page_search_term)
             matching = [b for b in self.section_blocks if b.has_search_match()]
 
-        cfg = get_theme_config(self._theme)
+        if not self._page_search_term:
+            self.page_search_box.setStyleSheet(f"""
+                QLineEdit {{
+                    background-color: {cfg['search_bg']};
+                    color: {cfg['search_text']};
+                    border: 1px solid {cfg['search_border']};
+                    border-radius: 6px;
+                    padding: 5px 10px;
+                    selection-background-color: {cfg['btn_color']};
+                }}
+                QLineEdit:focus {{
+                    border: 1px solid {cfg['btn_color']};
+                    background-color: {cfg['search_bg'] if self._theme == 'classic' else '#4A2E1A'};
+                }}
+            """)
+            return
+
         if matching:
             self.page_search_box.setStyleSheet(f"""
                 QLineEdit {{
@@ -617,11 +653,20 @@ class MainWindow(QMainWindow):
         self.witness_panel.reset()
 
     def _load_page_sections(self, sections: list, page_label: str):
+        # עדכן ספייסינג של הלייאאוט לפי מצב תצוגה
+        if self._continuous_sections_view:
+            self.text_layout.setSpacing(0)
+            self.text_layout.setContentsMargins(12, 14, 12, 30)
+        else:
+            self.text_layout.setSpacing(8)
+            self.text_layout.setContentsMargins(12, 14, 12, 30)
+
         for section in sections:
             block = SectionBlock(section, self.main_witness,
                                  font_family=self._font_family,
                                  font_size=self._font_size,
-                                 theme=self._theme)
+                                 theme=self._theme,
+                                 continuous_view=self._continuous_sections_view)
             block.clicked.connect(
                 lambda checked=False, s=section, b=block, p=page_label:
                     self._select_section(s, b, p)
@@ -691,15 +736,6 @@ class MainWindow(QMainWindow):
         if not self.selected_block:
             return
         self.selected_block.show_witness_diff(witness_name)
-
-    def changeEvent(self, event):
-        from PyQt6.QtCore import QEvent
-        # מניעת רינדור כפול אחרי יקיצה משינה
-        if event.type() == QEvent.Type.WindowStateChange:
-            if self.windowState() & Qt.WindowState.WindowMaximized:
-                # וודא שהחלון לא מרונדר פעמיים
-                self.repaint()
-        super().changeEvent(event)
 
     def keyPressEvent(self, event: QKeyEvent):
         if self.display_mode == 'words' and self._current_words_data:
