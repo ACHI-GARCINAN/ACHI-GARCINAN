@@ -32,7 +32,7 @@ jobs:
       run: |
         RUN_NUMBER=${{ github.run_number }}
         # שינוי כאן ל-44 כדי שהתוצאה תהיה 6 (גרסה 1.6)
-        VERSION_MINOR=$((RUN_NUMBER - 44))
+        VERSION_MINOR=$((RUN_NUMBER - 45))
         echo "final_version=1.$VERSION_MINOR" >> $GITHUB_OUTPUT
 
     - name: Set up Python

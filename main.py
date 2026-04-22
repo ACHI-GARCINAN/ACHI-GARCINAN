@@ -32,16 +32,14 @@ def main():
     if not icon.isNull():
         app.setWindowIcon(icon)
 
-    folder = sys.argv[1] if len(sys.argv) > 1 else get_base_dir()
+# טעינה ישירה מתיקיית הבסיס (הפנימית ב-EXE)
+    folder = get_base_dir()
     masechtot = load_masechet_list(folder)
 
     if not masechtot:
-        from PyQt6.QtWidgets import QFileDialog
-        folder = QFileDialog.getExistingDirectory(None, "בחר תיקייה", "")
-        if not folder:
-            sys.exit(0)
-        masechtot = load_masechet_list(folder)
-
+        from PyQt6.QtWidgets import QMessageBox
+        QMessageBox.critical(None, "שגיאה", "בסיס הנתונים talmud.db לא נמצא בתוך חבילת התוכנה.")
+        sys.exit(1)
     if not masechtot:
         from PyQt6.QtWidgets import QMessageBox
         QMessageBox.critical(None, "שגיאה", "לא נמצא קובץ talmud.db בתיקייה.")
