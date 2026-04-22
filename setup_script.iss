@@ -28,8 +28,8 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-; 1. העתקת כל תוכן התיקייה המפורקת (הכי חשוב למהירות ההפעלה!)
-; שימו לב: הנתיב dist\Talmudic-Formulas נוצר על ידי ה-PyInstaller בגיטהאב
+; 1. העתקת כל תוכן התיקייה המפורקת (כולל talmud.db ו-assets)
+; הנתיב dist\Talmudic-Formulas נוצר על ידי ה-PyInstaller בגיטהאב
 Source: "dist\Talmudic-Formulas\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 ; 2. קבצי עזר נוספים
@@ -37,7 +37,7 @@ Source: "license.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "comments.txt"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
-; יצירת קיצור דרך בתפריט התחלה
+; יצירת קיצור דרך בתפריט התחלה - וודא ששם ה-EXE תואם למה שמוגדר ב-PyInstaller
 Name: "{group}\Talmudic Formulas"; Filename: "{app}\Talmudic-Formulas.exe"
 ; יצירת קיצור דרך על שולחן העבודה
 Name: "{commondesktop}\Talmudic Formulas"; Filename: "{app}\Talmudic-Formulas.exe"; Tasks: desktopicon
