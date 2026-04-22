@@ -1,16 +1,19 @@
-﻿[Setup]
+﻿; קובץ הגדרות עבור Inno Setup - Talmudic Formulas
+; -----------------------------------------------
+
+[Setup]
 ; הגדרות בסיסיות של התוכנה
-AppName=נוסחאות התלמוד
+AppName=Talmudic Formulas
 AppVersion=1.1
-DefaultDirName={autopf}\Talmud Formulas
-DefaultGroupName=נוסחאות התלמוד
+DefaultDirName={autopf}\Talmudic Formulas
+DefaultGroupName=Talmudic Formulas
 OutputDir=Output
-OutputBaseFilename=Talmud-Formulas-Setup
+OutputBaseFilename=Talmudic-Formulas-Setup-Win
 SetupIconFile=icon.ico
 Compression=lzma
 SolidCompression=yes
 
-; חלוניות אישור ומידע (דורש שקבצי הטקסט יהיו קיימים בתיקייה)
+; חלוניות אישור ומידע (משתמש בקבצים מהתיקייה הראשית שלך)
 LicenseFile=license.txt
 InfoBeforeFile=comments.txt
 
@@ -21,23 +24,28 @@ ShowLanguageDialog=yes
 Name: "hebrew"; MessagesFile: "compiler:Languages\Hebrew.isl"
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
+[Tasks]
+Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+
 [Files]
-; הקובץ הראשי - שים לב: הוא כבר כולל את ה-DB בפנים בזכות ה-PyInstaller
-Source: "dist\Talmud-Formulas.exe"; DestDir: "{app}"; Flags: ignoreversion
+; 1. העתקת כל תוכן התיקייה המפורקת (הכי חשוב למהירות ההפעלה!)
+; שימו לב: הנתיב dist\Talmudic-Formulas נוצר על ידי ה-PyInstaller בגיטהאב
+Source: "dist\Talmudic-Formulas\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
-; תיקיית הווידג'טים
-Source: "widgets\*"; DestDir: "{app}\widgets"; Flags: ignoreversion recursesubdirs createallsubdirs
-
-; קבצי עזר נוספים
+; 2. קבצי עזר נוספים
 Source: "license.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "comments.txt"; DestDir: "{app}"; Flags: ignoreversion
-Source: "icon.ico"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
-; יצירת קיצורי דרך
-Name: "{group}\נוסחאות התלמוד"; Filename: "{app}\Talmud-Formulas.exe"; IconFilename: "{app}\icon.ico"
-Name: "{commondesktop}\נוסחאות התלמוד"; Filename: "{app}\Talmud-Formulas.exe"; IconFilename: "{app}\icon.ico"
+; יצירת קיצור דרך בתפריט התחלה
+Name: "{group}\Talmudic Formulas"; Filename: "{app}\Talmudic-Formulas.exe"
+; יצירת קיצור דרך על שולחן העבודה
+Name: "{commondesktop}\Talmudic Formulas"; Filename: "{app}\Talmudic-Formulas.exe"; Tasks: desktopicon
 
 [Run]
-; הרצת התוכנה בסיום ההתקנה
-Filename: "{app}\Talmud-Formulas.exe"; Description: "{cm:LaunchProgram,נוסחאות התלמוד}"; Flags: nowait postinstall skipifsilent
+; אפשרות להריץ את התוכנה מיד בסיום ההתקנה
+Filename: "{app}\Talmudic-Formulas.exe"; Description: "{cm:LaunchProgram,Talmudic Formulas}"; Flags: nowait postinstall skipifsilent
+
+[Code]
+// קוד זה נועד לוודא שהגרסה מתעדכנת אוטומטית דרך ה-GitHub Actions
+// אין צורך לשנות כאן כלום

@@ -4,12 +4,15 @@ import sys
 
 DB_PATH = ''
 
-
 def get_base_dir() -> str:
+    # אם התוכנה רצה כ-EXE מאורז (sys._MEIPASS)
+    if hasattr(sys, '_MEIPASS'):
+        return sys._MEIPASS
+    # אם התוכנה רצה כ-EXE רגיל בתיקייה
     if getattr(sys, 'frozen', False):
         return os.path.dirname(sys.executable)
+    # הרצה רגילה מפייתון
     return os.path.dirname(os.path.abspath(__file__))
-
 
 def load_masechet_list(folder: str) -> list:
     global DB_PATH
