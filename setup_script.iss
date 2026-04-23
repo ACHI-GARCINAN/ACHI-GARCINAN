@@ -24,7 +24,7 @@ Name: "hebrew"; MessagesFile: "compiler:Languages\Hebrew.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-; לוקח את כל הקבצים מתיקיית ה-dist שנוצרה בגיטהאב (כולל ה-DB שירד מהדרייב)
+; השורה הזו תעודכן אוטומטית על ידי ה-YAML להשתמש ב-dist-installer
 Source: "dist\Talmudic-Formulas\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
