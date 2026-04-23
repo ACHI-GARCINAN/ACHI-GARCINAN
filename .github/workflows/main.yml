@@ -15,7 +15,7 @@ jobs:
       contents: write
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4 # ללא LFS כדי לעקוף את החסימה
+      uses: actions/checkout@v4 # ללא LFS כדי למנוע חסימה
 
     - name: Get Latest Tag
       id: get_tag
@@ -49,16 +49,22 @@ jobs:
       run: pip install pyinstaller PyQt6 gdown
 
     - name: Download Database from Google Drive
-      run: gdown --id "1_jWI2qNMSyBkH3EneM2mZg-Wzibn_gLw" -O talmud.db # הקישור שסיפקת
+      run: gdown --id "1_jWI2qNMSyBkH3EneM2mZg-Wzibn_gLw" -O talmud.db # הורדה מהקישור שנתת
 
     - name: Build Windows
       if: matrix.os == 'windows-latest'
       shell: powershell
       run: |
         choco install innosetup --no-progress
-        pyinstaller --noconfirm --onefile --windowed --icon="icon.ico" --name="Talmudic-Formulas-Portable" --add-data "widgets;widgets" --add-data "assets;assets" --add-data "talmud.db;." --collect-all PyQt6 main.py
-        pyinstaller --noconfirm --onedir --windowed --icon="icon.ico" --name="Talmudic-Formulas" --add-data "widgets;widgets" --add-data "assets;assets" --add-data "talmud.db;." --collect-all PyQt6 main.py
+        # 1. בניית גרסה ניידת (קובץ EXE אחד) - נשמר בתיקייה נפרדת
+        pyinstaller --noconfirm --onefile --windowed --icon="icon.ico" --name="Talmudic-Formulas-Portable" --add-data "widgets;widgets" --add-data "assets;assets" --add-data "talmud.db;." --collect-all PyQt6 --distpath ./dist-portable main.py
+        
+        # 2. בניית תיקייה עבור ההתקנה (Installer)
+        pyinstaller --noconfirm --onedir --windowed --icon="icon.ico" --name="Talmudic-Formulas" --add-data "widgets;widgets" --add-data "assets;assets" --add-data "talmud.db;." --collect-all PyQt6 --distpath ./dist-installer main.py
+        
+        # עדכון גרסה ב-ISS והרצה (מול תיקיית ה-installer החדשה)
         (Get-Content "setup_script.iss") -replace 'AppVersion=.*', 'AppVersion=${{ steps.version_calc.outputs.final_version }}' | Set-Content "setup_script.iss"
+        (Get-Content "setup_script.iss") -replace 'Source: "dist\\Talmudic-Formulas\\\*"', 'Source: "dist-installer\\Talmudic-Formulas\\*"' | Set-Content "setup_script.iss"
         & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "setup_script.iss"
 
     - name: Build macOS
@@ -75,9 +81,11 @@ jobs:
         tag_name: v${{ steps.version_calc.outputs.final_version }}
         name: גרסה ${{ steps.version_calc.outputs.final_version }}
         body: |
-          ### הורדות עודכנו לגרסה ${{ steps.version_calc.outputs.final_version }}
+          ### גרסה חדשה: נוסחאות התלמוד
+          * הוסדר נושא ה-Database בתוך ההתקנה.
+          * שם התוכנה שונה לעברית.
         files: |
-          dist/Talmudic-Formulas-Portable.exe
+          dist-portable/Talmudic-Formulas-Portable.exe
           Output/Talmudic-Formulas-Setup-Win.exe
           Talmudic-Formulas-Mac-Portable.zip
           ./Talmudic-Formulas-Mac-Installer.dmg
