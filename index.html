@@ -30,8 +30,9 @@
 </head>
 <body class="bg-white text-gray-900 dark:bg-black dark:text-gray-100">
 
-    <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center border-b border-gray-100 dark:border-gray-900">
-        <div class="flex gap-6 items-center">
+    <div class="max-w-6xl mx-auto px-4 py-4 grid grid-cols-3 items-center border-b border-gray-100 dark:border-gray-900">
+        
+        <div class="flex gap-6 items-center justify-start">
             <a href="https://github.com/ACHI-GARCINAN/ACHI-GARCINAN" target="_blank" class="text-brand dark:text-blue-400 hover:opacity-70 transition" title="GitHub">
                 <svg class="w-7 h-7 fill-current" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.041-1.416-4.041-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
             </a>
@@ -40,12 +41,19 @@
                 <svg class="h-6 w-6 text-[#0066ff] transition group-hover:scale-110" viewBox="0 0 100 100" fill="currentColor">
                     <path d="M50 5C25.1 5 5 25.1 5 50c0 10.4 3.5 20 9.5 27.6L10 90l13.1-4.1C30.9 91.6 40.1 95 50 95c24.9 0 45-20.1 45-45S74.9 5 50 5zm18.3 62.5H60V48.1l-10 10-10-10v19.4h-8.3V32.5h8.3l10 10 10-10h8.3v35z"/>
                 </svg>
-                <span class="text-sm font-bold text-gray-500 group-hover:text-[#0066ff] transition">מתמחים טופ</span>
+                <span class="text-sm font-bold text-gray-500 group-hover:text-[#0066ff] transition hidden md:inline">מתמחים טופ</span>
             </a>
         </div>
-        <button onclick="toggleDarkMode()" class="p-2 bg-gray-100 dark:bg-gray-800 rounded-full transition shadow-sm">
-            <svg class="w-6 h-6 text-brand dark:text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
-        </button>
+
+        <div class="flex justify-center">
+            <img src="https://img.shields.io/github/downloads/achi-garcinan/ACHI-GARCINAN/total?label=הורדות&color=002855&style=flat" alt="Downloads">
+        </div>
+
+        <div class="flex justify-end">
+            <button onclick="toggleDarkMode()" class="p-2 bg-gray-100 dark:bg-gray-800 rounded-full transition shadow-sm">
+                <svg class="w-6 h-6 text-brand dark:text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+            </button>
+        </div>
     </div>
 
     <header class="text-center py-14 px-4">
@@ -81,11 +89,10 @@
                 </h3>
                 <div class="flex flex-col gap-4">
                     <a href="https://github.com/ACHI-GARCINAN/ACHI-GARCINAN/releases/latest/download/Talmudic-Formulas-Mac-Installer.dmg" class="bg-brand hover:bg-brandLight text-white font-bold py-4 px-6 rounded-2xl transition shadow-lg text-lg">הורדת קובץ התקנה (Setup)</a>
-
                     <a href="https://github.com/ACHI-GARCINAN/ACHI-GARCINAN/releases/latest/download/Talmudic-Formulas-Mac-Portable.zip" class="bg-white dark:bg-gray-800 border-2 border-brand text-brand dark:text-blue-300 font-bold py-4 px-6 rounded-2xl transition">הורדת גרסה ניידת (Portable)</a>
                 </div>
             </div> 
-     </div>
+        </div>
     </header>
 
     <section class="max-w-6xl mx-auto px-4 pb-16">
@@ -106,6 +113,7 @@
         </div>
     </section>
 
+    <section class="max-w-6xl mx-auto px-4 pb-16">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8 bg-gray-50 dark:bg-gray-900 p-8 md:p-12 rounded-3xl border border-gray-100 dark:border-gray-800">
             <div class="flex items-start gap-4"><div class="text-brand dark:text-blue-400 mt-1">●</div><p><strong>ממשק מודרני:</strong> עיצוב נקי ונוח לעין, תמיכה מלאה בעברית וגלילה מותאמת למסכי מגע.</p></div>
             <div class="flex items-start gap-4"><div class="text-brand dark:text-blue-400 mt-1">●</div><p><strong>ערכות נושא:</strong> תמיכה בשתי ערכות נושא (בהיר/כהה) להתאמה אישית של סביבת הלימוד.</p></div>
