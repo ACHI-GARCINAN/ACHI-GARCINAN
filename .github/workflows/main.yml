@@ -1,41 +1,82 @@
-import sys
-from PyQt6.QtWidgets import QApplication
-from PyQt6.QtCore import Qt
-from db import load_masechet_list, get_base_dir
-from main_window import MainWindow, get_icon
+name: Build and Release
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
 
-def main():
-    if sys.platform == "win32":
-        import ctypes
-        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("talmud.synopsis.viewer.1")
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest]
+    permissions:
+      contents: write
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-    QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
-    app = QApplication(sys.argv)
-    app.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
-    QApplication.setStyle("Fusion")
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.9'
 
-    icon = get_icon()
-    if not icon.isNull():
-        app.setWindowIcon(icon)
+    - name: Install Dependencies
+      run: |
+        pip install pyinstaller PyQt6 gdown
 
-    folder = sys.argv[1] if len(sys.argv) > 1 else get_base_dir()
-    masechtot = load_masechet_list(folder)
+    - name: Download DB from Google Drive
+      shell: bash
+      run: |
+        gdown --id "1_jWI2qNMSyBkH3EneM2mZg-Wzibn_gLw" -O talmud.db
 
-    if not masechtot:
-        from PyQt6.QtWidgets import QFileDialog
-        folder = QFileDialog.getExistingDirectory(None, "בחר תיקייה", "")
-        if not folder:
-            sys.exit(0)
-        masechtot = load_masechet_list(folder)
+    - name: Build Windows
+      if: matrix.os == 'windows-latest'
+      shell: powershell
+      run: |
+        choco install innosetup --no-progress
+        # גרסה ניידת
+        pyinstaller --noconfirm --onefile --windowed --icon="icon.ico" --name="Talmudic-Formulas-Portable" --add-data "talmud.db;." --add-data "widgets;widgets" --add-data "assets;assets" --collect-all PyQt6 --distpath ./dist-portable main.py
+        # גרסה למתקין
+        pyinstaller --noconfirm --onedir --windowed --icon="icon.ico" --name="Talmudic-Formulas" --add-data "talmud.db;." --add-data "widgets;widgets" --add-data "assets;assets" --collect-all PyQt6 --distpath ./dist-installer main.py
+        
+        # עדכון קידוד ועברית ל-Inno Setup
+        $issPath = "$(Get-Location)\setup_script.iss"
+        $iss = Get-Content $issPath -Raw
+        $Utf8WithBom = New-Object System.Text.UTF8Encoding($true)
+        [System.IO.File]::WriteAllText($issPath, $iss, $Utf8WithBom)
+        & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "setup_script.iss"
 
-    if not masechtot:
-        from PyQt6.QtWidgets import QMessageBox
-        QMessageBox.critical(None, "שגיאה", "לא נמצא קובץ talmud.db בתיקייה שנבחרה.")
-        sys.exit(1)
+    - name: Build macOS
+      if: matrix.os == 'macos-latest'
+      run: |
+        # גרסה ניידת (ZIP)
+        pyinstaller --noconfirm --windowed --name="Talmudic-Formulas-Mac" --add-data "talmud.db:." --add-data "widgets:widgets" --add-data "assets:assets" --collect-all PyQt6 main.py
+        cd dist && zip -r ../Talmudic-Formulas-Mac-Portable.zip Talmudic-Formulas-Mac.app && cd ..
+        # גרסה למתקין (DMG)
+        mkdir dmg_root && cp -R "dist/Talmudic-Formulas-Mac.app" dmg_root/
+        hdiutil create -volname "Talmudic Formulas" -srcfolder dmg_root -ov -format UDZO "Talmudic-Formulas-Mac-Installer.dmg"
 
-    window = MainWindow(masechtot)
-    window.showMaximized()
-    sys.exit(app.exec())
-
-if __name__ == "__main__":
-    main()
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v1.12
+        name: גרסה 1.12 - שחרור רשמי
+        body: |
+          ## קישורים להורדה ישירה:
+          
+          ###  Windows
+          * [הורדת מתקין (Windows Setup)](https://github.com/${{ github.repository }}/releases/download/v1.12/Talmudic-Formulas-Setup-Win.exe)
+          * [הורדת גרסה ניידת (Windows Portable EXE)](https://github.com/${{ github.repository }}/releases/download/v1.12/Talmudic-Formulas-Portable.exe)
+          
+          ###  macOS
+          * [הורדת מתקין (macOS DMG)](https://github.com/${{ github.repository }}/releases/download/v1.12/Talmudic-Formulas-Mac-Installer.dmg)
+          * [הורדת גרסה ניידת (macOS ZIP)](https://github.com/${{ github.repository }}/releases/download/v1.12/Talmudic-Formulas-Mac-Portable.zip)
+        files: |
+          dist-portable/Talmudic-Formulas-Portable.exe
+          Output/Talmudic-Formulas-Setup-Win.exe
+          Talmudic-Formulas-Mac-Portable.zip
+          ./Talmudic-Formulas-Mac-Installer.dmg
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
