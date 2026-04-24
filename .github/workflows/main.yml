@@ -17,20 +17,18 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       with:
-        fetch-depth: 0 # חשוב כדי שיוכל לראות את כל התגים הקודמים
+        fetch-depth: 0
 
     - name: Calculate Version
       id: get_version
       shell: bash
       run: |
-        # שליפת התג האחרון. אם אין תגים, נתחיל מ-v1.0
+        # מוצא את התג האחרון (למשל v1.12) ומקדם אותו ל-v1.13
         LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v1.0")
-        # חיתוך המספר שאחרי הנקודה והוספת 1
         VERSION_MINOR=$(echo $LATEST_TAG | cut -d. -f2)
         NEW_MINOR=$((VERSION_MINOR + 1))
         NEW_TAG="v1.$NEW_MINOR"
         echo "new_tag=$NEW_TAG" >> $GITHUB_OUTPUT
-        echo "Calculated version: $NEW_TAG"
 
     - name: Set up Python
       uses: actions/setup-python@v5
@@ -38,19 +36,20 @@ jobs:
         python-version: '3.9'
 
     - name: Install Dependencies
-      run: pip install pyinstaller PyQt6 gdown
+      run: pip install pyinstaller PyQt6 gdown macholib
 
     - name: Download DB from Google Drive
       shell: bash
-      run: |
-        gdown --id "1_jWI2qNMSyBkH3EneM2mZg-Wzibn_gLw" -O talmud.db
+      run: gdown --id "1_jWI2qNMSyBkH3EneM2mZg-Wzibn_gLw" -O talmud.db
 
     - name: Build Windows
       if: matrix.os == 'windows-latest'
       shell: powershell
       run: |
         choco install innosetup --no-progress
+        # גרסה ניידת
         pyinstaller --noconfirm --onefile --windowed --icon="icon.ico" --name="Talmudic-Formulas-Portable" --add-data "talmud.db;." --add-data "widgets;widgets" --add-data "assets;assets" --collect-all PyQt6 --distpath ./dist-portable main.py
+        # גרסה להתקנה
         pyinstaller --noconfirm --onedir --windowed --icon="icon.ico" --name="Talmudic-Formulas" --add-data "talmud.db;." --add-data "widgets;widgets" --add-data "assets;assets" --collect-all PyQt6 --distpath ./dist-installer main.py
         
         $iss = Get-Content "setup_script.iss" -Raw
@@ -59,10 +58,11 @@ jobs:
         [System.IO.File]::WriteAllText("setup_script.iss", $iss, $Utf8WithBom)
         & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "setup_script.iss"
 
-    - name: Build macOS
+    - name: Build macOS (Universal2)
       if: matrix.os == 'macos-latest'
       run: |
-        pyinstaller --noconfirm --windowed --name="Talmudic-Formulas-Mac" --add-data "talmud.db:." --add-data "widgets:widgets" --add-data "assets:assets" --collect-all PyQt6 main.py
+        # בנייה עבור אינטל וסיליקון במקביל
+        pyinstaller --noconfirm --windowed --target-arch universal2 --name="Talmudic-Formulas-Mac" --add-data "talmud.db:." --add-data "widgets:widgets" --add-data "assets:assets" --collect-all PyQt6 main.py
         cd dist && zip -r ../Talmudic-Formulas-Mac-Portable.zip Talmudic-Formulas-Mac.app && cd ..
         mkdir dmg_root && cp -R "dist/Talmudic-Formulas-Mac.app" dmg_root/
         hdiutil create -volname "Talmudic Formulas" -srcfolder dmg_root -ov -format UDZO "Talmudic-Formulas-Mac-Installer.dmg"
@@ -74,10 +74,12 @@ jobs:
         name: גרסה ${{ steps.get_version.outputs.new_tag }}
         body: |
           ## קישורים להורדה ישירה:
+          
           ###  Windows
           * [הורדת מתקין (Windows Setup)](https://github.com/${{ github.repository }}/releases/download/${{ steps.get_version.outputs.new_tag }}/Talmudic-Formulas-Setup-Win.exe)
-          * [הורדת גרסה ניידת (Portable EXE)](https://github.com/${{ github.repository }}/releases/download/${{ steps.get_version.outputs.new_tag }}/Talmudic-Formulas-Portable.exe)
-          ###  macOS
+          * [הורדת גרסה ניידת (Windows Portable EXE)](https://github.com/${{ github.repository }}/releases/download/${{ steps.get_version.outputs.new_tag }}/Talmudic-Formulas-Portable.exe)
+          
+          ###  macOS (Universal - Intel & Silicon)
           * [הורדת מתקין (macOS DMG)](https://github.com/${{ github.repository }}/releases/download/${{ steps.get_version.outputs.new_tag }}/Talmudic-Formulas-Mac-Installer.dmg)
           * [הורדת גרסה ניידת (macOS ZIP)](https://github.com/${{ github.repository }}/releases/download/${{ steps.get_version.outputs.new_tag }}/Talmudic-Formulas-Mac-Portable.zip)
         files: |

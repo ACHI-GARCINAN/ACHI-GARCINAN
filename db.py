@@ -5,18 +5,23 @@ import sys
 DB_PATH = ''
 
 def get_base_dir() -> str:
+    """מוצא את נתיב התיקייה הנכון בתוך EXE או בהרצה רגילה"""
     if getattr(sys, 'frozen', False):
-        # תמיכה בנתיב הפנימי של PyInstaller
         return getattr(sys, '_MEIPASS', os.path.dirname(sys.executable))
     return os.path.dirname(os.path.abspath(__file__))
 
 def load_masechet_list(folder: str) -> list:
     global DB_PATH
-    db_path = os.path.join(folder, "talmud.db")
+    # עדיפות ראשונה: חיפוש בתוך המשאבים הארוזים של ה-EXE
+    db_path = os.path.join(get_base_dir(), "talmud.db")
+    
+    # אם לא נמצא (למשל בהרצה ידנית), מחפשים בתיקייה שנבחרה
     if not os.path.exists(db_path):
-        db_path = os.path.join(get_base_dir(), "talmud.db")
+        db_path = os.path.join(folder, "talmud.db")
+    
     if not os.path.exists(db_path):
         return []
+    
     DB_PATH = db_path
     con = sqlite3.connect(db_path)
     rows = con.execute("SELECT id, num, name FROM masechtot ORDER BY num").fetchall()
