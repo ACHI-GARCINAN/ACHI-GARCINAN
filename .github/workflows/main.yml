@@ -1,93 +1,25 @@
-name: Build and Release
-on:
-  push:
-    branches: [ "main" ]
-  workflow_dispatch:
-
-jobs:
-  build:
-    name: Build on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [windows-latest, macos-latest]
-    permissions:
-      contents: write
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4 # ללא LFS כדי למנוע חסימה
-
-    - name: Get Latest Tag
-      id: get_tag
-      uses: oprypin/find-latest-tag@v1
-      with:
-        repository: ${{ github.repository }}
-        releases-only: true
-      continue-on-error: true
-
-    - name: Calculate Version
-      id: version_calc
-      shell: bash
-      run: |
-        LATEST_TAG="${{ steps.get_tag.outputs.tag }}"
-        if [ -z "$LATEST_TAG" ]; then
-          NEW_VERSION="1.10"
-        else
-          VERSION_MAJOR=$(echo $LATEST_TAG | cut -d. -f1 | sed 's/v//')
-          VERSION_MINOR=$(echo $LATEST_TAG | cut -d. -f2)
-          NEW_MINOR=$((VERSION_MINOR + 1))
-          NEW_VERSION="$VERSION_MAJOR.$NEW_MINOR"
-        fi
-        echo "final_version=$NEW_VERSION" >> $GITHUB_OUTPUT
-
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.9'
-
-    - name: Install Dependencies
-      run: pip install pyinstaller PyQt6 gdown
-
-    - name: Download Database from Google Drive
-      run: gdown --id "1_jWI2qNMSyBkH3EneM2mZg-Wzibn_gLw" -O talmud.db # הורדה מהקישור שנתת
-
-    - name: Build Windows
+- name: Build Windows
       if: matrix.os == 'windows-latest'
       shell: powershell
       run: |
         choco install innosetup --no-progress
-        # 1. בניית גרסה ניידת (קובץ EXE אחד) - נשמר בתיקייה נפרדת
-        pyinstaller --noconfirm --onefile --windowed --icon="icon.ico" --name="Talmudic-Formulas-Portable" --add-data "widgets;widgets" --add-data "assets;assets" --add-data "talmud.db;." --collect-all PyQt6 --distpath ./dist-portable main.py
         
-        # 2. בניית תיקייה עבור ההתקנה (Installer)
-        pyinstaller --noconfirm --onedir --windowed --icon="icon.ico" --name="Talmudic-Formulas" --add-data "widgets;widgets" --add-data "assets;assets" --add-data "talmud.db;." --collect-all PyQt6 --distpath ./dist-installer main.py
+        # בנייה לתיקיות נפרדות
+        pyinstaller --noconfirm --onefile --windowed --icon="icon.ico" --name="Talmudic-Formulas-Portable" --add-data "talmud.db;." --add-data "widgets;widgets" --add-data "assets;assets" --collect-all PyQt6 --distpath ./dist-portable main.py
+        pyinstaller --noconfirm --onedir --windowed --icon="icon.ico" --name="Talmudic-Formulas" --add-data "talmud.db;." --add-data "widgets;widgets" --add-data "assets;assets" --collect-all PyQt6 --distpath ./dist-installer main.py
         
-        # עדכון גרסה ב-ISS והרצה (מול תיקיית ה-installer החדשה)
-        (Get-Content "setup_script.iss") -replace 'AppVersion=.*', 'AppVersion=${{ steps.version_calc.outputs.final_version }}' | Set-Content "setup_script.iss"
-        (Get-Content "setup_script.iss") -replace 'Source: "dist\\Talmudic-Formulas\\\*"', 'Source: "dist-installer\\Talmudic-Formulas\\*"' | Set-Content "setup_script.iss"
+        # תיקון קריטי לקידוד עברית ב-Inno Setup
+        $issPath = "$(Get-Location)\setup_script.iss"
+        $encoding = New-Object System.Text.UTF8Encoding($true) # UTF-8 with BOM
+        
+        # קריאה בקידוד UTF8
+        $iss = [System.IO.File]::ReadAllText($issPath, [System.Text.Encoding]::UTF8)
+        
+        # החלפות
+        $iss = $iss -replace 'AppVersion=.*', 'AppVersion=${{ steps.version_calc.outputs.final_version }}'
+        $iss = $iss -replace 'Source: "dist\\Talmudic-Formulas\\\*"', 'Source: "dist-installer\\Talmudic-Formulas\\*"'
+        
+        # כתיבה בקידוד UTF8 עם BOM (חובה לעברית!)
+        [System.IO.File]::WriteAllText($issPath, $iss, $encoding)
+        
         & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "setup_script.iss"
-
-    - name: Build macOS
-      if: matrix.os == 'macos-latest'
-      run: |
-        pyinstaller --noconfirm --windowed --name="Talmudic-Formulas-Mac" --add-data "widgets:widgets" --add-data "assets:assets" --add-data "talmud.db:." --collect-all PyQt6 main.py
-        cd dist && zip -r ../Talmudic-Formulas-Mac-Portable.zip Talmudic-Formulas-Mac.app && cd ..
-        mkdir dmg_root && cp -R "dist/Talmudic-Formulas-Mac.app" dmg_root/
-        hdiutil create -volname "Talmudic Formulas" -srcfolder dmg_root -ov -format UDZO "Talmudic-Formulas-Mac-Installer.dmg"
-
-    - name: Create GitHub Release
-      uses: softprops/action-gh-release@v1
-      with:
-        tag_name: v${{ steps.version_calc.outputs.final_version }}
-        name: גרסה ${{ steps.version_calc.outputs.final_version }}
-        body: |
-          ### גרסה חדשה: נוסחאות התלמוד
-          * הוסדר נושא ה-Database בתוך ההתקנה.
-          * שם התוכנה שונה לעברית.
-        files: |
-          dist-portable/Talmudic-Formulas-Portable.exe
-          Output/Talmudic-Formulas-Setup-Win.exe
-          Talmudic-Formulas-Mac-Portable.zip
-          ./Talmudic-Formulas-Mac-Installer.dmg
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

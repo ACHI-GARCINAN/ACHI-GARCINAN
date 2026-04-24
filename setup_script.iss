@@ -1,5 +1,4 @@
-﻿;
-#define MyAppName "נוסחאות התלמוד"
+﻿#define MyAppName "נוסחאות התלמוד"
 #define MyAppExeName "Talmudic-Formulas.exe"
 
 [Setup]
@@ -24,7 +23,7 @@ Name: "hebrew"; MessagesFile: "compiler:Languages\Hebrew.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-; השורה הזו תעודכן אוטומטית על ידי ה-YAML להשתמש ב-dist-installer
+; השורה הבאה תתעדכן אוטומטית על ידי ה-YAML לתיקיית dist-installer
 Source: "dist\Talmudic-Formulas\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
