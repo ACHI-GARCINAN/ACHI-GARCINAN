@@ -10,7 +10,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        # שימוש ב-macos-13 מבטיח תאימות טובה יותר למעבדי אינטל וסיליקון כאחד
+        # שימוש ב-macos-13 (Intel) עם בנייה ל-Universal2 מכסה גם אינטל וגם M1/M2/M3
         os: [windows-latest, macos-13]
     permissions:
       contents: write
@@ -24,11 +24,21 @@ jobs:
       id: get_version
       shell: bash
       run: |
+        git fetch --tags
         LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v1.0")
         VERSION_MINOR=$(echo $LATEST_TAG | cut -d. -f2)
         NEW_MINOR=$((VERSION_MINOR + 1))
         NEW_TAG="v1.$NEW_MINOR"
         echo "new_tag=$NEW_TAG" >> $GITHUB_OUTPUT
+        echo "version_pure=1.$NEW_MINOR" >> $GITHUB_OUTPUT
+
+    - name: Create Git Tag
+      shell: bash
+      run: |
+        git tag ${{ steps.get_version.outputs.new_tag }}
+        git push origin ${{ steps.get_version.outputs.new_tag }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Set up Python
       uses: actions/setup-python@v5
@@ -38,24 +48,24 @@ jobs:
     - name: Install Dependencies
       run: |
         pip install pyinstaller PyQt6 gdown macholib
-        # מוודא התקנת PyQt6 נקייה עבור הארכיטקטורה
+        # כפיית התקנה שתומכת בארכיטקטורה הכפולה
         pip install --upgrade --force-reinstall PyQt6 PyQt6-Qt6
 
     - name: Download DB from Google Drive
       shell: bash
-      run: gdown "1_jWI2qNMSyBkH3EneM2mZg-Wzibn_gLw" -O talmud.db
+      run: |
+        # התיקון הקריטי: בלי --id
+        gdown "1_jWI2qNMSyBkH3EneM2mZg-Wzibn_gLw" -O talmud.db
 
     - name: Build Windows
       if: matrix.os == 'windows-latest'
       shell: powershell
       run: |
         choco install innosetup --no-progress
-        # גרסה ניידת
         pyinstaller --noconfirm --onefile --windowed --icon="icon.ico" --name="Talmudic-Formulas-Portable" --add-data "talmud.db;." --add-data "widgets;widgets" --add-data "assets;assets" --collect-all PyQt6 --distpath ./dist-portable main.py
-        # גרסה למתקין
         pyinstaller --noconfirm --onedir --windowed --icon="icon.ico" --name="Talmudic-Formulas" --add-data "talmud.db;." --add-data "widgets;widgets" --add-data "assets;assets" --collect-all PyQt6 --distpath ./dist-installer main.py
         
-        $VERSION = "${{ steps.get_version.outputs.new_tag }}".Replace("v", "")
+        $VERSION = "${{ steps.get_version.outputs.version_pure }}"
         $iss = Get-Content "setup_script.iss" -Raw
         $iss = $iss -replace 'AppVersion=.*', "AppVersion=$VERSION"
         $Utf8WithBom = New-Object System.Text.UTF8Encoding($true)
@@ -66,6 +76,7 @@ jobs:
     - name: Build macOS (Universal2)
       if: matrix.os == 'macos-13'
       run: |
+        # הפתרון למק: בנייה שתעבוד על כל המעבדים
         pyinstaller --noconfirm --windowed \
           --target-arch universal2 \
           --name="Talmudic-Formulas-Mac" \
@@ -84,13 +95,6 @@ jobs:
       with:
         tag_name: ${{ steps.get_version.outputs.new_tag }}
         name: גרסה ${{ steps.get_version.outputs.new_tag }}
-        body: |
-          ### 🪟 Windows
-          * [מתקין Setup](https://github.com/${{ github.repository }}/releases/download/${{ steps.get_version.outputs.new_tag }}/Talmudic-Formulas-Setup-Win.exe)
-          * [גרסה ניידת Portable](https://github.com/${{ github.repository }}/releases/download/${{ steps.get_version.outputs.new_tag }}/Talmudic-Formulas-Portable.exe)
-          ### 🍎 macOS
-          * [מתקין DMG](https://github.com/${{ github.repository }}/releases/download/${{ steps.get_version.outputs.new_tag }}/Talmudic-Formulas-Mac-Installer.dmg)
-          * [גרסה ניידת ZIP](https://github.com/${{ github.repository }}/releases/download/${{ steps.get_version.outputs.new_tag }}/Talmudic-Formulas-Mac-Portable.zip)
         files: |
           dist-portable/Talmudic-Formulas-Portable.exe
           Output/Talmudic-Formulas-Setup-Win.exe
