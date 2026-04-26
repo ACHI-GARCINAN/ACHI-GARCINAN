@@ -9,7 +9,7 @@ from db import load_masechet_list, get_base_dir
 from main_window import MainWindow, get_icon
 
 def resource_path(relative_path):
-    """ מחזירה את הנתיב המוחלט לקובץ, עובד גם ב-EXE וגם ב-App """
+    """ פונקציה טכנית למציאת קבצים בתוך ה-EXE או ה-App """
     if hasattr(sys, '_MEIPASS'):
         return os.path.join(sys._MEIPASS, relative_path)
     return os.path.join(os.path.abspath("."), relative_path)
@@ -35,7 +35,7 @@ class TalmudApp(QApplication):
         return super().notify(obj, event)
 
 def main():
-    # 1. סינון ארגומנטים של macOS
+    # סינון ארגומנטים של macOS למניעת קריסה
     args = [arg for arg in sys.argv if not arg.startswith("-psn")]
 
     if sys.platform == "win32":
@@ -52,44 +52,58 @@ def main():
     if not icon.isNull():
         app.setWindowIcon(icon)
 
-    # ── Splash Screen ──
+    # ── Splash Screen (המקורי שלך ללא שינוי עיצובי) ──
     splash_pix = QPixmap(500, 300)
     splash_pix.fill(QColor("#F7F3EC"))
     painter = QPainter(splash_pix)
     painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
     painter.setPen(QColor("#C8A060"))
     painter.drawRoundedRect(10, 10, 480, 280, 16, 16)
+
     painter.setPen(QColor("#5A1A00"))
     painter.setFont(QFont("David", 28, QFont.Weight.Bold))
     painter.drawText(splash_pix.rect(), Qt.AlignmentFlag.AlignCenter, "נוסחאות התלמוד")
+
+    painter.setPen(QColor("#C8A060"))
+    painter.setFont(QFont("David", 14))
+    painter.drawText(0, 240, 500, 40, Qt.AlignmentFlag.AlignCenter, "טוען נתונים...")
+
     painter.end()
 
     splash = QSplashScreen(splash_pix)
+    splash.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
     splash.show()
     app.processEvents()
+    # ───────────────────────────────────────────────────────
 
-    # ── טעינת נתונים ──
-    if len(args) > 1:
-        folder = args[1]
-    else:
-        folder = resource_path("")
-
+    t0 = time.time()
+    # תיקון: אם לא הועבר נתיב, מחפש בתוך ה-EXE/App
+    folder = args[1] if len(args) > 1 else resource_path("")
+    
     masechtot = load_masechet_list(folder)
+    print(f"load_masechet_list: {time.time()-t0:.2f}s")
     
     if not masechtot:
-        folder = QFileDialog.getExistingDirectory(None, "בחר תיקייה עם talmud.db", "")
-        if folder:
-            masechtot = load_masechet_list(folder)
+        folder = QFileDialog.getExistingDirectory(None, "בחר תיקייה", "")
+        if not folder:
+            sys.exit(0)
+        masechtot = load_masechet_list(folder)
 
     if not masechtot:
-        QMessageBox.critical(None, "שגיאה", "לא נמצא קובץ talmud.db.")
+        QMessageBox.critical(None, "שגיאה", "לא נמצא קובץ talmud.db בתיקייה.")
         sys.exit(1)
 
+    t0 = time.time()
     window = MainWindow(masechtot)
+    print(f"MainWindow init: {time.time()-t0:.2f}s")
     app.set_main_window(window)
+    if not icon.isNull():
+        window.setWindowIcon(icon)
     window.show()
+
     splash.finish(window)
     sys.exit(app.exec())
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

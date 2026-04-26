@@ -10,7 +10,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [windows-latest, macos-latest]
+        # שימוש ב-macos-13 מבטיח תאימות טובה יותר למעבדי אינטל וסיליקון כאחד
+        os: [windows-latest, macos-13]
     permissions:
       contents: write
     steps:
@@ -35,38 +36,35 @@ jobs:
         python-version: '3.11'
         
     - name: Install Dependencies
-      run: pip install pyinstaller PyQt6 gdown macholib
+      run: |
+        pip install pyinstaller PyQt6 gdown macholib
+        # מוודא התקנת PyQt6 נקייה עבור הארכיטקטורה
+        pip install --upgrade --force-reinstall PyQt6 PyQt6-Qt6
 
     - name: Download DB from Google Drive
       shell: bash
       run: gdown "1_jWI2qNMSyBkH3EneM2mZg-Wzibn_gLw" -O talmud.db
+
     - name: Build Windows
       if: matrix.os == 'windows-latest'
       shell: powershell
       run: |
         choco install innosetup --no-progress
-        
-        # בניית גרסה ניידת (Single File)
+        # גרסה ניידת
         pyinstaller --noconfirm --onefile --windowed --icon="icon.ico" --name="Talmudic-Formulas-Portable" --add-data "talmud.db;." --add-data "widgets;widgets" --add-data "assets;assets" --collect-all PyQt6 --distpath ./dist-portable main.py
-        
-        # בניית תיקייה עבור המתקין (Onedir)
+        # גרסה למתקין
         pyinstaller --noconfirm --onedir --windowed --icon="icon.ico" --name="Talmudic-Formulas" --add-data "talmud.db;." --add-data "widgets;widgets" --add-data "assets;assets" --collect-all PyQt6 --distpath ./dist-installer main.py
         
-        # עדכון אוטומטי של הגרסה והנתיב בתוך קובץ ה-ISS
-        $TAG = "${{ steps.get_version.outputs.new_tag }}"
-        $VERSION_NUM = $TAG.Replace("v", "") # הופך v1.6 ל-1.6
+        $VERSION = "${{ steps.get_version.outputs.new_tag }}".Replace("v", "")
         $iss = Get-Content "setup_script.iss" -Raw
-        $iss = $iss -replace 'AppVersion=.*', "AppVersion=$VERSION_NUM"
-        $iss = $iss -replace 'Source: "dist\\Talmudic-Formulas\\\*"', 'Source: "dist-installer\\Talmudic-Formulas\\*"'
-        
+        $iss = $iss -replace 'AppVersion=.*', "AppVersion=$VERSION"
         $Utf8WithBom = New-Object System.Text.UTF8Encoding($true)
         [System.IO.File]::WriteAllText("setup_script.iss", $iss, $Utf8WithBom)
         
-        # הרצת ה-Compiler של Inno Setup
         & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "setup_script.iss"
 
     - name: Build macOS (Universal2)
-      if: matrix.os == 'macos-latest'
+      if: matrix.os == 'macos-13'
       run: |
         pyinstaller --noconfirm --windowed \
           --target-arch universal2 \
@@ -76,9 +74,7 @@ jobs:
           --add-data "assets:assets" \
           --collect-all PyQt6 \
           main.py
-          
         cd dist && zip -r ../Talmudic-Formulas-Mac-Portable.zip Talmudic-Formulas-Mac.app && cd ..
-        
         mkdir dmg_root
         cp -R "dist/Talmudic-Formulas-Mac.app" dmg_root/
         hdiutil create -volname "Talmudic Formulas" -srcfolder dmg_root -ov -format UDZO "Talmudic-Formulas-Mac-Installer.dmg"
@@ -90,12 +86,11 @@ jobs:
         name: גרסה ${{ steps.get_version.outputs.new_tag }}
         body: |
           ### 🪟 Windows
-          * [הורדת מתקין (Setup)](https://github.com/${{ github.repository }}/releases/download/${{ steps.get_version.outputs.new_tag }}/Talmudic-Formulas-Setup-Win.exe)
-          * [הורדת גרסה ניידת (Portable EXE)](https://github.com/${{ github.repository }}/releases/download/${{ steps.get_version.outputs.new_tag }}/Talmudic-Formulas-Portable.exe)
-          
+          * [מתקין Setup](https://github.com/${{ github.repository }}/releases/download/${{ steps.get_version.outputs.new_tag }}/Talmudic-Formulas-Setup-Win.exe)
+          * [גרסה ניידת Portable](https://github.com/${{ github.repository }}/releases/download/${{ steps.get_version.outputs.new_tag }}/Talmudic-Formulas-Portable.exe)
           ### 🍎 macOS
-          * [הורדת מתקין (DMG)](https://github.com/${{ github.repository }}/releases/download/${{ steps.get_version.outputs.new_tag }}/Talmudic-Formulas-Mac-Installer.dmg)
-          * [הורדת גרסה ניידת (ZIP)](https://github.com/${{ github.repository }}/releases/download/${{ steps.get_version.outputs.new_tag }}/Talmudic-Formulas-Mac-Portable.zip)
+          * [מתקין DMG](https://github.com/${{ github.repository }}/releases/download/${{ steps.get_version.outputs.new_tag }}/Talmudic-Formulas-Mac-Installer.dmg)
+          * [גרסה ניידת ZIP](https://github.com/${{ github.repository }}/releases/download/${{ steps.get_version.outputs.new_tag }}/Talmudic-Formulas-Mac-Portable.zip)
         files: |
           dist-portable/Talmudic-Formulas-Portable.exe
           Output/Talmudic-Formulas-Setup-Win.exe
