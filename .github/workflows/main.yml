@@ -39,8 +39,7 @@ jobs:
 
     - name: Download DB from Google Drive
       shell: bash
-      run: gdown --id "1_jWI2qNMSyBkH3EneM2mZg-Wzibn_gLw" -O talmud.db
-
+      run: gdown "1_jWI2qNMSyBkH3EneM2mZg-Wzibn_gLw" -O talmud.db
     - name: Build Windows
       if: matrix.os == 'windows-latest'
       shell: powershell
