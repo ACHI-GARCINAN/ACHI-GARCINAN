@@ -5,30 +5,27 @@ import sys
 DB_PATH = ''
 
 def get_base_dir() -> str:
-    """מוצא את נתיב התיקייה הנכון בתוך EXE או בהרצה רגילה"""
     if getattr(sys, 'frozen', False):
-        return getattr(sys, '_MEIPASS', os.path.dirname(sys.executable))
+        return sys._MEIPASS
     return os.path.dirname(os.path.abspath(__file__))
 
 def load_masechet_list(folder: str) -> list:
     global DB_PATH
-    # עדיפות ראשונה: חיפוש בתוך המשאבים הארוזים של ה-EXE
-    db_path = os.path.join(get_base_dir(), "talmud.db")
-    
-    # אם לא נמצא (למשל בהרצה ידנית), מחפשים בתיקייה שנבחרה
+    db_path = os.path.join(folder, "talmud.db")
     if not os.path.exists(db_path):
-        db_path = os.path.join(folder, "talmud.db")
-    
+        db_path = os.path.join(get_base_dir(), "talmud.db")
     if not os.path.exists(db_path):
         return []
-    
     DB_PATH = db_path
     con = sqlite3.connect(db_path)
     rows = con.execute("SELECT id, num, name FROM masechtot ORDER BY num").fetchall()
     con.close()
     return [{'id': r[0], 'num': r[1], 'name': r[2]} for r in rows]
 
+
 def fetch_masechet(ms_id: int) -> tuple:
+    if not DB_PATH:
+        return [], []
     con = sqlite3.connect(DB_PATH)
     witnesses = [r[0] for r in con.execute(
         "SELECT name FROM witnesses WHERE masechet_id=? ORDER BY position", (ms_id,)
@@ -40,7 +37,10 @@ def fetch_masechet(ms_id: int) -> tuple:
     pages = [{'page': r[1], '_id': r[0]} for r in page_rows]
     return witnesses, pages
 
+
 def fetch_page(page_id: int) -> list:
+    if not DB_PATH:
+        return []
     con = sqlite3.connect(DB_PATH)
     sections_raw = con.execute(
         "SELECT id, section_label FROM sections WHERE page_id=? ORDER BY id",
@@ -57,23 +57,61 @@ def fetch_page(page_id: int) -> list:
     con.close()
     return sections
 
+
 def fetch_page_words(page_id: int) -> list:
+    if not DB_PATH:
+        return []
     con = sqlite3.connect(DB_PATH)
-    has_sw_table = con.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='sections_words'").fetchone()
+
+    has_sw_table = con.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='sections_words'"
+    ).fetchone()
+
     if has_sw_table:
         rows = con.execute(
-            "SELECT sw.id, s.section_label, w.name, wd.word FROM sections_words sw "
-            "JOIN sections s ON s.id = sw.section_id JOIN sections_words_texts swt ON swt.sections_word_id = sw.id "
-            "JOIN witnesses w ON w.id = swt.witness_id JOIN words wd ON wd.id = swt.word_id "
-            "WHERE sw.page_id = ? ORDER BY sw.id, w.position", (page_id,)
+            "SELECT sw.id, s.section_label, w.name, wd.word "
+            "FROM sections_words sw "
+            "JOIN sections s ON s.id = sw.section_id "
+            "JOIN sections_words_texts swt ON swt.sections_word_id = sw.id "
+            "JOIN witnesses w ON w.id = swt.witness_id "
+            "JOIN words wd ON wd.id = swt.word_id "
+            "WHERE sw.page_id = ? "
+            "ORDER BY sw.id, w.position",
+            (page_id,)
         ).fetchall()
         con.close()
+
         from collections import OrderedDict
-        word_map = OrderedDict()
+        word_map: OrderedDict = OrderedDict()
         for sw_id, sec_label, wit_name, content in rows:
             if sw_id not in word_map:
                 word_map[sw_id] = {'section': sec_label, 'witnesses': {}}
             word_map[sw_id]['witnesses'][wit_name] = content
+
         return list(word_map.values())
+
     con.close()
     return []
+    
+def search_word_in_shas(word: str) -> list:
+    if not DB_PATH or not word:
+        return []
+    con = sqlite3.connect(DB_PATH)
+    rows = con.execute(
+        "SELECT m.name, p.page_label, s.section_label "
+        "FROM texts t "
+        "JOIN witnesses w ON w.id = t.witness_id "
+        "JOIN sections s ON s.id = t.section_id "
+        "JOIN pages p ON p.id = s.page_id "
+        "JOIN masechtot m ON m.id = p.masechet_id "
+        "WHERE w.position = 0 "
+        "AND (' ' || replace(replace(replace(t.content, '.', ''), ',', ''), ':', '') || ' ') "
+        "LIKE (? || ' %') "
+        "OR (' ' || replace(replace(replace(t.content, '.', ''), ',', ''), ':', '') || ' ') "
+        "LIKE ('% ' || ? || ' %') "
+        "OR (' ' || replace(replace(replace(t.content, '.', ''), ',', ''), ':', '') || ' ') "
+        "LIKE ('% ' || ? || ' ')",
+        (word, word, word)
+    ).fetchall()
+    con.close()
+    return [{'masechet': r[0], 'page': r[1], 'section': r[2]} for r in rows]
