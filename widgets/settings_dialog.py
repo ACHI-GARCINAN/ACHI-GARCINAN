@@ -8,6 +8,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt, pyqtSignal, QSize
 from PyQt6.QtGui import QFont, QFontDatabase, QIntValidator, QPixmap
+import sys
 
 
 _hebrew_fonts_cache: list = []
@@ -50,99 +51,219 @@ class SettingsDialog(QDialog):
     def __init__(self, current_font: str, current_size: int, current_theme: str, continuous_sections_view: bool = False, parent=None):
         super().__init__(parent)
         self._continuous_sections_view = continuous_sections_view
+        self._current_theme = current_theme
+        self._current_font = current_font
         self.setWindowTitle("הגדרות תצוגה")
-        self.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
+        self.setLayoutDirection(Qt.LayoutDirection.LeftToRight)
         self.setMinimumWidth(500)
         self.setModal(True)
 
-        self.setStyleSheet("""
-            QDialog { background-color: #F0F4F7; }
-            QDialog QWidget { background: transparent; }
-            QDialog QFrame { background: transparent; }
-            QLabel { color: #2D3748; background: transparent; }
-            QRadioButton { background: transparent; color: #2D3748; }
-            QComboBox {
-                background-color: #FFFFFF;
-                border: 1px solid #CBD5E0;
-                border-radius: 6px;
-                padding: 5px 10px;
-                color: #2D3748;
-                font-size: 13px;
-                min-height: 30px;
-            }
-            QComboBox:focus { border-color: #5A6A82; }
-            QComboBox::drop-down { border: none; padding-left: 5px; }
-            QLineEdit {
-                background-color: #FFFFFF;
-                border: 1px solid #CBD5E0;
-                border-radius: 6px;
-                padding: 4px 8px;
-                color: #2D3748;
-                font-size: 14px;
-                min-height: 30px;
-            }
-            QLineEdit:focus { border-color: #5A6A82; }
-            QPushButton#ok_btn {
-                background-color: #5A6A82;
-                color: white;
-                border: none;
-                border-radius: 6px;
-                padding: 8px 24px;
-                font-size: 13px;
-                font-weight: bold;
-            }
-            QPushButton#ok_btn:hover { background-color: #4A5A72; }
-            QPushButton#cancel_btn {
-                background-color: #E1E8ED;
-                color: #4A5568;
-                border: 1px solid #CBD5E0;
-                border-radius: 6px;
-                padding: 8px 24px;
-                font-size: 13px;
-            }
-            QPushButton#cancel_btn:hover { background-color: #D1D9E0; }
-            QPushButton#size_btn {
-                background-color: #E1E8ED;
-                color: #2D3748;
-                border: 1px solid #CBD5E0;
-                border-radius: 6px;
-                min-width: 38px;
-                min-height: 34px;
-                font-weight: bold;
-            }
-            QPushButton#size_btn:hover {
-                background-color: #CBD5E0;
-                border-color: #5A6A82;
-            }
-            QPushButton#size_btn:pressed { background-color: #A0B4CC; }
+        if current_theme == 'colorful':
+            self.setStyleSheet("""
+                QDialog { background-color: #F7F3EC; }
+                QDialog QWidget { background: transparent; }
+                QDialog QFrame { background: transparent; }
+                QLabel { color: #2B1A0F; background: transparent; }
+                QRadioButton { background: transparent; color: #2B1A0F; }
+                QComboBox {
+                    background-color: #F7F3EC;
+                    border: 1px solid #C8A060;
+                    border-radius: 6px;
+                    padding: 5px 10px;
+                    color: #2B1A0F;
+                    font-size: 13px;
+                    min-height: 30px;
+                }
+                QComboBox QAbstractItemView {
+                    background-color: #F7F3EC;
+                    color: #2B1A0F;
+                    selection-background-color: #7A3810;
+                    selection-color: #FFF5E6;
+                    border: 1px solid #6A4020;
+                }
+                QComboBox:focus { border-color: #C8A060; }
+                QComboBox::drop-down { border: none; padding-left: 5px; }
+                QLineEdit {
+                    background-color: #F7F3EC;
+                    border: 1px solid #C8A060;
+                    border-radius: 6px;
+                    padding: 4px 8px;
+                    color: #2B1A0F;
+                    font-size: 14px;
+                    min-height: 30px;
+                }
+                QLineEdit:focus { border-color: #C8A060; }
+                QPushButton#ok_btn {
+                    background-color: #7A3810;
+                    color: #FFF5E6;
+                    border: none;
+                    border-radius: 6px;
+                    padding: 8px 24px;
+                    font-size: 13px;
+                    font-weight: bold;
+                }
+                QPushButton#ok_btn:hover { background-color: #8A4820; }
+                QPushButton#cancel_btn {
+                    background-color: #3A2418;
+                    color: #C8A87A;
+                    border: 1px solid #6A4020;
+                    border-radius: 6px;
+                    padding: 8px 24px;
+                    font-size: 13px;
+                }
+                QPushButton#cancel_btn:hover { background-color: #4A3428; }
+                QPushButton#size_btn {
+                    background-color: #3A2418;
+                    color: #FFF5E6;
+                    border: 1px solid #6A4020;
+                    border-radius: 6px;
+                    min-width: 38px;
+                    min-height: 34px;
+                    font-weight: bold;
+                }
+                QPushButton#size_btn:hover {
+                    background-color: #4A3428;
+                    border-color: #C8A060;
+                }
+                QPushButton#size_btn:pressed { background-color: #7A3810; }
+                QRadioButton {
+                    color: #FFF5E6;
+                    font-size: 13px;
+                    spacing: 8px;
+                }
+                QRadioButton::indicator {
+                    width: 18px;
+                    height: 18px;
+                    border-radius: 9px;
+                    border: 2px solid #C8A060;
+                    background-color: #3A2418;
+                }
+                QRadioButton::indicator:unchecked {
+                    border: 2px solid #6A4020;
+                    background-color: #3A2418;
+                }
+                QRadioButton::indicator:unchecked:hover {
+                    border: 2px solid #C8A060;
+                    background-color: #4A3428;
+                }
+                QRadioButton::indicator:checked {
+                    border: 2px solid #C8A060;
+                    background-color: #C8A060;
+                    image: none;
+                }
+                QCheckBox {
+                    color: #FFF5E6;
+                    font-size: 13px;
+                    spacing: 8px;
+                    background: transparent;
+                }
+                QCheckBox::indicator {
+                    width: 18px;
+                    height: 18px;
+                    border-radius: 3px;
+                    border: 1px solid #C8A060;
+                    background: #3A2418;
+                }
+                QCheckBox::indicator:checked {
+                    background: #C8A060;
+                    border: 1px solid #C8A060;
+                }
+            """)
+        else:
+            self.setStyleSheet("""
+                QDialog { background-color: #F0F4F7; }
+                QDialog QWidget { background: transparent; }
+                QDialog QFrame { background: transparent; }
+                QLabel { color: #2D3748; background: transparent; }
+                QRadioButton { background: transparent; color: #2D3748; }
+                QComboBox {
+                    background-color: #FFFFFF;
+                    border: 1px solid #CBD5E0;
+                    border-radius: 6px;
+                    padding: 5px 10px;
+                    color: #2D3748;
+                    font-size: 13px;
+                    min-height: 30px;
+                }
+                QComboBox QAbstractItemView {
+                    background-color: #FFFFFF;
+                    color: #2D3748;
+                    selection-background-color: #5A6A82;
+                    selection-color: #FFFFFF;
+                    border: 1px solid #CBD5E0;
+                }
+                QComboBox:focus { border-color: #5A6A82; }
+                QComboBox::drop-down { border: none; padding-left: 5px; }
+                QLineEdit {
+                    background-color: #FFFFFF;
+                    border: 1px solid #CBD5E0;
+                    border-radius: 6px;
+                    padding: 4px 8px;
+                    color: #2D3748;
+                    font-size: 14px;
+                    min-height: 30px;
+                }
+                QLineEdit:focus { border-color: #5A6A82; }
+                QPushButton#ok_btn {
+                    background-color: #5A6A82;
+                    color: white;
+                    border: none;
+                    border-radius: 6px;
+                    padding: 8px 24px;
+                    font-size: 13px;
+                    font-weight: bold;
+                }
+                QPushButton#ok_btn:hover { background-color: #4A5A72; }
+                QPushButton#cancel_btn {
+                    background-color: #E1E8ED;
+                    color: #4A5568;
+                    border: 1px solid #CBD5E0;
+                    border-radius: 6px;
+                    padding: 8px 24px;
+                    font-size: 13px;
+                }
+                QPushButton#cancel_btn:hover { background-color: #D1D9E0; }
+                QPushButton#size_btn {
+                    background-color: #E1E8ED;
+                    color: #2D3748;
+                    border: 1px solid #CBD5E0;
+                    border-radius: 6px;
+                    min-width: 38px;
+                    min-height: 34px;
+                    font-weight: bold;
+                }
+                QPushButton#size_btn:hover {
+                    background-color: #CBD5E0;
+                    border-color: #5A6A82;
+                }
+                QPushButton#size_btn:pressed { background-color: #A0B4CC; }
+                QRadioButton {
+                    color: #2D3748;
+                    font-size: 13px;
+                    spacing: 8px;
+                }
+                QRadioButton::indicator {
+                    width: 18px;
+                    height: 18px;
+                    border-radius: 9px;
+                    border: 2px solid #718096;
+                    background-color: #FFFFFF;
+                }
+                QRadioButton::indicator:unchecked {
+                    border: 2px solid #A0AEC0;
+                    background-color: #FFFFFF;
+                }
+                QRadioButton::indicator:unchecked:hover {
+                    border: 2px solid #5A6A82;
+                    background-color: #EDF2F7;
+                }
+                QRadioButton::indicator:checked {
+                    border: 2px solid #2D3748;
+                    background-color: #2D3748;
+                    image: none;
+                }
+            """)
             
-            QRadioButton {
-                color: #2D3748;
-                font-size: 13px;
-                spacing: 8px;
-            }
-            QRadioButton::indicator {
-                width: 18px;
-                height: 18px;
-                border-radius: 9px;
-                border: 2px solid #718096;
-                background-color: #FFFFFF;
-            }
-            QRadioButton::indicator:unchecked {
-                border: 2px solid #A0AEC0;
-                background-color: #FFFFFF;
-            }
-            QRadioButton::indicator:unchecked:hover {
-                border: 2px solid #5A6A82;
-                background-color: #EDF2F7;
-            }
-            QRadioButton::indicator:checked {
-                border: 2px solid #2D3748;
-                background-color: #2D3748;
-                image: none;
-            }
-        """)
-
         layout = QVBoxLayout(self)
         layout.setContentsMargins(24, 20, 24, 20)
         layout.setSpacing(16)
@@ -150,9 +271,9 @@ class SettingsDialog(QDialog):
         # כותרת
         title = QLabel("הגדרות תצוגה")
         title.setFont(QFont("David", 16, QFont.Weight.Bold))
-        title.setAlignment(Qt.AlignmentFlag.AlignRight)
+        title.setAlignment(Qt.AlignmentFlag.AlignLeft)
         layout.addWidget(title)
-
+        
         sep = QFrame()
         sep.setFrameShape(QFrame.Shape.HLine)
         sep.setStyleSheet("color: #CBD5E0;")
@@ -164,11 +285,11 @@ class SettingsDialog(QDialog):
         font_layout.setContentsMargins(0, 0, 0, 0)
         font_layout.setSpacing(12)
 
-        font_label = QLabel("גופן:")
+        font_label = QLabel(":גופן")
         font_label.setFont(QFont("David", 13))
         font_label.setFixedWidth(85)
-        font_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-
+        font_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        
         self.font_container = QWidget()
         font_vbox = QVBoxLayout(self.font_container)
         font_vbox.setContentsMargins(0, 0, 0, 0)
@@ -183,7 +304,9 @@ class SettingsDialog(QDialog):
         self.font_combo = QComboBox()
         self.font_combo.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
 
-        self.all_hebrew_fonts = get_hebrew_fonts()
+        self.all_hebrew_fonts = []
+        from PyQt6.QtCore import QTimer
+        QTimer.singleShot(0, self._load_fonts_async)
         if not self.all_hebrew_fonts:
             self.all_hebrew_fonts = ['David']
 
@@ -208,11 +331,11 @@ class SettingsDialog(QDialog):
         size_layout.setContentsMargins(0, 0, 0, 0)
         size_layout.setSpacing(8)
 
-        size_label = QLabel("גודל גופן:")
+        size_label = QLabel(":גודל גופן")
         size_label.setFont(QFont("David", 13))
         size_label.setFixedWidth(85)
-        size_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-
+        size_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        
         self.btn_smaller = QPushButton("א")
         self.btn_smaller.setObjectName("size_btn")
         self.btn_smaller.setFont(QFont("David", 11))
@@ -237,19 +360,19 @@ class SettingsDialog(QDialog):
         self.btn_larger.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_larger.clicked.connect(self._increase_size)
 
+        size_layout.addWidget(size_label)
+        size_layout.addStretch()
         size_layout.addWidget(self.btn_larger)
         size_layout.addWidget(self.size_edit)
         size_layout.addWidget(self.btn_smaller)
-        size_layout.addStretch()
-        size_layout.addWidget(size_label)
         layout.addWidget(size_row)
-
+        
         # ── בחירת ערכת נושא ──
-        theme_title = QLabel("ערכת נושא:")
+        theme_title = QLabel(":ערכת נושא")
         theme_title.setFont(QFont("David", 13))
-        theme_title.setAlignment(Qt.AlignmentFlag.AlignRight)
+        theme_title.setAlignment(Qt.AlignmentFlag.AlignLeft)
         layout.addWidget(theme_title)
-
+        
         theme_container = QHBoxLayout()
         theme_container.setSpacing(20)
 
@@ -280,7 +403,7 @@ class SettingsDialog(QDialog):
 
         self.img_colorful = QLabel()
         self.img_colorful.setFixedSize(180, 110)
-        self.img_colorful.setStyleSheet("border: 2px solid #CBD5E0; background: #2B1A0F; border-radius: 4px; cursor: pointer;")
+        self.img_colorful.setStyleSheet("border: 2px solid #C8A060; background: #F7F3EC; border-radius: 4px; cursor: pointer;")
         self.img_colorful.setCursor(Qt.CursorShape.PointingHandCursor)
         self._set_placeholder_image(self.img_colorful, "colorful_preview.png", "תצוגה צבעונית")
         self.img_colorful.mousePressEvent = lambda e: self.radio_colorful.setChecked(True)
@@ -329,10 +452,10 @@ class SettingsDialog(QDialog):
         layout.addWidget(hint_lbl)
 
         # ── תצוגה מקדימה ──
-        preview_lbl = QLabel("תצוגה מקדימה של גופן:")
+        preview_lbl = QLabel(":תצוגה מקדימה של גופן")
         preview_lbl.setFont(QFont("David", 11))
         preview_lbl.setStyleSheet("color: #718096;")
-        preview_lbl.setAlignment(Qt.AlignmentFlag.AlignRight)
+        preview_lbl.setAlignment(Qt.AlignmentFlag.AlignLeft)
         layout.addWidget(preview_lbl)
 
         self.preview = QLabel("אמר ליה שמואל לרב יהודה: שיננא, חטוף ואכול חטוף ואישתי, דעלמא דאזלינן מיניה כהלולא דמי")
@@ -370,9 +493,19 @@ class SettingsDialog(QDialog):
         layout.addWidget(btn_row)
 
         self._update_preview()
-
+    def _load_fonts_async(self):
+        self.all_hebrew_fonts = get_hebrew_fonts()
+        self._fill_font_combo(self.all_hebrew_fonts)
+        idx = self.font_combo.findText(self._current_font)
+        if idx >= 0:
+            self.font_combo.setCurrentIndex(idx)
+        self._update_preview()
+        
     def _set_placeholder_image(self, label: QLabel, filename: str, alt_text: str):
-        base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        if getattr(sys, 'frozen', False):
+            base = sys._MEIPASS
+        else:
+            base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         path = os.path.join(base, "assets", filename)
         if os.path.exists(path):
             pix = QPixmap(path)

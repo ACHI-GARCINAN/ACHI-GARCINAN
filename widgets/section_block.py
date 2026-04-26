@@ -148,18 +148,36 @@ class SectionBlock(QFrame):
     def search_highlight(self, term: str) -> bool:
         if not self._plain_text or not term:
             self._has_search_match = False
-            self._update_ui_colors()
+            if self._active_diff_witness:
+                w_name = self._active_diff_witness
+                self._active_diff_witness = None
+                self.show_witness_diff(w_name)
+            else:
+                self._update_ui_colors()
             return False
-        
-        if term in self._plain_text:
-            highlighted = self._plain_text.replace(term, f'<span style="background-color: yellow; color: black;">{term}</span>')
+
+        import re
+        plain_no_nikud = re.sub(r'[\u05B0-\u05C7]', '', self._plain_text)
+        term_no_nikud  = re.sub(r'[\u05B0-\u05C7]', '', term)
+
+        if term_no_nikud in plain_no_nikud:
+            highlighted = re.sub(
+                re.escape(term_no_nikud),
+                f'<span style="background-color: yellow; color: black;">{term}</span>',
+                plain_no_nikud
+            )
             self._text_lbl.setTextFormat(Qt.TextFormat.RichText)
             self._text_lbl.setText(self._make_justified_html(highlighted))
             self._has_search_match = True
             return True
         else:
             self._has_search_match = False
-            self._update_ui_colors()
+            if self._active_diff_witness:
+                w_name = self._active_diff_witness
+                self._active_diff_witness = None
+                self.show_witness_diff(w_name)
+            else:
+                self._update_ui_colors()
             return False
 
     def has_search_match(self) -> bool:

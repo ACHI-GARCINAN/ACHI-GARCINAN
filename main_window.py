@@ -7,8 +7,8 @@ from PyQt6.QtWidgets import (
     QListWidget, QListWidgetItem, QLabel, QSplitter,
     QPushButton, QLineEdit, QSpacerItem, QSizePolicy
 )
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont, QCursor, QIcon, QKeyEvent
+from PyQt6.QtCore import Qt, QObject, QEvent, QPoint
+from PyQt6.QtGui import QFont, QCursor, QIcon, QKeyEvent, QKeySequence
 
 from styles import STYLE, get_theme_styles, get_theme_config
 from db import fetch_masechet, fetch_page, fetch_page_words
@@ -19,7 +19,7 @@ from widgets.touch_scroll import TouchScrollArea
 from widgets.copyright_popup import CopyrightPopup
 from widgets.words_view import WordsView
 from widgets.settings_dialog import SettingsDialog
-from settings_manager import load_settings, save_settings
+from settings_manager import load_settings, save_settings, save_last_position, load_last_position, save_layout, load_layout
 
 
 def get_base_dir() -> str:
@@ -35,6 +35,57 @@ def get_icon() -> QIcon:
         if os.path.exists(path):
             return QIcon(path)
     return QIcon()
+
+
+
+
+
+class _ListArrowFilter(QObject):
+    """מונע מ-QListWidget לבלוע חצי מקלדת בתצוגת מילים — מעביר אותם ל-MainWindow."""
+
+    def __init__(self, window):
+        super().__init__()
+        self._window = window
+
+    def eventFilter(self, obj, event):
+        if (event.type() == QEvent.Type.KeyPress
+                and self._window.display_mode == 'words'):
+            key = event.key()
+            if key in (Qt.Key.Key_Left, Qt.Key.Key_Right,
+                       Qt.Key.Key_Up, Qt.Key.Key_Down):
+                self._window.keyPressEvent(event)
+                return True
+        return False
+
+
+class ListTouchScrollFilter(QObject):
+    """מאפשר גלילה במסך מגע ב-QListWidget."""
+
+    def __init__(self):
+        super().__init__()
+        self._touch_start = None
+        self._scroll_start = None
+
+    def eventFilter(self, obj, event):
+        t = event.type()
+        if t == QEvent.Type.TouchBegin:
+            pts = event.points()
+            if pts:
+                self._touch_start = pts[0].position().toPoint()
+                sb = obj.parent().verticalScrollBar()
+                self._scroll_start = sb.value()
+            return True
+        if t == QEvent.Type.TouchUpdate:
+            pts = event.points()
+            if pts and self._touch_start is not None:
+                delta = pts[0].position().toPoint().y() - self._touch_start.y()
+                sb = obj.parent().verticalScrollBar()
+                sb.setValue(self._scroll_start - delta)
+            return True
+        if t == QEvent.Type.TouchEnd:
+            self._touch_start = None
+            return True
+        return False
 
 
 class MainWindow(QMainWindow):
@@ -60,7 +111,7 @@ class MainWindow(QMainWindow):
         self._theme = settings.get('theme', 'classic')
         self._continuous_sections_view = settings.get('continuous_sections_view', False)
 
-        self.setWindowTitle("סינופסיס תלמוד בבלי")
+        self.setWindowTitle("נוסחאות התלמוד")
         self.setMinimumSize(1100, 650)
         self.showMaximized()
         self.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
@@ -76,8 +127,28 @@ class MainWindow(QMainWindow):
 
         self._build_ui()
 
+        # שחזר פריסה שמורה
+        _layout = load_layout()
+        self.splitter.setSizes(_layout['splitter_sizes'])
+        if not _layout['sidebar_visible']:
+            self.nav_panel.hide()
+            self.sidebar_toggle_btn.setText("◀")
+
+
+        # גלילת מסך מגע עבור רשימות המסכתות והדפים
+        self._list_touch_filter = ListTouchScrollFilter()
+        self._list_arrow_filter = _ListArrowFilter(self)
+        for lw in (self.masechet_list, self.page_list):
+            lw.viewport().setAttribute(Qt.WidgetAttribute.WA_AcceptTouchEvents, True)
+            lw.viewport().installEventFilter(self._list_touch_filter)
+            lw.installEventFilter(self._list_arrow_filter)
+
         if self.masechtot:
-            self.masechet_list.setCurrentRow(0)
+            last_ms, last_pg = load_last_position()
+            last_ms = min(last_ms, len(self.masechtot) - 1)
+            # חסום את אות הדף כדי שנוכל להגדיר אותו ידנית אחרי טעינת המסכת
+            self._restore_page_idx = last_pg
+            self.masechet_list.setCurrentRow(last_ms)
 
     def _show_copyright_notice(self):
         popup = CopyrightPopup(self.centralWidget())
@@ -176,6 +247,7 @@ class MainWindow(QMainWindow):
         self.mode_btn.setFixedHeight(30)
         self.mode_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.mode_btn.setCheckable(True)
+        self.mode_btn.setToolTip("עבור בין תצוגת מילים לתצוגת קטעים (Alt+M)")
         self.mode_btn.toggled.connect(self._on_mode_toggled)
         left_layout.addWidget(self.mode_btn)
 
@@ -328,6 +400,7 @@ class MainWindow(QMainWindow):
         self.splitter.setStretchFactor(0, 0)
         self.splitter.setStretchFactor(1, 1)
         self.splitter.setStretchFactor(2, 0)
+        self.splitter.splitterMoved.connect(self._on_splitter_moved)
         
         self._update_ui_colors()
 
@@ -435,11 +508,15 @@ class MainWindow(QMainWindow):
         row = self.page_list.currentRow()
         if row > 0:
             self.page_list.setCurrentRow(row - 1)
+        if self.display_mode == 'words':
+            self.setFocus()
 
     def _go_next_page(self):
         row = self.page_list.currentRow()
         if row < self.page_list.count() - 1:
             self.page_list.setCurrentRow(row + 1)
+        if self.display_mode == 'words':
+            self.setFocus()
 
     def _update_nav_buttons(self, idx: int):
         self.prev_btn.setEnabled(idx > 0)
@@ -454,6 +531,7 @@ class MainWindow(QMainWindow):
             self.nav_panel.show()
             self.sidebar_toggle_btn.setText("▶")
             self.splitter.setSizes([215, 780, 420])
+        save_layout(self.splitter.sizes(), self.nav_panel.isVisible())
 
     def _quick_nav(self):
         raw = self.search_box.text().strip()
@@ -461,14 +539,47 @@ class MainWindow(QMainWindow):
             return
 
         # ניתוח הקלט: מחלצים שם מסכת ומספר דף
-        # תבנית: <מסכת> [דף] <מספר>
-        m = re.match(
-            r'^([\u05d0-\u05ea]+(?:\s[\u05d0-\u05ea]+)*)'
-            r'(?:\s+\u05d3\u05e3)?'
-            r'\s+([\u05d0-\u05ea"\u05f4\u05f3\u2019\']+|\d+)$',
-            raw
-        )
-        if not m:
+        # תומך בראשי תיבות ובפורמטים גמישים
+        acronyms = {
+            'ר"ה': 'ראש השנה',
+            'מו"ק': 'מועד קטן',
+            'ב"ק': 'בבא קמא',
+            'ב"מ': 'בבא מציעא',
+            'ב"ב': 'בבא בתרא',
+            'ע"ז': 'עבודה זרה'
+        }
+
+        ms_query = ""
+        pg_query = ""
+
+        # בדוק אם השאילתה מתחילה בראשי תיבות
+        found_acronym = False
+        for abbr, full in acronyms.items():
+            if raw == abbr or raw.startswith(abbr + " "):
+                ms_query = full
+                pg_query = raw[len(abbr):].strip()
+                # נקה את המילה "דף" אם קיימת
+                pg_query = re.sub(r'^\u05d3\u05e3\s*', '', pg_query).strip()
+                found_acronym = True
+                break
+
+        if not found_acronym:
+            # תבנית רגילה: <מסכת> [דף] <מספר>
+            m = re.match(
+                r'^([\u05d0-\u05ea]+(?:\s[\u05d0-\u05ea]+)*)'
+                r'(?:\s+\u05d3\u05e3)?'
+                r'\s+([\u05d0-\u05ea"\u05f4\u05f3\u2019\']+|\d+)$',
+                raw
+            )
+            if m:
+                ms_query = m.group(1).strip()
+                pg_query = m.group(2).strip()
+            else:
+                # אם אין מספר דף, נסה לראות אם זה רק שם מסכת
+                ms_query = raw
+                pg_query = ""
+
+        if not ms_query:
             # לא הצלחנו לפרש — סמן שגיאה בתיבת החיפוש
             cfg = get_theme_config(self._theme)
             self.search_box.setStyleSheet(f"""
@@ -481,9 +592,6 @@ class MainWindow(QMainWindow):
                 }}
             """)
             return
-
-        ms_query = m.group(1).strip()
-        pg_query = m.group(2).strip()
 
         # מצא את המסכת
         ms_idx = None
@@ -511,10 +619,14 @@ class MainWindow(QMainWindow):
 
         # מצא את הדף
         pg_idx = None
-        for i, pg in enumerate(self.pages):
-            if _page_matches(pg['page'], pg_query):
-                pg_idx = i
-                break
+        if not pg_query:
+            # אם לא הוזן דף, נבחר את הדף הראשון במסכת
+            pg_idx = 0
+        else:
+            for i, pg in enumerate(self.pages):
+                if _page_matches(pg['page'], pg_query):
+                    pg_idx = i
+                    break
 
         if pg_idx is None:
             cfg = get_theme_config(self._theme)
@@ -531,6 +643,9 @@ class MainWindow(QMainWindow):
 
         self.page_list.setCurrentRow(pg_idx)
         self.search_box.clear()
+        self.search_box.clearFocus()
+        if self.display_mode == 'words':
+            self.setFocus()
         # החזר סגנון רגיל
         cfg = get_theme_config(self._theme)
         self.search_box.setStyleSheet(f"""
@@ -668,12 +783,19 @@ class MainWindow(QMainWindow):
         self._clear_text()
         self.page_title.setText(self.current_masechet_name)
         if pages:
-            self.page_list.setCurrentRow(0)
+            # שחזר דף אחרון אם יש (בטעינה ראשונה)
+            restore_idx = getattr(self, '_restore_page_idx', 0)
+            self._restore_page_idx = 0  # אפס כדי שמעכשיו תמיד יתחיל מדף ראשון בעת החלפת מסכת
+            restore_idx = min(restore_idx, len(pages) - 1)
+            self.page_list.setCurrentRow(restore_idx)
 
     def _load_page(self, idx: int):
         if idx < 0 or idx >= len(self.pages):
             return
         self.current_page_idx = idx
+        # שמור מיקום נוכחי
+        ms_idx = self.masechet_list.currentRow()
+        save_last_position(ms_idx, idx)
         self.selected_block = None
         self.section_blocks = []
         self._words_view = None
@@ -839,6 +961,17 @@ class MainWindow(QMainWindow):
         if not self.selected_block:
             return
         self.selected_block.show_witness_diff(witness_name)
+
+    def _on_splitter_moved(self, pos: int, index: int):
+        save_layout(self.splitter.sizes(), self.nav_panel.isVisible())
+
+    def closeEvent(self, event):
+        """שומר את המיקום האחרון בסגירת התוכנה."""
+        ms_idx = self.masechet_list.currentRow()
+        pg_idx = self.current_page_idx
+        if ms_idx >= 0 and pg_idx >= 0:
+            save_last_position(ms_idx, pg_idx)
+        super().closeEvent(event)
 
     def keyPressEvent(self, event: QKeyEvent):
         if self.display_mode == 'words' and self._current_words_data:

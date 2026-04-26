@@ -17,6 +17,7 @@ def is_minor_diff(source_word: str, ref_word: str) -> bool:
     בודק אם ההבדל בין שתי מילים הוא "שינוי קל" לפי הכללים:
     1. אותה מילה ורק חסר אותיות ויש גרש (') במילה המקורית.
     2. אותה מילה וחסר רק י', אפילו בלי גרש.
+    חריג: אליעזר ואלעזר נחשבים כשינוי משמעותי (לא קל).
     """
     s = normalize_word(source_word)
     r = normalize_word(ref_word)
@@ -24,6 +25,11 @@ def is_minor_diff(source_word: str, ref_word: str) -> bool:
         return False
     if s == r:
         return True
+
+    # חריג: אליעזר vs אלעזר — תמיד ייחשב כשינוי משמעותי
+    _ELIEZER_FORMS = {'אליעזר', 'אלעזר'}
+    if s in _ELIEZER_FORMS and r in _ELIEZER_FORMS and s != r:
+        return False
 
     # הסרת גרשים לצורך השוואה
     s_no_quotes = s.replace("'", "").replace('"', '')
@@ -87,17 +93,16 @@ def _diff_highlight(source_text: str, reference_text: str, highlight_style: str,
 
 def build_highlighted_html(witness_text: str, base_text: str, hide_minor: bool = False) -> str:
     """מדגיש מילים בעד הנוסח שאינן מופיעות ברצף המתאים בטקסט הבסיס (וילנא)."""
-    style = "background-color:#FFD700;color:#1A202C;border-radius:3px;padding:0 2px;font-weight:bold;"
+    # שינוי לבקשת המשתמש: אדום מודגש ללא רקע
+    style = "color:#E53E3E;font-weight:bold;"
     return _diff_highlight(witness_text, base_text, style, hide_minor=hide_minor)
 
 
 def build_vilna_diff_html(base_text: str, witness_text: str, hide_minor: bool = False) -> str:
     """מדגיש מילים בטקסט וילנא שאינן מופיעות ברצף המתאים בעד הנוסח."""
-    style = "background-color:#E53E3E;color:#FFFFFF;border-radius:3px;padding:0 2px;font-weight:bold;"
+    # שינוי לבקשת המשתמש: אדום מודגש ללא רקע
+    style = "color:#E53E3E;font-weight:bold;"
     return _diff_highlight(base_text, witness_text, style, hide_minor=hide_minor)
-    """מדגיש מילים בטקסט וילנא שאינן מופיעות ברצף המתאים בעד הנוסח."""
-    style = "background-color:#E53E3E;color:#FFFFFF;border-radius:3px;padding:0 2px;font-weight:bold;"
-    return _diff_highlight(base_text, witness_text, style)
 
 
 # ── גימטריה ──────────────────────────────────────────────────
@@ -151,4 +156,21 @@ def _page_matches(page_str: str, query_page: str) -> bool:
 def _masechet_matches(ms_name: str, query_name: str) -> bool:
     name_clean = re.sub(r'^\u05de\u05e1\u05db\u05ea\s*', '', ms_name).strip()
     q = query_name.strip()
+    
+    # תמיכה בראשי תיבות לפי בקשת המשתמש
+    acronyms = {
+        'ר"ה': 'ראש השנה',
+        'מו"ק': 'מועד קטן',
+        'ב"ק': 'בבא קמא',
+        'ב"מ': 'בבא מציעא',
+        'ב"ב': 'בבא בתרא',
+        'ע"ז': 'עבודה זרה'
+    }
+    
+    # אם השאילתה מתחילה בראשי תיבות מוכרים (גם אם אחריהם יש דף, למשל "ב"ק לז")
+    for abbr, full in acronyms.items():
+        if q == abbr or q.startswith(abbr + " "):
+            if full in name_clean:
+                return True
+            
     return name_clean == q or name_clean.startswith(q) or q.startswith(name_clean)

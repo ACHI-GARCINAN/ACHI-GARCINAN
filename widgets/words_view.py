@@ -1,9 +1,11 @@
+import os, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel
 from PyQt6.QtCore import Qt, pyqtSignal, QSize, QTimer
 from PyQt6.QtGui import QFont, QCursor
 
 from styles import get_theme_config
-
 
 class _ClickableWord(QLabel):
     """מילה לחיצה בודדת בתצוגת המילים."""
@@ -68,7 +70,21 @@ class _ClickableWord(QLabel):
             if top:
                 top.setFocus()
         super().mousePressEvent(e)
-
+    def contextMenuEvent(self, event):
+        from PyQt6.QtWidgets import QMenu
+        menu = QMenu(self)
+        menu.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
+        search_action = menu.addAction(f'חפש "{self.text()}" בש"ס')
+        action = menu.exec(event.globalPos())
+        if action == search_action:
+            from db import search_word_in_shas
+            from search_results_dialog import SearchResultsDialog
+            import re
+            word = re.sub(r'[\u05B0-\u05C7]', '', self.text().strip())
+            results = search_word_in_shas(word)
+            dlg = SearchResultsDialog(word, results, self._theme, self.window())
+            dlg.exec()
+            
 
 class _FlowWidget(QWidget):
     """Flow layout — מציג מילים בשורות גמישות RTL."""
