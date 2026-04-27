@@ -6,16 +6,28 @@ DB_PATH = ''
 
 def get_base_dir() -> str:
     if getattr(sys, 'frozen', False):
+        # נתיב הקובץ המריץ (.exe)
+        base_exe_dir = os.path.dirname(sys.executable)
+        # בדיקה האם אנחנו בתוך התקנה עם תיקיית _internal
+        internal_path = os.path.join(base_exe_dir, "_internal")
+        if os.path.exists(internal_path):
+            return internal_path
+        # אם התיקייה לא קיימת (מצב Portable), נשתמש בתיקייה הזמנית
         return sys._MEIPASS
     return os.path.dirname(os.path.abspath(__file__))
 
 def load_masechet_list(folder: str) -> list:
     global DB_PATH
+    # ניסיון טעינה מהנתיב שהתקבל (ארגומנט או בסיס)
     db_path = os.path.join(folder, "talmud.db")
+    
+    # אם לא נמצא שם, נבצע חיפוש אוטומטי בנתיב הבסיס המותאם
     if not os.path.exists(db_path):
         db_path = os.path.join(get_base_dir(), "talmud.db")
+        
     if not os.path.exists(db_path):
         return []
+        
     DB_PATH = db_path
     con = sqlite3.connect(db_path)
     rows = con.execute("SELECT id, num, name FROM masechtot ORDER BY num").fetchall()
