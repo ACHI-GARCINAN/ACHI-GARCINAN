@@ -334,7 +334,7 @@ class WitnessPanel(QWidget):
 
                 is_vilna = (witness == main_witness)
                 if self.highlight_diffs and not is_vilna:
-                    from utils import is_minor_diff
+                    from utils import is_minor_diff, is_acronym_minor_diff
                     norm_sel = normalize_word(sel_text)
                     norm_vil = normalize_word(vilna_word)
                     # שינוי: גם כשיש מילה בוילנא אבל אין בעד הנוסח (קו) - זה שינוי
@@ -343,8 +343,28 @@ class WitnessPanel(QWidget):
                     if word_differs and not missing_in_witness and self.hide_minor_diffs:
                         if is_minor_diff(sel_text, vilna_word):
                             word_differs = False
+                        # כלל ראשי תיבות: בדוק אם המילה הנוכחית + שכנותיה הן ר"ת של הצד השני
+                        if word_differs and words_data is not None:
+                            # אסוף את המילים השלמות סביב המיקום הנוכחי בכל צד
+                            def _get_context_words(witness_name, center_idx, n=3):
+                                words = []
+                                for j in range(center_idx, min(len(words_data), center_idx + n)):
+                                    t = (words_data[j]['witnesses'].get(witness_name) or '').strip()
+                                    if t and t != 'None':
+                                        words.append(t)
+                                return words
+                            wit_context = _get_context_words(witness, word_idx)
+                            vil_context = _get_context_words(main_witness, word_idx)
+                            if is_acronym_minor_diff(wit_context[:1] if wit_context else [sel_text],
+                                                     vil_context) or                                is_acronym_minor_diff(wit_context,
+                                                     vil_context[:1] if vil_context else [vilna_word]):
+                                word_differs = False
                     if word_differs:
-                        highlight_style = "color: #E53E3E; font-weight: bold;"
+                        if missing_in_witness:
+                            # מקף (מילה חסרה בעד הנוסח) — שחור עם הצללה ורדרדה בהירה
+                            highlight_style = "color: #1A1A1A; background-color: #FFE4E4; padding: 1px 4px; border-radius: 3px;"
+                        else:
+                            highlight_style = "color: #E53E3E; font-weight: bold;"
                         selected_word = f'<span style="{highlight_style}">{selected_word}</span>'
 
                 before_str = " ".join(before_parts)

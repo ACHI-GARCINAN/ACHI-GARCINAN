@@ -48,6 +48,80 @@ def is_minor_diff(source_word: str, ref_word: str) -> bool:
     return False
 
 
+
+# ── ראשי תיבות ──────────────────────────────────────────────────
+
+_GERSHAYIM = '״'  # ״
+
+def _get_heb_letters(w: str) -> str:
+    """מחזיר רק אותיות עבריות, ללא ניקוד ופיסוק."""
+    w = re.sub(r'[ְ-ׇ]', '', w)
+    return re.sub(r'[^א-ת]', '', w)
+
+def _has_gershayim(w: str) -> bool:
+    """בודק אם מילה מכילה גרשיים (") — סימן ראשי תיבות."""
+    return '"' in w or _GERSHAYIM in w
+
+def _acronym_matches_words(acronym_word: str, full_words: list) -> bool:
+    """
+    בודק אם acronym_word (עם גרשיים) הוא ראשי תיבות של full_words.
+    כל אות בר"ת יכולה להתאים לאות הבאה (לאו דווקא הראשונה) של כל מילה,
+    כך שכנה"ג מתאים ל-כנסת הגדולה ומנ"ל ל-מנא ליה.
+    ו' חיבור: יכולה לדלג ללא צריכת אות/מילה.
+    """
+    if not _has_gershayim(acronym_word):
+        return False
+    letters = _get_heb_letters(acronym_word)
+    if len(letters) < 2 or not full_words:
+        return False
+
+    full_letters = [_get_heb_letters(w) for w in full_words]
+
+    def match(li: int, wi: int, ci: int) -> bool:
+        """
+        li = אינדקס באותיות הר"ת
+        wi = אינדקס במילה הנוכחית ב-full_words
+        ci = אינדקס האות הנוכחית בתוך full_words[wi]
+        """
+        if li == len(letters):
+            return True
+        if wi >= len(full_words):
+            return False
+        letter = letters[li]
+        word_ltrs = full_letters[wi] if wi < len(full_letters) else ''
+        # ו\'\' חיבור: דלג עליה ללא צריכת אות
+        if letter == 'ו' and match(li + 1, wi, ci):
+            return True
+        # האות תואמת לאות הנוכחית במילה
+        if ci < len(word_ltrs) and word_ltrs[ci] == letter:
+            if match(li + 1, wi, ci + 1):   # המשך באותה מילה
+                return True
+            if match(li + 1, wi + 1, 0):    # מעבר למילה הבאה
+                return True
+        # דלג למילה הבאה (רק אם כבר התחלנו לצרוך אותיות ממילה זו)
+        if ci > 0 and match(li, wi + 1, 0):
+            return True
+        return False
+
+    return match(0, 0, 0)
+
+def is_acronym_minor_diff(src_slice: list, ref_slice: list) -> bool:
+    """
+    בודק אם ההחלפה src_slice↔ref_slice היא שינוי קל של ראשי תיבות (דו-כיווני).
+    כיוון 1: src הוא ר"ת ו-ref הן המילים השלמות (replace 1→N).
+    כיוון 2: ref הוא ר"ת ו-src הן המילים השלמות (replace N→1).
+    כיוון 3: 1→1 כשאחת מהן היא ר"ת של השנייה (נדיר אבל אפשרי).
+    """
+    if len(src_slice) == 1 and len(ref_slice) >= 2:
+        return _acronym_matches_words(src_slice[0], ref_slice)
+    if len(ref_slice) == 1 and len(src_slice) >= 2:
+        return _acronym_matches_words(ref_slice[0], src_slice)
+    if len(src_slice) == 1 and len(ref_slice) == 1:
+        return (_acronym_matches_words(src_slice[0], ref_slice) or
+                _acronym_matches_words(ref_slice[0], src_slice))
+    return False
+
+
 def _diff_highlight(source_text: str, reference_text: str, highlight_style: str, hide_minor: bool = False) -> str:
     """
     מחזיר HTML עם הדגשה של מילים בטקסט המקור שאינן תואמות לרצף בטקסט הייחוס.
@@ -56,8 +130,11 @@ def _diff_highlight(source_text: str, reference_text: str, highlight_style: str,
     source_tokens = tokenize(source_text)
     ref_tokens = tokenize(reference_text)
 
-    source_words = [normalize_word(t) for t in source_tokens if t.strip()]
-    ref_words    = [normalize_word(t) for t in ref_tokens    if t.strip()]
+    # שמור מילים מקוריות (לצורך זיהוי גרשיים בר"ת) ומנורמלות (להשוואה)
+    source_words_orig = [t for t in source_tokens if t.strip()]
+    ref_words_orig    = [t for t in ref_tokens    if t.strip()]
+    source_words = [normalize_word(t) for t in source_words_orig]
+    ref_words    = [normalize_word(t) for t in ref_words_orig]
 
     matched = [False] * len(source_words)
     matcher = difflib.SequenceMatcher(None, source_words, ref_words, autojunk=False)
@@ -69,8 +146,17 @@ def _diff_highlight(source_text: str, reference_text: str, highlight_style: str,
     if hide_minor:
         # נמצא את כל ה-opcodes כדי לזהות מילים שלא הותאמו
         for tag, i1, i2, j1, j2 in matcher.get_opcodes():
-            if tag == 'replace' and (i2 - i1) == (j2 - j1):
-                # החלפה של מילה במילה - נבדוק אם זה שינוי קל
+            if tag != 'replace':
+                continue
+            # כלל 3: ראשי תיבות — משתמש במילים המקוריות (עם גרשיים!)
+            src_orig_slice = source_words_orig[i1:i2]
+            ref_orig_slice = ref_words_orig[j1:j2]
+            if is_acronym_minor_diff(src_orig_slice, ref_orig_slice):
+                for k in range(i2 - i1):
+                    matched[i1 + k] = True
+                continue
+            # כלל 1+2: שינוי קל מילה-במילה (replace 1:1 בלבד)
+            if (i2 - i1) == (j2 - j1):
                 for k in range(i2 - i1):
                     if is_minor_diff(source_words[i1 + k], ref_words[j1 + k]):
                         matched[i1 + k] = True
