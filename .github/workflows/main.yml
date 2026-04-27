@@ -34,8 +34,9 @@ jobs:
       if: matrix.os == 'windows-latest'
       shell: bash
       run: |
+        # בדיקה אם התג כבר קיים למניעת שגיאת exit code 128
         if git rev-parse "${{ steps.get_version.outputs.new_tag }}" >/dev/null 2>&1; then
-          echo "Tag already exists, skipping creation."
+          echo "Tag ${{ steps.get_version.outputs.new_tag }} already exists, skipping..."
         else
           git tag ${{ steps.get_version.outputs.new_tag }}
           git push origin ${{ steps.get_version.outputs.new_tag }}
@@ -48,9 +49,17 @@ jobs:
       with:
         python-version: '3.11'
         
-    - name: Install Dependencies
+    - name: Install Dependencies (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        pip install pyinstaller PyQt6 gdown macholib
+        pip install --upgrade --force-reinstall PyQt6 PyQt6-Qt6
+
+    - name: Install Dependencies (macOS)
+      if: contains(matrix.os, 'macos')
       run: |
         pip install pyinstaller gdown macholib
+        # התקנה ספציפית למק שתומכת ב-Universal2
         pip install --upgrade --only-binary=:all: --platform macosx_10_14_universal2 PyQt6 PyQt6-Qt6
 
     - name: Download DB
@@ -62,7 +71,11 @@ jobs:
       shell: powershell
       run: |
         choco install innosetup --no-progress
+        # בניית גרסת Portable
+        pyinstaller --noconfirm --onefile --windowed --icon="icon.ico" --name="Talmudic-Formulas-Portable" --add-data "talmud.db;." --add-data "widgets;widgets" --add-data "assets;assets" --collect-all PyQt6 --distpath ./dist-portable main.py
+        # בנייה להתקנה (Onedir) - זו הגרסה שמשתמשת בתיקיית _internal
         pyinstaller --noconfirm --onedir --windowed --icon="icon.ico" --name="Talmudic-Formulas" --add-data "talmud.db;." --add-data "widgets;widgets" --add-data "assets;assets" --collect-all PyQt6 --distpath ./dist-installer main.py
+        
         $VERSION = "${{ steps.get_version.outputs.version_pure }}"
         (Get-Content "setup_script.iss") -replace 'AppVersion=.*', "AppVersion=$VERSION" | Set-Content "setup_script.iss"
         & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "setup_script.iss"
@@ -78,6 +91,7 @@ jobs:
       with:
         tag_name: ${{ steps.get_version.outputs.new_tag }}
         files: |
+          dist-portable/*.exe
           Output/*.exe
           *.zip
       env:
