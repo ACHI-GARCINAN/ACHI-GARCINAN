@@ -6,17 +6,17 @@ from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QComboBox,
     QPushButton, QFrame, QWidget, QLineEdit, QRadioButton, QButtonGroup, QCheckBox
 )
-from PyQt6.QtCore import Qt, pyqtSignal, QSize
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QFont, QFontDatabase, QIntValidator, QPixmap
 import sys
 
 
-_hebrew_fonts_cache: list = []
+_hebrew_fonts_cache = None
 
 def get_hebrew_fonts() -> list:
     """מחזיר רשימת גופנים שתומכים בעברית, ממוין לפי שם. מטמון בזיכרון."""
     global _hebrew_fonts_cache
-    if _hebrew_fonts_cache:
+    if _hebrew_fonts_cache is not None:
         return _hebrew_fonts_cache
     try:
         all_families = QFontDatabase.families()
@@ -93,6 +93,7 @@ class SettingsDialog(QDialog):
                     min-height: 30px;
                 }
                 QLineEdit:focus { border-color: #C8A060; }
+                QLineEdit#size_edit { min-height: 20px; max-height: 28px; }
                 QPushButton#ok_btn {
                     background-color: #7A3810;
                     color: #FFF5E6;
@@ -118,7 +119,7 @@ class SettingsDialog(QDialog):
                     border: 1px solid #6A4020;
                     border-radius: 6px;
                     min-width: 38px;
-                    min-height: 34px;
+                    min-height: 20px;
                     font-weight: bold;
                 }
                 QPushButton#size_btn:hover {
@@ -127,7 +128,7 @@ class SettingsDialog(QDialog):
                 }
                 QPushButton#size_btn:pressed { background-color: #7A3810; }
                 QRadioButton {
-                    color: #FFF5E6;
+                    color: #000000;
                     font-size: 13px;
                     spacing: 8px;
                 }
@@ -183,7 +184,7 @@ class SettingsDialog(QDialog):
                     padding: 5px 10px;
                     color: #2D3748;
                     font-size: 13px;
-                    min-height: 30px;
+                    min-height: 20px;
                 }
                 QComboBox QAbstractItemView {
                     background-color: #FFFFFF;
@@ -201,10 +202,10 @@ class SettingsDialog(QDialog):
                     padding: 4px 8px;
                     color: #2D3748;
                     font-size: 14px;
-                    min-height: 30px;
+                    min-height: 20px;
                 }
                 QLineEdit:focus { border-color: #5A6A82; }
-                QPushButton#ok_btn {
+                QLineEdit#size_edit { min-height: 20px; max-height: 28px; }                QPushButton#ok_btn {
                     background-color: #5A6A82;
                     color: white;
                     border: none;
@@ -229,7 +230,7 @@ class SettingsDialog(QDialog):
                     border: 1px solid #CBD5E0;
                     border-radius: 6px;
                     min-width: 38px;
-                    min-height: 34px;
+                    min-height: 20px;
                     font-weight: bold;
                 }
                 QPushButton#size_btn:hover {
@@ -285,8 +286,9 @@ class SettingsDialog(QDialog):
         font_layout.setContentsMargins(0, 0, 0, 0)
         font_layout.setSpacing(12)
 
-        font_label = QLabel(":גופן")
+        font_label = QLabel("גופן:")
         font_label.setFont(QFont("David", 13))
+        font_label.setFixedHeight(34) 
         font_label.setFixedWidth(85)
         font_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         
@@ -304,15 +306,13 @@ class SettingsDialog(QDialog):
         self.font_combo = QComboBox()
         self.font_combo.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
 
-        self.all_hebrew_fonts = []
+        self.all_hebrew_fonts = [self._current_font]
         from PyQt6.QtCore import QTimer
         QTimer.singleShot(0, self._load_fonts_async)
-        if not self.all_hebrew_fonts:
-            self.all_hebrew_fonts = ['David']
 
         self._fill_font_combo(self.all_hebrew_fonts)
 
-        idx = self.font_combo.findText(current_font)
+        idx = self.font_combo.findText(self._current_font)
         if idx >= 0:
             self.font_combo.setCurrentIndex(idx)
 
@@ -327,11 +327,12 @@ class SettingsDialog(QDialog):
         self._font_size = current_size
 
         size_row = QWidget()
+        size_row.setFixedHeight(36)
         size_layout = QHBoxLayout(size_row)
-        size_layout.setContentsMargins(0, 0, 0, 0)
+        size_layout.setContentsMargins(0, 4, 0, 4)
         size_layout.setSpacing(8)
 
-        size_label = QLabel(":גודל גופן")
+        size_label = QLabel("גודל גופן:")
         size_label.setFont(QFont("David", 13))
         size_label.setFixedWidth(85)
         size_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
@@ -339,39 +340,41 @@ class SettingsDialog(QDialog):
         self.btn_smaller = QPushButton("א")
         self.btn_smaller.setObjectName("size_btn")
         self.btn_smaller.setFont(QFont("David", 11))
-        self.btn_smaller.setFixedSize(38, 34)
         self.btn_smaller.setToolTip("הקטן גופן")
         self.btn_smaller.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_smaller.clicked.connect(self._decrease_size)
 
         self.size_edit = QLineEdit(str(current_size))
+        self.size_edit.setObjectName("size_edit")
         self.size_edit.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.size_edit.setFixedWidth(52)
-        self.size_edit.setFixedHeight(34)
+        self.size_edit.setFixedHeight(28)
         self.size_edit.setValidator(QIntValidator(8, 36, self))
         self.size_edit.setLayoutDirection(Qt.LayoutDirection.LeftToRight)
         self.size_edit.textChanged.connect(self._on_size_text_changed)
 
         self.btn_larger = QPushButton("א")
         self.btn_larger.setObjectName("size_btn")
-        self.btn_larger.setFont(QFont("David", 17, QFont.Weight.Bold))
-        self.btn_larger.setFixedSize(38, 34)
+        self.btn_larger.setFont(QFont("David", 14, QFont.Weight.Bold))
+        self.btn_larger.setFixedSize(38, 28)
         self.btn_larger.setToolTip("הגדל גופן")
         self.btn_larger.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_larger.clicked.connect(self._increase_size)
 
-        size_layout.addWidget(size_label)
-        size_layout.addStretch()
-        size_layout.addWidget(self.btn_larger)
-        size_layout.addWidget(self.size_edit)
         size_layout.addWidget(self.btn_smaller)
+        size_layout.addWidget(self.size_edit)
+        size_layout.addWidget(self.btn_larger)
         layout.addWidget(size_row)
+        size_layout.addStretch()
+        size_layout.addWidget(size_label)
+
         
         # ── בחירת ערכת נושא ──
-        theme_title = QLabel(":ערכת נושא")
+        theme_title = QLabel("ערכת נושא:")
         theme_title.setFont(QFont("David", 13))
-        theme_title.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        layout.addWidget(theme_title)
+        theme_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        layout.addWidget(theme_title, alignment=Qt.AlignmentFlag.AlignHCenter)
         
         theme_container = QHBoxLayout()
         theme_container.setSpacing(20)
@@ -391,7 +394,7 @@ class SettingsDialog(QDialog):
         self._set_placeholder_image(self.img_classic, "classic_preview.png", "תצוגה קלאסית")
         self.img_classic.mousePressEvent = lambda e: self.radio_classic.setChecked(True)
 
-        classic_box.addWidget(self.img_classic)
+        classic_box.addWidget(self.img_classic, 0, Qt.AlignmentFlag.AlignCenter)
         classic_box.addWidget(self.radio_classic, 0, Qt.AlignmentFlag.AlignCenter)
         theme_container.addLayout(classic_box)
 
@@ -408,7 +411,7 @@ class SettingsDialog(QDialog):
         self._set_placeholder_image(self.img_colorful, "colorful_preview.png", "תצוגה צבעונית")
         self.img_colorful.mousePressEvent = lambda e: self.radio_colorful.setChecked(True)
 
-        colorful_box.addWidget(self.img_colorful)
+        colorful_box.addWidget(self.img_colorful, 0, Qt.AlignmentFlag.AlignCenter)
         colorful_box.addWidget(self.radio_colorful, 0, Qt.AlignmentFlag.AlignCenter)
         theme_container.addLayout(colorful_box)
 
@@ -447,27 +450,26 @@ class SettingsDialog(QDialog):
 
         hint_lbl = QLabel("(הקטעים יוצגו ברצף, ללא מסגרות וכותרות, ניתן עדיין לבחור קטע)")
         hint_lbl.setFont(QFont("David", 10))
-        hint_lbl.setStyleSheet("color: #718096;")
-        hint_lbl.setAlignment(Qt.AlignmentFlag.AlignRight)
+        hint_lbl.setStyleSheet("color: #718096;")        
         layout.addWidget(hint_lbl)
 
+
         # ── תצוגה מקדימה ──
-        preview_lbl = QLabel(":תצוגה מקדימה של גופן")
-        preview_lbl.setFont(QFont("David", 11))
-        preview_lbl.setStyleSheet("color: #718096;")
-        preview_lbl.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        preview_lbl = QLabel("תצוגה מקדימה של גופן:")
+        preview_lbl.setFont(QFont("David", 12))
+        hint_lbl.setStyleSheet("color: #718096;")        
+        preview_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(preview_lbl)
 
         self.preview = QLabel("אמר ליה שמואל לרב יהודה: שיננא, חטוף ואכול חטוף ואישתי, דעלמא דאזלינן מיניה כהלולא דמי")
         self.preview.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
-        self.preview.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        self.preview.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         self.preview.setWordWrap(True)
         self.preview.setStyleSheet(
             "background:#FFFFFF;border:1px solid #CBD5E0;border-radius:6px;"
             "padding:12px 14px;color:#2D3748;min-height:55px;"
         )
         layout.addWidget(self.preview)
-
         layout.addSpacing(8)
 
         # ── כפתורים ──
@@ -478,28 +480,31 @@ class SettingsDialog(QDialog):
 
         cancel_btn = QPushButton("ביטול")
         cancel_btn.setObjectName("cancel_btn")
+        cancel_btn.setFixedSize(90, 36)
         cancel_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         cancel_btn.clicked.connect(self.reject)
 
         ok_btn = QPushButton("שמור")
         ok_btn.setObjectName("ok_btn")
+        ok_btn.setFixedSize(90, 36)
         ok_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         ok_btn.clicked.connect(self._on_ok)
         ok_btn.setDefault(True)
 
-        btn_layout.addWidget(cancel_btn)
-        btn_layout.addStretch()
         btn_layout.addWidget(ok_btn)
+        btn_layout.addStretch()
+        btn_layout.addWidget(cancel_btn)
         layout.addWidget(btn_row)
 
         self._update_preview()
     def _load_fonts_async(self):
+        current = self.font_combo.currentText()
         self.all_hebrew_fonts = get_hebrew_fonts()
         self._fill_font_combo(self.all_hebrew_fonts)
-        idx = self.font_combo.findText(self._current_font)
+        idx = self.font_combo.findText(current or self._current_font)
         if idx >= 0:
             self.font_combo.setCurrentIndex(idx)
-        self._update_preview()
+        self.font_combo.blockSignals(False)
         
     def _set_placeholder_image(self, label: QLabel, filename: str, alt_text: str):
         if getattr(sys, 'frozen', False):
@@ -531,7 +536,10 @@ class SettingsDialog(QDialog):
     def _on_size_text_changed(self, text: str):
         try:
             val = int(text)
-            self._font_size = self._clamp_size(val)
+            clamped = self._clamp_size(val)
+            if val != clamped:
+                self.size_edit.setText(str(clamped))
+            self._font_size = clamped
             self._update_preview()
         except ValueError:
             pass
@@ -539,15 +547,17 @@ class SettingsDialog(QDialog):
     def _fill_font_combo(self, font_list):
         current = self.font_combo.currentText()
         self.font_combo.blockSignals(True)
+
         self.font_combo.clear()
+
         for f in font_list:
             self.font_combo.addItem(f)
             idx = self.font_combo.count() - 1
             self.font_combo.setItemData(idx, QFont(f, 12), Qt.ItemDataRole.FontRole)
-        
-        idx = self.font_combo.findText(current)
-        if idx >= 0:
-            self.font_combo.setCurrentIndex(idx)
+
+        if self.font_combo.count() > 0:
+            self.font_combo.setCurrentIndex(0)
+
         self.font_combo.blockSignals(False)
 
     def _filter_fonts(self, text):
@@ -555,11 +565,23 @@ class SettingsDialog(QDialog):
             filtered = self.all_hebrew_fonts
         else:
             search_term = text.lower()
-            filtered = [f for f in self.all_hebrew_fonts if search_term in f.lower()]
-        
+            filtered = [
+                f for f in self.all_hebrew_fonts
+                if search_term in f.lower()
+            ]
+
+        current = self.font_combo.currentText()
         self._fill_font_combo(filtered)
-        if self.font_combo.count() > 0:
-            self._update_preview()
+
+        idx = self.font_combo.findText(current)
+
+        if idx >= 0:
+            self.font_combo.setCurrentIndex(idx)
+        else:
+            if self.font_combo.count() > 0:
+                self.font_combo.setCurrentIndex(0)
+
+        self.font_combo.blockSignals(False)
 
     def _update_preview(self):
         family = self.font_combo.currentText()
@@ -568,7 +590,6 @@ class SettingsDialog(QDialog):
         self.preview.setStyleSheet(
             f"background:#FFFFFF;border:1px solid #CBD5E0;border-radius:6px;"
             f"padding:12px 14px;color:#2D3748;min-height:55px;"
-            f"font-family:'{family}';font-size:{size}pt;"
         )
 
     def _on_ok(self):

@@ -1,25 +1,20 @@
 import re
 import sys
 import os
-
+import ctypes
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QHBoxLayout, QVBoxLayout,
     QListWidget, QListWidgetItem, QLabel, QSplitter,
     QPushButton, QLineEdit, QSpacerItem, QSizePolicy
 )
-from PyQt6.QtCore import Qt, QObject, QEvent, QPoint
-from PyQt6.QtGui import QFont, QCursor, QIcon, QKeyEvent, QKeySequence
+from PyQt6.QtCore import Qt, QObject, QEvent
 
-from styles import STYLE, get_theme_styles, get_theme_config
+from PyQt6.QtGui import QFont, QCursor, QIcon, QKeyEvent
+from styles import get_theme_styles, get_theme_config
 from db import fetch_masechet, fetch_page, fetch_page_words
 from utils import _page_matches, _masechet_matches
-from widgets.section_block import SectionBlock
-from widgets.witness_panel import WitnessPanel
-from widgets.touch_scroll import TouchScrollArea
-from widgets.copyright_popup import CopyrightPopup
-from widgets.words_view import WordsView
-from widgets.settings_dialog import SettingsDialog
 from settings_manager import load_settings, save_settings, save_last_position, load_last_position, save_layout, load_layout
+from icons import get_theme_icon, IconName
 
 
 def get_base_dir() -> str:
@@ -113,7 +108,6 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("נוסחאות התלמוד")
         self.setMinimumSize(1100, 650)
-        self.showMaximized()
         self.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
         
         # החל עיצוב לפי ערכת הנושא
@@ -121,19 +115,17 @@ class MainWindow(QMainWindow):
         self.setStyleSheet(style_str)
         
         self.setWindowIcon(get_icon())
-
-        self.display_mode = 'sections'  # 'sections' or 'words'
+        
+        self.display_mode = 'sections'
         self._words_view = None
 
-        self._build_ui()
-
+        self._build_ui()                        # ← קודם בונים
         # שחזר פריסה שמורה
         _layout = load_layout()
         self.splitter.setSizes(_layout['splitter_sizes'])
         if not _layout['sidebar_visible']:
             self.nav_panel.hide()
-            self.sidebar_toggle_btn.setText("◀")
-
+            self.sidebar_toggle_btn.setIcon(get_theme_icon(IconName.SIDEBAR_SHOW, self._theme, 18))
 
         # גלילת מסך מגע עבור רשימות המסכתות והדפים
         self._list_touch_filter = ListTouchScrollFilter()
@@ -146,15 +138,16 @@ class MainWindow(QMainWindow):
         if self.masechtot:
             last_ms, last_pg = load_last_position()
             last_ms = min(last_ms, len(self.masechtot) - 1)
-            # חסום את אות הדף כדי שנוכל להגדיר אותו ידנית אחרי טעינת המסכת
             self._restore_page_idx = last_pg
-            self.masechet_list.setCurrentRow(last_ms)
-
+            from PyQt6.QtCore import QTimer
+            QTimer.singleShot(150, lambda: self.masechet_list.setCurrentRow(last_ms))            
     def _show_copyright_notice(self):
+        from widgets.copyright_popup import CopyrightPopup
         popup = CopyrightPopup(self.centralWidget())
         popup.exec()
 
     def _open_settings(self):
+        from widgets.settings_dialog import SettingsDialog
         dlg = SettingsDialog(self._font_family, self._font_size, self._theme, self._continuous_sections_view, self)
         dlg.settings_changed.connect(self._apply_settings)
         dlg.exec()
@@ -180,6 +173,8 @@ class MainWindow(QMainWindow):
             style_str, _ = get_theme_styles(theme)
             self.setStyleSheet(style_str)
             self._update_ui_colors()
+            self.style().unpolish(self)
+            self.style().polish(self)
             # רענון הדף הנוכחי כדי להחיל צבעים חדשים
             if self.pages:
                 self._load_page(self.current_page_idx)
@@ -197,6 +192,8 @@ class MainWindow(QMainWindow):
             self._words_view.update_font(font_family, font_size, theme=self._theme)
 
     def _build_ui(self):
+        from widgets.witness_panel import WitnessPanel
+        from widgets.touch_scroll import TouchScrollArea
         central = QWidget()
         self.setCentralWidget(central)
         root = QHBoxLayout(central)
@@ -225,24 +222,26 @@ class MainWindow(QMainWindow):
         left_layout = QHBoxLayout()
         left_layout.setSpacing(10)
 
-        self.warn_btn = QPushButton("ℹ")
+        self.warn_btn = QPushButton()
+        self.warn_btn.setIcon(get_theme_icon(IconName.INFO, self._theme, 18))  # הוספת האייקון
         self.warn_btn.setToolTip("הערת שימוש")
         self.warn_btn.setFixedSize(30, 30)
-        self.warn_btn.setFont(QFont("Arial", 14))
         self.warn_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.warn_btn.clicked.connect(self._show_copyright_notice)
         left_layout.addWidget(self.warn_btn)
-
+        
         # כפתור הגדרות
-        self.settings_btn = QPushButton("⚙")
+        self.settings_btn = QPushButton()
+        self.settings_btn.setIcon(get_theme_icon(IconName.SETTINGS, self._theme, 18))  # הוספת האייקון החדש
         self.settings_btn.setToolTip("הגדרות תצוגה")
         self.settings_btn.setFixedSize(30, 30)
-        self.settings_btn.setFont(QFont("Arial", 14))
         self.settings_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.settings_btn.clicked.connect(self._open_settings)
         left_layout.addWidget(self.settings_btn)
-
-        self.mode_btn = QPushButton("\U0001f520 תצוגת מילים")
+ 
+        self.mode_btn = QPushButton()
+        self.mode_btn.setIcon(get_theme_icon(IconName.MODE_WORDS, self._theme, 16))
+        self.mode_btn.setText("תצוגת מילים")
         self.mode_btn.setFont(QFont("David", 11))
         self.mode_btn.setFixedHeight(30)
         self.mode_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
@@ -254,23 +253,23 @@ class MainWindow(QMainWindow):
         self.h_outer.addLayout(left_layout)
 
         # כפתור הצגת/הסתרת סרגל צד — חץ מתחלף
-        self.sidebar_toggle_btn = QPushButton("▶")
+        self.sidebar_toggle_btn = QPushButton()
+        self.sidebar_toggle_btn.setIcon(get_theme_icon(IconName.SIDEBAR_HIDE, self._theme, 18))  # הוספת האייקון החדש
         self.sidebar_toggle_btn.setToolTip("הצג/הסתר סרגל מסכתות")
         self.sidebar_toggle_btn.setFixedSize(30, 30)
-        self.sidebar_toggle_btn.setFont(QFont("Arial", 12))
         self.sidebar_toggle_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.sidebar_toggle_btn.clicked.connect(self._toggle_sidebar)
         self.h_outer.insertWidget(0, self.sidebar_toggle_btn)
-
         # Center: Navigation and Title
         self.h_outer.addStretch(1)
 
         center_layout = QHBoxLayout()
         center_layout.setSpacing(20)
 
-        self.prev_btn = QPushButton("→")
+        self.prev_btn = QPushButton()
+        self.prev_btn.setIcon(get_theme_icon(IconName.NAV_PREV, self._theme, 20))
+        self.prev_btn.setFont(QFont())  # ניקוי גופן ישן
         self.prev_btn.setFixedSize(35, 35)
-        self.prev_btn.setFont(QFont("Arial", 18, QFont.Weight.Bold))
         self.prev_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.prev_btn.clicked.connect(self._go_prev_page)
         center_layout.addWidget(self.prev_btn)
@@ -293,9 +292,9 @@ class MainWindow(QMainWindow):
 
         center_layout.addWidget(titles_widget)
 
-        self.next_btn = QPushButton("←")
+        self.next_btn = QPushButton()
+        self.next_btn.setIcon(get_theme_icon(IconName.NAV_NEXT, self._theme, 20))
         self.next_btn.setFixedSize(35, 35)
-        self.next_btn.setFont(QFont("Arial", 18, QFont.Weight.Bold))
         self.next_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.next_btn.clicked.connect(self._go_next_page)
         center_layout.addWidget(self.next_btn)
@@ -405,12 +404,26 @@ class MainWindow(QMainWindow):
         self._update_ui_colors()
 
     def _update_ui_colors(self):
+        if getattr(self, '_last_applied_theme', None) == self._theme:
+            return
+        self._last_applied_theme = self._theme
         cfg = get_theme_config(self._theme)
         
         self.main_area.setStyleSheet(f"background-color:{cfg['main_bg']};")
         self.header.setStyleSheet(f"background-color:{cfg['header_bg']}; border-bottom: 1px solid {cfg['panel_header_border']};")
         self.page_title.setStyleSheet(f"color:{cfg['header_text']};background:transparent;")
         self.page_sub.setStyleSheet(f"color:{cfg['header_subtext']};background:transparent;")
+        
+        self.warn_btn.setIcon(get_theme_icon(IconName.INFO, self._theme, 18))
+        self.settings_btn.setIcon(get_theme_icon(IconName.SETTINGS, self._theme, 18))
+        is_visible = self.nav_panel.isVisible() if hasattr(self, 'nav_panel') else True
+        _sb_icon = IconName.SIDEBAR_HIDE if is_visible else IconName.SIDEBAR_SHOW
+        self.sidebar_toggle_btn.setIcon(get_theme_icon(_sb_icon, self._theme, 18))
+        self.prev_btn.setIcon(get_theme_icon(IconName.NAV_PREV, self._theme, 20))
+        self.next_btn.setIcon(get_theme_icon(IconName.NAV_NEXT, self._theme, 20))
+        _mode_icon = IconName.MODE_SECTIONS if self.display_mode == 'words' else IconName.MODE_WORDS
+        self.mode_btn.setIcon(get_theme_icon(_mode_icon, self._theme, 16))
+
         
         icon_btn_style = f"""
             QPushButton {{
@@ -525,14 +538,15 @@ class MainWindow(QMainWindow):
     def _toggle_sidebar(self):
         if self.nav_panel.isVisible():
             self.nav_panel.hide()
-            self.sidebar_toggle_btn.setText("◀")
+            self.sidebar_toggle_btn.setIcon(get_theme_icon(IconName.SIDEBAR_SHOW, self._theme, 18))  # ← מראה "לחץ להציג"
             self.splitter.setSizes([0, 995, 420])
         else:
             self.nav_panel.show()
-            self.sidebar_toggle_btn.setText("▶")
+            self.sidebar_toggle_btn.setIcon(get_theme_icon(IconName.SIDEBAR_HIDE, self._theme, 18))  # ← מראה "לחץ להסתיר"
+            self.splitter.setSizes([215, 780, 420])
+            save_layout(self.splitter.sizes(), self.nav_panel.isVisible())
             self.splitter.setSizes([215, 780, 420])
         save_layout(self.splitter.sizes(), self.nav_panel.isVisible())
-
     def _quick_nav(self):
         raw = self.search_box.text().strip()
         if not raw:
@@ -787,15 +801,23 @@ class MainWindow(QMainWindow):
             restore_idx = getattr(self, '_restore_page_idx', 0)
             self._restore_page_idx = 0  # אפס כדי שמעכשיו תמיד יתחיל מדף ראשון בעת החלפת מסכת
             restore_idx = min(restore_idx, len(pages) - 1)
-            self.page_list.setCurrentRow(restore_idx)
-
+            from PyQt6.QtCore import QTimer
+            QTimer.singleShot(0, lambda: self.page_list.setCurrentRow(restore_idx))
+            
     def _load_page(self, idx: int):
         if idx < 0 or idx >= len(self.pages):
             return
         self.current_page_idx = idx
-        # שמור מיקום נוכחי
+        # שמור מיקום נוכחי — debounce: רק אחרי 2 שניות של שקט
         ms_idx = self.masechet_list.currentRow()
-        save_last_position(ms_idx, idx)
+        if not hasattr(self, '_save_pos_timer'):
+            from PyQt6.QtCore import QTimer
+            self._save_pos_timer = QTimer()
+            self._save_pos_timer.setSingleShot(True)
+            self._save_pos_timer.timeout.connect(
+                lambda: save_last_position(self.masechet_list.currentRow(), self.current_page_idx)
+            )
+        self._save_pos_timer.start(2000)        # ← כותב לדיסק רק אחרי 2 שניות בלי שינוי
         self.selected_block = None
         self.section_blocks = []
         self._words_view = None
@@ -824,18 +846,17 @@ class MainWindow(QMainWindow):
         self._update_nav_buttons(idx)
         self._clear_text()
 
-        sections = fetch_page(page['_id'])
-
         if self.display_mode == 'words':
-            self._load_page_words(page, sections)
+            self._load_page_words(page)         # ← בלי sections, בלי קריאת DB מיותרת
         else:
+            sections = fetch_page(page['_id'])  # ← נקרא רק כשצריך
             self._load_page_sections(sections, page['page'])
-
+            
         self.text_scroll.verticalScrollBar().setValue(0)
         self.witness_panel.reset()
 
     def _load_page_sections(self, sections: list, page_label: str):
-        # עדכן ספייסינג של הלייאאוט לפי מצב תצוגה
+        from widgets.section_block import SectionBlock
         if self._continuous_sections_view:
             self.text_layout.setSpacing(0)
             self.text_layout.setContentsMargins(12, 14, 12, 30)
@@ -856,7 +877,8 @@ class MainWindow(QMainWindow):
             self.text_layout.insertWidget(self.text_layout.count() - 1, block)
             self.section_blocks.append(block)
 
-    def _load_page_words(self, page: dict, sections: list):
+    def _load_page_words(self, page: dict):
+        from widgets.words_view import WordsView
         words_data = fetch_page_words(page['_id'])
         self._current_words_data = words_data
         self._current_word_idx = -1
@@ -885,30 +907,29 @@ class MainWindow(QMainWindow):
             words_data[idx], page, self.main_witness,
             words_data=words_data, word_idx=idx
         )
-
     def _on_mode_toggled(self, checked: bool):
-        # שמור מיקום נוכחי לפני המעבר
-        prev_mode = self.display_mode
-        prev_section_label = None
-        prev_word_idx = self._current_word_idx
-
-        if prev_mode == 'sections' and self.selected_block:
+        prev_section_label = ''
+        if self.selected_block:
             prev_section_label = self.selected_block.section.get('section', '')
-        elif prev_mode == 'words' and prev_word_idx >= 0 and self._current_words_data:
-            prev_section_label = self._current_words_data[prev_word_idx].get('section', '')
+        elif self._current_words_data and self._current_word_idx >= 0:
+            wd = self._current_words_data[self._current_word_idx]
+            prev_section_label = wd.get('section', '')
 
-        self.display_mode = 'words' if checked else 'sections'
         if checked:
-            self.mode_btn.setText("\U0001f4dc תצוגת קטעים")
+            self.display_mode = 'words'
+            self.mode_btn.setText("תצוגת קטעים")
+            self.mode_btn.setIcon(get_theme_icon(IconName.MODE_SECTIONS, self._theme, 16))
         else:
-            self.mode_btn.setText("\U0001f520 תצוגת מילים")
+            self.display_mode = 'sections'
+            self.mode_btn.setText("תצוגת מילים")
+            self.mode_btn.setIcon(get_theme_icon(IconName.MODE_WORDS, self._theme, 16))
 
-        if self.pages:
-            self._load_page(self.current_page_idx)
+        if not self.pages:
+            return
 
-        # עבור למיקום המתאים אחרי טעינה
+        self._load_page(self.current_page_idx)
+
         if not prev_section_label:
-            # גם אם אין מיקום קודם, תן פוקוס לחלון הראשי בתצוגת מילים
             if self.display_mode == 'words':
                 self.setFocus()
             return
@@ -916,11 +937,9 @@ class MainWindow(QMainWindow):
         page = self.pages[self.current_page_idx]['page']
 
         if self.display_mode == 'words' and self._current_words_data:
-            # מצא את המילה הראשונה של הקטע שבו היינו
             for i, wd in enumerate(self._current_words_data):
                 if wd.get('section', '') == prev_section_label:
                     self._select_word(i, self._current_words_data, page)
-                    # גלול למילה ומקד את החלון הראשי לקבלת אירועי מקלדת
                     if self._words_view and self._words_view._flow_widget:
                         lbl = self._words_view._flow_widget._labels[i]
                         from PyQt6.QtCore import QTimer
@@ -929,7 +948,6 @@ class MainWindow(QMainWindow):
                     break
 
         elif self.display_mode == 'sections' and self.section_blocks:
-            # מצא את הקטע המתאים
             for block in self.section_blocks:
                 if block.section.get('section', '') == prev_section_label:
                     section = block.section
@@ -937,7 +955,7 @@ class MainWindow(QMainWindow):
                     from PyQt6.QtCore import QTimer
                     QTimer.singleShot(50, lambda b=block: self.text_scroll.ensureWidgetVisible(b))
                     break
-
+                    
     def _clear_text(self):
         while self.text_layout.count() > 1:
             item = self.text_layout.takeAt(0)

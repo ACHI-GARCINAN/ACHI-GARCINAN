@@ -7,6 +7,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt, QUrl
 from PyQt6.QtGui import QFont, QColor, QCursor, QDesktopServices
+from icons import get_theme_icon, IconName
 
 
 class CopyrightPopup(QWidget):
@@ -122,10 +123,9 @@ class CopyrightPopup(QWidget):
     def _copy_mail(self):
         QApplication.clipboard().setText(self.MAIL)
         sender = self.sender()
-        sender.setText("✓")
+        sender.setIcon(get_theme_icon(IconName.CHECK, 'classic', 14))
         from PyQt6.QtCore import QTimer
-        QTimer.singleShot(1200, lambda: sender.setText("📋"))
-
+        QTimer.singleShot(1200, lambda: sender.setIcon(get_theme_icon(IconName.COPY, 'classic', 14)))
     def mousePressEvent(self, event):
         if not self._card.geometry().contains(event.position().toPoint()):
             self.close()

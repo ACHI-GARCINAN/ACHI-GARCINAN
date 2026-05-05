@@ -7,13 +7,28 @@ import sys
 
 
 def get_settings_path() -> str:
-    """מחזיר נתיב לקובץ הגדרות."""
-    if getattr(sys, 'frozen', False):
-        base = os.path.dirname(sys.executable)
-    else:
-        base = os.path.dirname(os.path.abspath(__file__))
-    return os.path.join(base, 'settings.json')
-
+    """
+    מחזיר נתיב לקובץ הגדרות בתיקיית AppData של המשתמש.
+    יוצר תיקייה ייעודית אם היא אינה קיימת.
+    """
+    # איתור תיקיית AppData המערכתית
+    app_data = os.environ.get('APPDATA')
+    
+    # הגדרת נתיב התיקייה עבור התוכנה
+    base_dir = os.path.join(app_data, 'נוסחאות התלמוד')
+    
+    # יצירת התיקייה במידה ואינה קיימת
+    if not os.path.exists(base_dir):
+        try:
+            os.makedirs(base_dir)
+        except Exception:
+            # גיבוי למקרה של תקלה: שימוש בנתיב הרגיל ליד הקובץ
+            if getattr(sys, 'frozen', False):
+                base_dir = os.path.dirname(sys.executable)
+            else:
+                base_dir = os.path.dirname(os.path.abspath(__file__))
+                
+    return os.path.join(base_dir, 'settings.json')
 
 DEFAULTS = {
     'font_family': 'David',

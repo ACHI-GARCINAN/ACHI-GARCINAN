@@ -1,15 +1,19 @@
+import os, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QScrollArea, QLabel, QCheckBox,
     QFrame, QSizePolicy, QTextBrowser, QHBoxLayout, QPushButton
 )
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QFont, QColor, QCursor
-
-from styles import WITNESS_COLORS, get_theme_styles, get_theme_config
-from widgets.witness_card import WitnessCard
-from widgets.touch_scroll import TouchScrollArea
+from PyQt6.QtGui import QFont, QCursor
 from settings_manager import load_settings, save_settings
+from styles import get_theme_styles, get_theme_config
+from witness_card import WitnessCard
+from touch_scroll import TouchScrollArea
+from manuscript_info_popup import ManuscriptInfoPopup
 from utils import normalize_word
+from db import fetch_manuscript_info
+from icons import get_theme_icon, IconName
 
 class WitnessPanel(QWidget):
     witness_clicked = pyqtSignal(str)
@@ -22,13 +26,13 @@ class WitnessPanel(QWidget):
         self.highlight_diffs = _saved.get('highlight_diffs', False)
         self.hide_empty_witnesses = _saved.get('hide_empty_witnesses', True)
         self.hide_minor_diffs = _saved.get('hide_minor_diffs', False)
+        self.show_summary = _saved.get('show_summary', False)
         self._font_family = font_family
         self._font_size = font_size
         self._theme = theme
 
         # State for re-rendering
         self._current_section = None
-        self._render_token = 0
         self._current_page = ''
         self._base_text = ''
         self._word_mode = False
@@ -56,9 +60,9 @@ class WitnessPanel(QWidget):
         top_row.addWidget(self.header_label, 1)
 
         self._options_visible = False
-        self.options_toggle_btn = QPushButton("⚙")
+        self.options_toggle_btn = QPushButton()
+        self.options_toggle_btn.setIcon(get_theme_icon(IconName.OPTIONS, self._theme, 16)) 
         self.options_toggle_btn.setFixedSize(24, 24)
-        self.options_toggle_btn.setFont(QFont("Arial", 11))
         self.options_toggle_btn.setToolTip("אפשרויות תצוגה")
         self.options_toggle_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.options_toggle_btn.setStyleSheet(
@@ -66,10 +70,9 @@ class WitnessPanel(QWidget):
             "QPushButton:hover{color:#333;}"
         )
         self.options_toggle_btn.clicked.connect(self._toggle_options)
-        top_row.addWidget(self.options_toggle_btn)
-
+        top_row.addWidget(self.options_toggle_btn)  # <--- תוודא שכתוב btn וסגור סוגריים
         self.header_layout.addLayout(top_row)
-
+        
         self.options_widget = QWidget()
         self.options_widget.setVisible(False)
         opts_layout = QVBoxLayout(self.options_widget)
@@ -98,6 +101,14 @@ class WitnessPanel(QWidget):
         opts_layout.addWidget(self.highlight_cb)
         opts_layout.addWidget(self.hide_empty_cb)
         opts_layout.addWidget(self.hide_minor_cb)
+
+        self.show_summary_cb = QCheckBox("הצג סיכום")
+        self.show_summary_cb.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
+        self.show_summary_cb.setFont(QFont("Arial", 10))
+        self.show_summary_cb.setChecked(self.show_summary)
+        self.show_summary_cb.stateChanged.connect(self._on_show_summary_changed)
+        opts_layout.addWidget(self.show_summary_cb)
+
         self.header_layout.addWidget(self.options_widget)
 
         self.hint_label = QLabel("לחץ על קטע כדי לראות את השינויים בטקסט המרכזי")
@@ -136,11 +147,13 @@ class WitnessPanel(QWidget):
         self.highlight_cb.setStyleSheet(cb_style)
         self.hide_empty_cb.setStyleSheet(cb_style)
         self.hide_minor_cb.setStyleSheet(cb_style)
+        self.show_summary_cb.setStyleSheet(cb_style)
         
     def _toggle_options(self):
         self._options_visible = not self._options_visible
         self.options_widget.setVisible(self._options_visible)
-        self.options_toggle_btn.setText("✕" if self._options_visible else "⚙")
+        icon_name = IconName.CLOSE if self._options_visible else IconName.OPTIONS
+        self.options_toggle_btn.setIcon(get_theme_icon(icon_name, self._theme, 16))
     def update_witnesses(self, witnesses: list):
         self.witnesses = witnesses
 
@@ -199,6 +212,138 @@ class WitnessPanel(QWidget):
         elif self._current_section is not None:
             self.show_section(self._current_section, self._current_page, self._base_text)
 
+    def _on_show_summary_changed(self, state):
+        if isinstance(state, int):
+            self.show_summary = (state == 2)
+        else:
+            self.show_summary = bool(state)
+        save_settings({'show_summary': self.show_summary})
+        if self._word_mode and self._words_data is not None:
+            self.show_word(self._current_section, self._current_page, self._main_witness,
+                           words_data=self._words_data, word_idx=self._word_idx)
+
+    def _is_print_witness(self, witness_name: str) -> bool:
+        """בודק אם עד הנוסח הוא דפוס (יש בסוגריים אותיות עבריות וגרשיים)."""
+        import re
+        m = re.search(r'\(([^)]+)\)', witness_name)
+        if not m:
+            return False
+        inside = m.group(1)
+        has_heb = bool(re.search(r'[א-ת]', inside))
+        has_quote = bool(re.search(r'["\u05f4\u05f3\'״]', inside))
+        return has_heb and has_quote
+
+    def _build_summary_card(self, word_entry: dict, main_witness: str,
+                             words_data: list, word_idx: int) -> QWidget:
+        """בונה כרטיסיית סיכום עבור מילה בתצוגת מילים."""
+        from PyQt6.QtWidgets import QFrame
+        cfg = get_theme_config(self._theme)
+
+        vilna_word = (word_entry['witnesses'].get(main_witness) or '').strip()
+        if vilna_word == 'None':
+            vilna_word = ''
+
+        CONTEXT = 12
+
+        # איסוף נתוני כל עד נוסח (תוך התעלמות מעדים ריקים כמו "הסתר עדי נוסח ריקים")
+        variant_map = {}  # text -> [witness_names]
+
+        for i, witness in enumerate(self.witnesses):
+            if i == 0:
+                continue
+            sel_text = (words_data[word_idx]['witnesses'].get(witness) or '').strip()
+            if sel_text == 'None':
+                sel_text = ''
+
+            # בדוק אם יש תוכן כלשהו בהקשר (כמו לוגיקת hide_empty)
+            has_any_in_context = bool(sel_text) or any(
+                (words_data[j]['witnesses'].get(witness) or '').strip() not in ('', 'None')
+                for j in range(max(0, word_idx - CONTEXT), min(len(words_data), word_idx + CONTEXT + 1))
+            )
+            if not has_any_in_context:
+                continue  # דלג על עדים ריקים לחלוטין
+
+            key = sel_text if sel_text else '—'
+            variant_map.setdefault(key, []).append(witness)
+
+        if not variant_map:
+            summary_text = "אינו קיים בכל עדי הנוסח"
+        else:
+            all_absent = all(k == '—' for k in variant_map)
+            norm_vilna = normalize_word(vilna_word)
+            all_same = all(normalize_word(k) == norm_vilna for k in variant_map if k != '—') and '—' not in variant_map
+
+            if all_absent:
+                summary_text = "אינו קיים בכל עדי הנוסח"
+            elif all_same and len(variant_map) == 1:
+                summary_text = "אין שינוי בכל עדי הנוסח"
+            else:
+                parts = []
+                sorted_variants = sorted(variant_map.items(), key=lambda x: -len(x[1]))
+                for text, witnesses_list in sorted_variants:
+                    n_print = sum(1 for w in witnesses_list if self._is_print_witness(w))
+                    n_ms = len(witnesses_list) - n_print
+
+                    # אם יש רק עד אחד ואין בשמו אותיות אנגליות — כתוב את שמו
+                    has_english = bool(__import__('re').search(r'[A-Za-z]', witnesses_list[0]))
+                    use_name = (len(witnesses_list) == 1 and not has_english)
+                    if use_name:
+                        name_str = witnesses_list[0]
+                    else:
+                        counts = []
+                        if n_print > 0:
+                            counts.append(f"{n_print} דפוסים")
+                        if n_ms > 0:
+                            counts.append(f"{n_ms} כתבי יד")
+                        count_str = " ו".join(counts)
+
+                    norm_text = normalize_word(text) if text != '—' else ''
+                    if use_name:
+                        if text == '—':
+                            variant_desc = f"{name_str}: אינו קיים"
+                        elif norm_text == norm_vilna:
+                            variant_desc = f"{name_str}: אין שינוי"
+                        else:
+                            variant_desc = f"{name_str}: <b>{text}</b>"
+                    else:
+                        if text == '—':
+                            variant_desc = f"ב{count_str} אינו קיים"
+                        elif norm_text == norm_vilna:
+                            variant_desc = f"ב{count_str} אין שינוי"
+                        else:
+                            variant_desc = f"ב{count_str} הנוסח <b>{text}</b>"
+                    parts.append(variant_desc)
+                summary_text = "  |  ".join(parts)
+
+        # יצירת הווידג'ט
+        card = QFrame()
+        card.setFrameShape(QFrame.Shape.StyledPanel)
+        card.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
+        card.setStyleSheet(
+            f"QFrame {{ background: {cfg.get('panel_header_bg', '#EEF2FF')};"
+            f" border: 2px solid {cfg.get('panel_header_border', '#6366F1')};"
+            f" border-radius: 6px; margin: 2px; }}"
+        )
+        card_layout = QVBoxLayout(card)
+        card_layout.setContentsMargins(10, 6, 10, 6)
+        card_layout.setSpacing(2)
+
+        title_lbl = QLabel("סיכום")
+        title_lbl.setFont(QFont("David", 11, QFont.Weight.Bold))
+        title_lbl.setAlignment(Qt.AlignmentFlag.AlignRight)
+        title_lbl.setStyleSheet(f"color: {cfg.get('panel_header_text', '#4338CA')}; background: transparent; border: none;")
+        card_layout.addWidget(title_lbl)
+
+        text_lbl = QLabel(summary_text)
+        text_lbl.setFont(QFont("David", 10))
+        text_lbl.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+        text_lbl.setWordWrap(True)
+        text_lbl.setTextFormat(Qt.TextFormat.RichText)
+        text_lbl.setStyleSheet(f"color: {cfg.get('panel_header_text', '#374151')}; background: transparent; border: none;")
+        card_layout.addWidget(text_lbl)
+
+        return card
+
     def _show_placeholder(self):
         self._clear()
         cfg = get_theme_config(self._theme)
@@ -242,44 +387,44 @@ class WitnessPanel(QWidget):
         self._word_mode = False
         self._words_data = None
         self._word_idx = -1
-        self._render_token += 1
-        token = self._render_token
         self._clear()
         
         self.header_label.setText(f"דף {page}  ·  {section['section']}")
 
         witness_data = section.get('witnesses', {})
 
-        def _render():
-            if self._render_token != token:
-                return
-            _, theme_colors = get_theme_styles(self._theme)
-            for i, witness in enumerate(self.witnesses):
-                if i == 0:
-                    continue
-                text = witness_data.get(witness)
-                if text == 'None' or text == '':
-                    text = None
-                if text is None and self.hide_empty_witnesses:
-                    continue
-                color = theme_colors[i % len(theme_colors)]
-                card = WitnessCard(
-                    witness, text, color,
-                    base_text=base_text,
-                    highlight=self.highlight_diffs,
-                    clickable=self.highlight_diffs,
-                    font_family=self._font_family,
-                    font_size=self._font_size,
-                    hide_minor=self.hide_minor_diffs
-                )
-                if self.highlight_diffs and text:
-                    card.clicked.connect(self.witness_clicked.emit)
-                self.inner_layout.addWidget(card)
-            self.inner_layout.addStretch()
-            self.scroll.verticalScrollBar().setValue(0)
-
-        from PyQt6.QtCore import QTimer
-        QTimer.singleShot(0, _render)
+        _, theme_colors = get_theme_styles(self._theme)
+        for i, witness in enumerate(self.witnesses):
+            if i == 0:
+                continue
+            text = witness_data.get(witness)
+            if text == 'None' or text == '':
+                text = None
+            if text is None and self.hide_empty_witnesses:
+                continue
+            color = theme_colors[i % len(theme_colors)]
+            
+            # בדוק אם יש מידע על כתב יד
+            manuscript_info = fetch_manuscript_info(witness)
+            has_manuscript = manuscript_info is not None
+            
+            card = WitnessCard(
+                witness, text, color,
+                base_text=base_text,
+                highlight=self.highlight_diffs,
+                clickable=self.highlight_diffs,
+                font_family=self._font_family,
+                font_size=self._font_size,
+                hide_minor=self.hide_minor_diffs,
+                has_manuscript_info=has_manuscript
+            )
+            if self.highlight_diffs and text:
+                card.clicked.connect(self.witness_clicked.emit)
+            if has_manuscript:
+                card.manuscript_requested.connect(self._on_manuscript_requested)
+            self.inner_layout.addWidget(card)
+        self.inner_layout.addStretch()
+        self.scroll.verticalScrollBar().setValue(0)
 
     def show_word(self, word_entry: dict, page: str, main_witness: str,
                   words_data: list = None, word_idx: int = -1):
@@ -303,6 +448,11 @@ class WitnessPanel(QWidget):
         vilna_word = (word_entry['witnesses'].get(main_witness) or '').strip()
         if vilna_word == 'None':
             vilna_word = ''
+
+        # כרטיסיית סיכום (רק בתצוגת מילים, אם הופעלה)
+        if self.show_summary and words_data is not None and word_idx >= 0:
+            summary_card = self._build_summary_card(word_entry, main_witness, words_data, word_idx)
+            self.inner_layout.addWidget(summary_card)
 
         for i, witness in enumerate(self.witnesses):
             if i == 0:
@@ -355,9 +505,12 @@ class WitnessPanel(QWidget):
                                 return words
                             wit_context = _get_context_words(witness, word_idx)
                             vil_context = _get_context_words(main_witness, word_idx)
-                            if is_acronym_minor_diff(wit_context[:1] if wit_context else [sel_text],
-                                                     vil_context) or                                is_acronym_minor_diff(wit_context,
-                                                     vil_context[:1] if vil_context else [vilna_word]):
+                            if (is_acronym_minor_diff(
+                                    wit_context[:1] if wit_context else [sel_text],
+                                    vil_context)
+                                or is_acronym_minor_diff(
+                                    wit_context,
+                                    vil_context[:1] if vil_context else [vilna_word])):
                                 word_differs = False
                     if word_differs:
                         if missing_in_witness:
@@ -380,8 +533,29 @@ class WitnessPanel(QWidget):
 
                 _, theme_colors = get_theme_styles(self._theme)
                 color = theme_colors[i % len(theme_colors)]
-                card = WitnessCard(witness, full_html, color, is_html=True, font_family=self._font_family, font_size=self._font_size)
+                
+                # בדוק אם יש מידע על כתב יד
+                manuscript_info = fetch_manuscript_info(witness)
+                has_manuscript = manuscript_info is not None
+                
+                card = WitnessCard(witness, full_html, color, is_html=True, font_family=self._font_family, font_size=self._font_size, has_manuscript_info=has_manuscript)
+                if has_manuscript:
+                    card.manuscript_requested.connect(self._on_manuscript_requested)
                 self.inner_layout.addWidget(card)
 
         self.inner_layout.addStretch()
         self.scroll.verticalScrollBar().setValue(0)
+
+
+    def _on_manuscript_requested(self, witness_name: str):
+        """
+        טיפול בבקשה לפתיחת מידע על כתב יד.
+        """
+        manuscript_info = fetch_manuscript_info(witness_name)
+        if manuscript_info:
+            popup = ManuscriptInfoPopup(
+                manuscript_info['name'],
+                manuscript_info['full_text'],
+                self.window() if self.window() else self
+            )
+            popup.exec()

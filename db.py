@@ -1,9 +1,9 @@
 import os
 import sqlite3
 import sys
-
+ 
 DB_PATH = ''
-
+ 
 def get_base_dir() -> str:
     if getattr(sys, 'frozen', False):
         # נתיב הקובץ המריץ (.exe)
@@ -15,7 +15,7 @@ def get_base_dir() -> str:
         # אם התיקייה לא קיימת (מצב Portable), נשתמש בתיקייה הזמנית
         return sys._MEIPASS
     return os.path.dirname(os.path.abspath(__file__))
-
+ 
 def load_masechet_list(folder: str) -> list:
     global DB_PATH
     # ניסיון טעינה מהנתיב שהתקבל (ארגומנט או בסיס)
@@ -33,8 +33,8 @@ def load_masechet_list(folder: str) -> list:
     rows = con.execute("SELECT id, num, name FROM masechtot ORDER BY num").fetchall()
     con.close()
     return [{'id': r[0], 'num': r[1], 'name': r[2]} for r in rows]
-
-
+ 
+ 
 def fetch_masechet(ms_id: int) -> tuple:
     if not DB_PATH:
         return [], []
@@ -48,8 +48,8 @@ def fetch_masechet(ms_id: int) -> tuple:
     con.close()
     pages = [{'page': r[1], '_id': r[0]} for r in page_rows]
     return witnesses, pages
-
-
+ 
+ 
 def fetch_page(page_id: int) -> list:
     if not DB_PATH:
         return []
@@ -68,17 +68,17 @@ def fetch_page(page_id: int) -> list:
         sections.append({'section': sec_label, 'witnesses': dict(texts)})
     con.close()
     return sections
-
-
+ 
+ 
 def fetch_page_words(page_id: int) -> list:
     if not DB_PATH:
         return []
     con = sqlite3.connect(DB_PATH)
-
+ 
     has_sw_table = con.execute(
         "SELECT name FROM sqlite_master WHERE type='table' AND name='sections_words'"
     ).fetchone()
-
+ 
     if has_sw_table:
         rows = con.execute(
             "SELECT sw.id, s.section_label, w.name, wd.word "
@@ -92,16 +92,16 @@ def fetch_page_words(page_id: int) -> list:
             (page_id,)
         ).fetchall()
         con.close()
-
+ 
         from collections import OrderedDict
         word_map: OrderedDict = OrderedDict()
         for sw_id, sec_label, wit_name, content in rows:
             if sw_id not in word_map:
                 word_map[sw_id] = {'section': sec_label, 'witnesses': {}}
             word_map[sw_id]['witnesses'][wit_name] = content
-
+ 
         return list(word_map.values())
-
+ 
     con.close()
     return []
     
@@ -117,13 +117,41 @@ def search_word_in_shas(word: str) -> list:
         "JOIN pages p ON p.id = s.page_id "
         "JOIN masechtot m ON m.id = p.masechet_id "
         "WHERE w.position = 0 "
-        "AND (' ' || replace(replace(replace(t.content, '.', ''), ',', ''), ':', '') || ' ') "
-        "LIKE (? || ' %') "
-        "OR (' ' || replace(replace(replace(t.content, '.', ''), ',', ''), ':', '') || ' ') "
-        "LIKE ('% ' || ? || ' %') "
-        "OR (' ' || replace(replace(replace(t.content, '.', ''), ',', ''), ':', '') || ' ') "
-        "LIKE ('% ' || ? || ' ')",
+        "AND ("
+        "  (' ' || replace(replace(replace(t.content, '.', ''), ',', ''), ':', '') || ' ') LIKE (? || ' %') "
+        "  OR (' ' || replace(replace(replace(t.content, '.', ''), ',', ''), ':', '') || ' ') LIKE ('% ' || ? || ' %') "
+        "  OR (' ' || replace(replace(replace(t.content, '.', ''), ',', ''), ':', '') || ' ') LIKE ('% ' || ? || ' ') "
+        ")",
         (word, word, word)
     ).fetchall()
     con.close()
     return [{'masechet': r[0], 'page': r[1], 'section': r[2]} for r in rows]
+def fetch_manuscript_info(witness_name: str) -> dict | None:
+    """
+    שולף מידע על כתב יד מטבלת manuscript_info לפי שם העד הנוסח.
+    מחזיר dict עם 'name' ו-'full_text', או None אם לא נמצא.
+    """
+    if not DB_PATH:
+        return None
+    
+    con = sqlite3.connect(DB_PATH)
+    
+    has_mi_table = con.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='manuscript_info'"
+    ).fetchone()
+    
+    if not has_mi_table:
+        con.close()
+        return None
+    
+    row = con.execute(
+        "SELECT name, full_text FROM manuscript_info WHERE witness_id IN "
+        "(SELECT id FROM witnesses WHERE name = ?) LIMIT 1",
+        (witness_name,)
+    ).fetchone()
+    
+    con.close()
+    
+    if row:
+        return {'name': row[0], 'full_text': row[1]}
+    return None

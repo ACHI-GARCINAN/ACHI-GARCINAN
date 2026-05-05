@@ -36,12 +36,19 @@ def is_minor_diff(source_word: str, ref_word: str) -> bool:
     r_no_quotes = r.replace("'", "").replace('"', '')
 
     # כלל 2: חסר רק י' (אפילו בלי גרש)
-    if s_no_quotes.replace('י', '') == r_no_quotes.replace('י', ''):
-        return True
+    # חריג: אם הי' נמצאת בסוף המילה — לא נחשב שינוי קל
+    s_no_yod = s_no_quotes.replace('י', '')
+    r_no_yod = r_no_quotes.replace('י', '')
+    if s_no_yod == r_no_yod:
+        # בדוק שהי' אינה בסוף המילה בשום אחת מהן
+        s_ends_with_yod = s_no_quotes.endswith('י')
+        r_ends_with_yod = r_no_quotes.endswith('י')
+        if not s_ends_with_yod and not r_ends_with_yod:
+            return True
 
-    # כלל 1: חסר אותיות ויש גרש במקור
-    # אם המילה המקורית מכילה גרש והיא מוכלת במילת הייחוס (או להיפך אחרי ניקוי גרשים)
-    if "'" in source_word or '"' in source_word:
+    # כלל 1: חסר אותיות ויש גרש — כלל דו-כיווני
+    # אם אחת המילים (מקור או ייחוס) מכילה גרש והיא מוכלת בשנייה (אחרי ניקוי גרשים)
+    if ("'" in source_word or '"' in source_word) or ("'" in ref_word or '"' in ref_word):
         if s_no_quotes in r_no_quotes or r_no_quotes in s_no_quotes:
             return True
 
@@ -122,6 +129,61 @@ def is_acronym_minor_diff(src_slice: list, ref_slice: list) -> bool:
     return False
 
 
+def _try_match_minor_block(src_orig: list, ref_orig: list) -> list:
+    """
+    מנסה לבדוק אם כל מילה ב-src_orig היא "שינוי קל" ביחס ל-ref_orig.
+    תומך ב:
+      - 1:1  is_minor_diff
+      - 1:N  ר"ת (src[i] = ראשי תיבות של ref[j:j+k])
+      - N:1  ר"ת (src[i:i+k] = ראשי תיבות של ref[j])
+    מחזיר רשימת bool באורך len(src_orig): True = שינוי קל, False = שינוי משמעותי.
+    """
+    n = len(src_orig)
+    m = len(ref_orig)
+    src_matched = [False] * n
+
+    i, j = 0, 0
+    while i < n and j < m:
+        src_w = src_orig[i]
+
+        # נסה 1:1 minor diff
+        if is_minor_diff(src_w, ref_orig[j]):
+            src_matched[i] = True
+            i += 1
+            j += 1
+            continue
+
+        # נסה ר"ת: src[i] = ר"ת של ref[j:j+k]
+        found = False
+        for k in range(2, m - j + 1):
+            if is_acronym_minor_diff([src_w], ref_orig[j:j + k]):
+                src_matched[i] = True
+                i += 1
+                j += k
+                found = True
+                break
+        if found:
+            continue
+
+        # נסה ר"ת: src[i:i+k] = ר"ת של ref[j]
+        for k in range(2, n - i + 1):
+            if is_acronym_minor_diff(src_orig[i:i + k], [ref_orig[j]]):
+                for x in range(k):
+                    src_matched[i + x] = True
+                i += k
+                j += 1
+                found = True
+                break
+        if found:
+            continue
+
+        # לא התאים — שינוי משמעותי, קדם ב-1:1
+        i += 1
+        j += 1
+
+    return src_matched
+
+
 def _diff_highlight(source_text: str, reference_text: str, highlight_style: str, hide_minor: bool = False) -> str:
     """
     מחזיר HTML עם הדגשה של מילים בטקסט המקור שאינן תואמות לרצף בטקסט הייחוס.
@@ -148,18 +210,15 @@ def _diff_highlight(source_text: str, reference_text: str, highlight_style: str,
         for tag, i1, i2, j1, j2 in matcher.get_opcodes():
             if tag != 'replace':
                 continue
-            # כלל 3: ראשי תיבות — משתמש במילים המקוריות (עם גרשיים!)
             src_orig_slice = source_words_orig[i1:i2]
             ref_orig_slice = ref_words_orig[j1:j2]
-            if is_acronym_minor_diff(src_orig_slice, ref_orig_slice):
-                for k in range(i2 - i1):
+
+            # כלל כללי: נסה לבדוק אם כל המילים בבלוק הן שינויים קלים
+            # באמצעות greedy matching שתומך ב-1:1, ר"ת 1:N, ר"ת N:1
+            block_matched = _try_match_minor_block(src_orig_slice, ref_orig_slice)
+            for k, is_minor in enumerate(block_matched):
+                if is_minor:
                     matched[i1 + k] = True
-                continue
-            # כלל 1+2: שינוי קל מילה-במילה (replace 1:1 בלבד)
-            if (i2 - i1) == (j2 - j1):
-                for k in range(i2 - i1):
-                    if is_minor_diff(source_words[i1 + k], ref_words[j1 + k]):
-                        matched[i1 + k] = True
 
     parts = []
     word_idx = 0

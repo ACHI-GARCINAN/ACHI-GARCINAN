@@ -4,13 +4,14 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QFont, QCursor
-
-
+    
 class SearchResultsDialog(QDialog):
     def __init__(self, word: str, results: list, theme: str = 'classic', parent=None):
         super().__init__(parent)
         self.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
         self.setWindowTitle(f'חיפוש: {word}')
+        from main_window import get_icon
+        self.setWindowIcon(get_icon())
         self.setMinimumSize(420, 380)
         self._results = results
 
@@ -42,7 +43,7 @@ class SearchResultsDialog(QDialog):
         self.list_widget.setStyleSheet(f"""
             QListWidget{{background:{bg};border:1px solid {border};border-radius:8px;outline:none;}}
             QListWidget::item{{padding:8px 12px;border-bottom:1px solid {border};color:{text};}}
-            QListWidget::item:selected{{background:{item_sel};color:{text};}}
+            QListWidget::item:selected{{background:{accent};color:white;font-weight:bold;border-right:4px solid {accent};}}
             QListWidget::item:hover:!selected{{background:{accent}20;}}
         """)
         layout.addWidget(self.list_widget, 1)
