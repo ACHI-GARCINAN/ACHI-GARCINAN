@@ -1,20 +1,25 @@
+import os, sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from PyQt6.QtWidgets import (
-    QFrame, QVBoxLayout, QLabel, QSizePolicy
+    QFrame, QVBoxLayout, QHBoxLayout, QLabel, QSizePolicy, QPushButton
 )
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QFont, QCursor
 
 from utils import build_highlighted_html
-
+from icons import get_theme_icon, IconName
 
 class WitnessCard(QFrame):
     clicked = pyqtSignal(str)  # emits witness name
+    manuscript_requested = pyqtSignal(str)  # emits witness name for manuscript info
 
     def __init__(self, name: str, text, color_pair: tuple,
                  base_text: str = '', highlight: bool = False,
                  clickable: bool = False, is_html: bool = False,
                  font_family: str = 'David', font_size: int = 15,
                  hide_minor: bool = False,
+                 has_manuscript_info: bool = False,
                  parent=None):
         super().__init__(parent)
         self.accent, self.bg = color_pair
@@ -27,6 +32,7 @@ class WitnessCard(QFrame):
         self._font_family = font_family
         self._font_size = font_size
         self.hide_minor = hide_minor
+        self.has_manuscript_info = has_manuscript_info
         
         self.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
         if clickable and text:
@@ -39,10 +45,38 @@ class WitnessCard(QFrame):
         self.layout.setContentsMargins(14, 10, 14, 12)
         self.layout.setSpacing(6)
 
+        # שורת כותרת עם שם ואייקון
+        header_layout = QHBoxLayout()
+        header_layout.setContentsMargins(0, 0, 0, 0)
+        header_layout.setSpacing(6)
+
         self.name_lbl = QLabel(name)
         self.name_lbl.setAlignment(Qt.AlignmentFlag.AlignRight)
         self.name_lbl.setFont(QFont("Arial", 10, QFont.Weight.Bold))
-        self.layout.addWidget(self.name_lbl)
+        header_layout.addWidget(self.name_lbl, 1)
+
+        # אייקון מידע על כתב יד (אם קיים)
+        if has_manuscript_info:
+            self.info_btn = QPushButton()
+            self.info_btn.setIcon(get_theme_icon(IconName.MANUSCRIPT, 'classic', 16))
+            self.info_btn.setFixedSize(24, 24)
+            self.info_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+            self.info_btn.setToolTip("מידע על כתב היד")
+            self.info_btn.setStyleSheet("""
+                QPushButton {
+                    background-color: transparent;
+                    border: none;
+                    padding: 0px;
+                }
+                QPushButton:hover {
+                    background-color: rgba(0, 0, 0, 0.1);
+                    border-radius: 4px;
+                }
+            """)
+            self.info_btn.clicked.connect(self._on_info_clicked)
+            header_layout.addWidget(self.info_btn, 0, Qt.AlignmentFlag.AlignLeft)
+
+        self.layout.addLayout(header_layout)
 
         self.text_lbl = QLabel()
         self.text_lbl.setWordWrap(True)
@@ -106,6 +140,10 @@ class WitnessCard(QFrame):
         if hide_minor is not None:
             self.hide_minor = hide_minor
         self._update_content()
+
+    def _on_info_clicked(self):
+        """פתיחת חלונית מידע על כתב היד"""
+        self.manuscript_requested.emit(self.witness_name)
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton and self.clickable:

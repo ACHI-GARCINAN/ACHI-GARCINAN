@@ -77,6 +77,16 @@ QCheckBox::indicator:checked {
     background: #A0B4CC;
     border: 1px solid #718096;
 }
+QPushButton {
+    background-color: transparent;
+    border: 1px solid #A0B4CC;
+    border-radius: 6px;
+    padding: 4px;  /* זה ייתן לאייקונים שלך מרחב נשימה */
+}
+
+QPushButton:hover {
+    background-color: #DDE4E9;
+}
 """
 
 WITNESS_COLORS_CLASSIC = [
@@ -165,6 +175,16 @@ QCheckBox::indicator:checked {
     background: #C8A060;
     border: 1px solid #E8C080;
 }
+/* עיצוב כפתורים עם אייקונים - צבעוני */
+QPushButton {
+    background-color: transparent;
+    border: 1px solid #C8A060;
+    border-radius: 6px;
+    padding: 4px;
+}
+QPushButton:hover {
+    background-color: #3A2418;
+}
 """
 
 WITNESS_COLORS_COLORFUL = [
@@ -187,9 +207,13 @@ def get_theme_styles(theme_name: str):
         return STYLE_COLORFUL, WITNESS_COLORS_COLORFUL
     return STYLE_CLASSIC, WITNESS_COLORS_CLASSIC
 
+_theme_config_cache: dict = {}
+
 def get_theme_config(theme_name: str):
+    if theme_name in _theme_config_cache:
+        return _theme_config_cache[theme_name]
     if theme_name == 'colorful':
-        return {
+        cfg = {
             'main_bg': '#F7F3EC',
             'header_bg': '#2B1A0F',
             'header_text': '#FFF5E6',
@@ -228,7 +252,7 @@ def get_theme_config(theme_name: str):
             'panel_hint_text': '#C8A87A',
         }
     else:
-        return {
+        cfg = {
             'main_bg': '#F0F4F7',
             'header_bg': '#E1E8ED',
             'header_text': '#2D3748',
@@ -266,3 +290,5 @@ def get_theme_config(theme_name: str):
             'panel_header_border': '#A0B4CC',
             'panel_hint_text': '#718096',
         }
+    _theme_config_cache[theme_name] = cfg
+    return cfg

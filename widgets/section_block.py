@@ -1,3 +1,6 @@
+import os, sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from PyQt6.QtWidgets import QFrame, QVBoxLayout, QLabel, QSizePolicy
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QFont, QCursor
@@ -62,12 +65,14 @@ class SectionBlock(QFrame):
     def _update_styles(self):
         cfg = get_theme_config(self._theme)
         if self._continuous_view:
-            self._normal_style   = f"QFrame#section_block{{background-color:transparent;border:none;border-top:1px solid {cfg['section_normal_border']};border-radius:0px;margin:0px 8px;}}"
+            # border-right תמיד 4px — רק הצבע משתנה, כך שהגודל קבוע ואין רצידה
+            self._normal_style   = f"QFrame#section_block{{background-color:transparent;border:none;border-top:1px solid {cfg['section_normal_border']};border-right:4px solid transparent;border-radius:0px;margin:0px 8px;}}"
             self._hover_style    = f"QFrame#section_block{{background-color:{cfg['section_hover_bg']};border:none;border-top:1px solid {cfg['section_hover_border']};border-right:4px solid {cfg['section_hover_right']};border-radius:0px;margin:0px 8px;}}"
             self._selected_style = f"QFrame#section_block{{background-color:{cfg['section_selected_bg']};border:none;border-top:1px solid {cfg['section_selected_border']};border-right:4px solid {cfg['section_selected_right']};border-radius:0px;margin:0px 8px;}}"
             self._diff_style     = f"QFrame#section_block{{background-color:{cfg['section_diff_bg']};border:none;border-top:1px solid {cfg['section_diff_border']};border-right:4px solid {cfg['section_diff_right']};border-radius:0px;margin:0px 8px;}}"
         else:
-            self._normal_style   = f"QFrame#section_block{{background-color:{cfg['section_normal_bg']};border:1px solid {cfg['section_normal_border']};border-radius:8px;margin:3px 8px;}}"
+            # border-right תמיד 4px — רק הצבע משתנה, כך שהגודל קבוע ואין רצידה
+            self._normal_style   = f"QFrame#section_block{{background-color:{cfg['section_normal_bg']};border:1px solid {cfg['section_normal_border']};border-right:4px solid transparent;border-radius:8px;margin:3px 8px;}}"
             self._hover_style    = f"QFrame#section_block{{background-color:{cfg['section_hover_bg']};border:1px solid {cfg['section_hover_border']};border-right:4px solid {cfg['section_hover_right']};border-radius:8px;margin:3px 8px;}}"
             self._selected_style = f"QFrame#section_block{{background-color:{cfg['section_selected_bg']};border:1px solid {cfg['section_selected_border']};border-right:4px solid {cfg['section_selected_right']};border-radius:8px;margin:3px 8px;}}"
             self._diff_style     = f"QFrame#section_block{{background-color:{cfg['section_diff_bg']};border:1px solid {cfg['section_diff_border']};border-right:4px solid {cfg['section_diff_right']};border-radius:8px;margin:3px 8px;}}"

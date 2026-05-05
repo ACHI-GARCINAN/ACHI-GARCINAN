@@ -1,9 +1,9 @@
 import os, sys
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel
 from PyQt6.QtCore import Qt, pyqtSignal, QSize, QTimer
-from PyQt6.QtGui import QFont, QCursor
+from PyQt6.QtGui import QCursor
 
 from styles import get_theme_config
 
@@ -72,7 +72,10 @@ class _ClickableWord(QLabel):
         super().mousePressEvent(e)
     def contextMenuEvent(self, event):
         from PyQt6.QtWidgets import QMenu
+        from PyQt6.QtGui import QFont
         menu = QMenu(self)
+        menu.setFont(QFont('David', 11))
+        menu.setStyleSheet("QMenu { font-family: 'David'; font-size: 11pt; }")
         menu.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
         search_action = menu.addAction(f'חפש "{self.text()}" בש"ס')
         action = menu.exec(event.globalPos())
