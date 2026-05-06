@@ -18,10 +18,9 @@ from icons import get_theme_icon, IconName
 
 
 def get_base_dir() -> str:
-    if getattr(sys, 'frozen', False):
-        return os.path.dirname(sys.executable)
+    if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+        return sys._MEIPASS
     return os.path.dirname(os.path.abspath(__file__))
-
 
 def get_icon() -> QIcon:
     base = get_base_dir()

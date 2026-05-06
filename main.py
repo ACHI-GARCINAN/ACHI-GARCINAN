@@ -2,14 +2,15 @@
 נוסחאות התלמוד - מציג עדי נוסח
 הרצה: python main.py [נתיב_לתיקיה_עם_talmud.db]
 """
-
+import time
 import sys
-
+import os
+import ctypes
+from main_window import MainWindow, get_icon
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtCore import Qt, QEvent
-
+from PyQt6.QtGui import QIcon
 from db import load_masechet_list, get_base_dir
-
 
 class TalmudApp(QApplication):
     """מחלקת אפליקציה מותאמת — מיירטת קיצורי מקלדת גלובליים דרך notify()."""
@@ -51,9 +52,7 @@ class TalmudApp(QApplication):
 
 
 def main():
-
     if sys.platform == "win32":
-        import ctypes
         my_app_id = "talmud.synopsis.viewer.v1" 
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(my_app_id)
 
@@ -63,15 +62,14 @@ def main():
 
     app = TalmudApp(sys.argv)
     
-
-    from main_window import get_icon
+    # טעינת האייקון והגדרה לאפליקציה (עבור שורת המשימות/Dock)
     icon = get_icon()
     if not icon.isNull():
-        app.setWindowIcon(icon) 
-
+        app.setWindowIcon(icon)
+        
     app.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
     QApplication.setStyle("Fusion")
-    
+
     # ── Splash Screen ──────────────────────────────────────
     from PyQt6.QtWidgets import QSplashScreen
     from PyQt6.QtGui import QPixmap, QPainter, QColor, QFont
@@ -102,12 +100,7 @@ def main():
     splash.show()
     app.processEvents()
     # ───────────────────────────────────────────────────────
-    from main_window import MainWindow, get_icon
 
-    icon = get_icon()
-    if not icon.isNull():
-        app.setWindowIcon(icon)    
-    import time
     t0 = time.time()
     folder = sys.argv[1] if len(sys.argv) > 1 else get_base_dir()
     masechtot = load_masechet_list(folder)
@@ -129,8 +122,6 @@ def main():
     window = MainWindow(masechtot)
     print(f"MainWindow init: {time.time()-t0:.2f}s")
     app.set_main_window(window)
-    if not icon.isNull():
-        window.setWindowIcon(icon)
     window.showMaximized()
     
     splash.finish(window)  # מסתיר את הספלאש כשהחלון מוכן
