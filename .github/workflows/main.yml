@@ -27,10 +27,8 @@ jobs:
         git fetch --tags --force
         LATEST_TAG=$(git tag -l "v*" | sort -V | tail -n1)
         if [ -z "$LATEST_TAG" ]; then LATEST_TAG="v1.0"; fi
-        
         VERSION_MINOR=$(echo $LATEST_TAG | cut -d. -f2)
         NEW_MINOR=$((VERSION_MINOR + 1))
-        
         echo "new_tag=v1.$NEW_MINOR" >> $GITHUB_OUTPUT
         echo "version_pure=1.$NEW_MINOR" >> $GITHUB_OUTPUT
 
@@ -54,20 +52,18 @@ jobs:
         
     - name: Install Dependencies
       run: |
-        python -m pip install --upgrade pip
-        # הוספת Pillow מאפשרת המרת אייקונים אוטומטית ב-macOS
-        pip install pyinstaller gdown macholib PyQt6 PyQt6-Qt6 Pillow[cite: 1]
+        pip install pyinstaller gdown macholib PyQt6 PyQt6-Qt6
 
     - name: Download DB
       shell: bash
-      run: gdown "1_jWI2qNMSyBkH3EneM2mZg-Wzibn_gLw" -O talmud.db[cite: 1]
+      run: gdown "1_jWI2qNMSyBkH3EneM2mZg-Wzibn_gLw" -O talmud.db
 
     - name: Build Windows
       if: matrix.os == 'windows-latest'
       shell: powershell
       run: |
         choco install innosetup --no-progress
-        pyinstaller --noconfirm --onedir --windowed --icon="icon.ico" --name="Talmudic-Formulas" --add-data "talmud.db;." --add-data "widgets;widgets" --add-data "assets;assets" --collect-all PyQt6 --distpath ./dist-installer main.py[cite: 1]
+        pyinstaller --noconfirm --onedir --windowed --icon="icon.ico" --name="Software-Formulas" --add-data "talmud.db;." --add-data "widgets;widgets" --add-data "assets;assets" --collect-all PyQt6 --distpath ./dist-installer main.py
         $VERSION = "${{ steps.get_version.outputs.version_pure }}"
         (Get-Content "setup_script.iss") -replace 'AppVersion=.*', "AppVersion=$VERSION" | Set-Content "setup_script.iss"
         & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "setup_script.iss"
@@ -75,9 +71,8 @@ jobs:
     - name: Build macOS
       if: contains(matrix.os, 'macos')
       run: |
-        # בזכות Pillow, ניתן להשאיר את icon.ico ו-PyInstaller ימיר אותו ל-icns
-        pyinstaller --noconfirm --windowed --target-arch universal2 --icon="icon.ico" --name="Talmudic-Formulas-Mac" --add-data "talmud.db:." --add-data "widgets:widgets" --add-data "assets:assets" --collect-all PyQt6 main.py[cite: 1]
-        cd dist && zip -r ../Talmudic-Formulas-Mac-Portable.zip Talmudic-Formulas-Mac.app && cd ..
+        pyinstaller --noconfirm --windowed --target-arch universal2 --icon="icon.ico" --name="Software-Formulas-Mac" --add-data "talmud.db:." --add-data "widgets:widgets" --add-data "assets:assets" --collect-all PyQt6 main.py
+        cd dist && zip -r ../Software-Formulas-Mac-Portable.zip Software-Formulas-Mac.app && cd ..
 
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
@@ -86,11 +81,11 @@ jobs:
         name: גרסה ${{ steps.get_version.outputs.new_tag }}
         body: |
           ### Windows
-          * [הורדת מתקין (Setup)](https://github.com/${{ github.repository }}/releases/download/${{ steps.get_version.outputs.new_tag }}/Talmudic-Formulas-Setup-Win.exe)
-          * [הורדת גרסה ניידת (Portable EXE)](https://github.com/${{ github.repository }}/releases/download/${{ steps.get_version.outputs.new_tag }}/Talmudic-Formulas-Portable.exe)
+          * [הורדת מתקין (Setup)](https://github.com/${{ github.repository }}/releases/download/${{ steps.get_version.outputs.new_tag }}/Software-Formulas-Setup-Win.exe)
+          * [הורדת גרסה ניידת (Portable EXE)](https://github.com/${{ github.repository }}/releases/download/${{ steps.get_version.outputs.new_tag }}/Software-Formulas-Portable.exe)
 
           ### macOS
-          * [הורדת גרסה ניידת (ZIP)](https://github.com/${{ github.repository }}/releases/download/${{ steps.get_version.outputs.new_tag }}/Talmudic-Formulas-Mac-Portable.zip)
+          * [הורדת גרסה ניידת (ZIP)](https://github.com/${{ github.repository }}/releases/download/${{ steps.get_version.outputs.new_tag }}/Software-Formulas-Mac-Portable.zip)
         files: |
           Output/*.exe
           dist-installer/*.exe
