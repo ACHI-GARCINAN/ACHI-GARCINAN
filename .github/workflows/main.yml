@@ -25,7 +25,6 @@ jobs:
       shell: bash
       run: |
         git fetch --tags --force
-        # חישוב הגרסה הכי גבוהה באמת במאגר
         LATEST_TAG=$(git tag -l "v*" | sort -V | tail -n1)
         if [ -z "$LATEST_TAG" ]; then LATEST_TAG="v1.0"; fi
         
@@ -55,19 +54,20 @@ jobs:
         
     - name: Install Dependencies
       run: |
-        pip install pyinstaller gdown macholib PyQt6 PyQt6-Qt6
+        python -m pip install --upgrade pip
+        # הוספת Pillow מאפשרת המרת אייקונים אוטומטית ב-macOS
+        pip install pyinstaller gdown macholib PyQt6 PyQt6-Qt6 Pillow[cite: 1]
 
     - name: Download DB
       shell: bash
-      run: gdown "1_jWI2qNMSyBkH3EneM2mZg-Wzibn_gLw" -O talmud.db
+      run: gdown "1_jWI2qNMSyBkH3EneM2mZg-Wzibn_gLw" -O talmud.db[cite: 1]
 
     - name: Build Windows
       if: matrix.os == 'windows-latest'
       shell: powershell
       run: |
         choco install innosetup --no-progress
-        # אריזת ה-DB והאייקון לתוך התיקייה
-        pyinstaller --noconfirm --onedir --windowed --icon="icon.ico" --name="Talmudic-Formulas" --add-data "talmud.db;." --add-data "widgets;widgets" --add-data "assets;assets" --collect-all PyQt6 --distpath ./dist-installer main.py
+        pyinstaller --noconfirm --onedir --windowed --icon="icon.ico" --name="Talmudic-Formulas" --add-data "talmud.db;." --add-data "widgets;widgets" --add-data "assets;assets" --collect-all PyQt6 --distpath ./dist-installer main.py[cite: 1]
         $VERSION = "${{ steps.get_version.outputs.version_pure }}"
         (Get-Content "setup_script.iss") -replace 'AppVersion=.*', "AppVersion=$VERSION" | Set-Content "setup_script.iss"
         & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "setup_script.iss"
@@ -75,8 +75,8 @@ jobs:
     - name: Build macOS
       if: contains(matrix.os, 'macos')
       run: |
-        # אריזת ה-DB והאייקון במק
-        pyinstaller --noconfirm --windowed --target-arch universal2 --icon="icon.ico" --name="Talmudic-Formulas-Mac" --add-data "talmud.db:." --add-data "widgets:widgets" --add-data "assets:assets" --collect-all PyQt6 main.py
+        # בזכות Pillow, ניתן להשאיר את icon.ico ו-PyInstaller ימיר אותו ל-icns
+        pyinstaller --noconfirm --windowed --target-arch universal2 --icon="icon.ico" --name="Talmudic-Formulas-Mac" --add-data "talmud.db:." --add-data "widgets:widgets" --add-data "assets:assets" --collect-all PyQt6 main.py[cite: 1]
         cd dist && zip -r ../Talmudic-Formulas-Mac-Portable.zip Talmudic-Formulas-Mac.app && cd ..
 
     - name: Create GitHub Release
