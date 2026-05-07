@@ -26,7 +26,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       with:
-        fetch-depth: 0 # חייב להיות 0 כדי לראות תגיות קודמות
+        fetch-depth: 0
 
     - name: Set up Python
       uses: actions/setup-python@v5
@@ -39,14 +39,10 @@ jobs:
       shell: bash
       run: |
         git fetch --tags --force
-        # מוצא את התגית האחרונה בפורמט v1.x
         LATEST_TAG=$(git tag -l "v1.*" | sort -V | tail -n1)
-        
         if [ -z "$LATEST_TAG" ]; then
-          # אם לא מצא תגיות בכלל, נתחיל מ-1.12
           NEW_TAG="v1.12"
         else
-          # לוקח את המספר שאחרי הנקודה ומעלה ב-1
           CURRENT_MINOR=$(echo $LATEST_TAG | cut -d. -f2)
           NEW_MINOR=$((CURRENT_MINOR + 1))
           NEW_TAG="v1.$NEW_MINOR"
@@ -62,7 +58,6 @@ jobs:
       shell: bash
       run: gdown "1_jWI2qNMSyBkH3EneM2mZg-Wzibn_gLw" -O talmud.db
 
-    # --- Windows Build ---
     - name: Build Windows
       if: matrix.platform == 'windows'
       shell: powershell
@@ -72,7 +67,6 @@ jobs:
         pyinstaller --noconfirm --onefile --windowed --icon="icon.ico" --name="TalmudicFormulas-Portable" --add-data "talmud.db;." --add-data "widgets;widgets" --add-data "assets;assets" --collect-all PyQt6 --distpath ./dist-portable main.py
         & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /DMyAppVersion="${{ steps.get_version.outputs.tag }}" "setup_script.iss"
 
-    # --- macOS Build ---
     - name: Build macOS
       if: startsWith(matrix.platform, 'macos')
       env:
@@ -84,7 +78,6 @@ jobs:
         create-dmg --volname "Talmudic Formulas" "TalmudicFormulas-$ARCH-Installer.dmg" "dist/TalmudicFormulas-Mac-$ARCH.app" || true
         zip -r "TalmudicFormulas-Mac-$ARCH-Portable.zip" "dist/TalmudicFormulas-Mac-$ARCH.app"
 
-# --- Create Release ---
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
       with:
@@ -101,7 +94,7 @@ jobs:
 
           ---
 
-          ###  macOS Apple Silicon (מעבדי M1, M2, M3 ומעלה)
+          ### macOS Apple Silicon (מעבדי M1, M2, M3 ומעלה)
           * **[הורדת מתקין (DMG)](https://github.com/${{ github.repository }}/releases/download/${{ steps.get_version.outputs.tag }}/TalmudicFormulas-arm64-Installer.dmg)**
           * **[הורדת גרסה ניידת (ZIP)](https://github.com/${{ github.repository }}/releases/download/${{ steps.get_version.outputs.tag }}/TalmudicFormulas-Mac-arm64-Portable.zip)**
 
@@ -112,7 +105,7 @@ jobs:
           * **[הורדת גרסה ניידת (ZIP)](https://github.com/${{ github.repository }}/releases/download/${{ steps.get_version.outputs.tag }}/TalmudicFormulas-Mac-x86_64-Portable.zip)**
 
           ---
-           **טיפ למשתמשי מק:** אם אינכם בטוחים איזה מעבד יש לכם, לחצו על תפריט התפוח () בפינת המסך ובחרו ב-"אודות מק זה" (About This Mac).
+          **טיפ למשתמשי מק:** אם אינכם בטוחים איזה מעבד יש לכם, לחצו על תפריט התפוח () בפינת המסך ובחרו ב-"אודות מק זה" (About This Mac).
         files: |
           Output/*.exe
           dist-portable/*.exe
