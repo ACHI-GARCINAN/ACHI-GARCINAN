@@ -1,10 +1,10 @@
-﻿[Setup]
+[Setup]
+; MyAppVersion מועבר דינמית מה-GitHub Actions באמצעות /DMyAppVersion="..."
+; אל תגדיר כאן #define MyAppVersion — זה ידרוס את הערך הדינמי!
 #define MyAppName "נוסחאות התלמוד"
 #define MyAppExeName "TalmudicFormulas.exe"
-#define MyAppVersion "1.0"
 #define MyAppId "{{D3B3E5C1-A8F2-4E9D-B6D7-3F1A2C3D4E5F}"
 
-; AppId ייחודי עבור האפליקציה
 AppId={#MyAppId}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
@@ -26,12 +26,14 @@ Name: "hebrew"; MessagesFile: "compiler:Languages\Hebrew.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-; לוקח את כל הקבצים ש-PyInstaller יצר בתיקיית ה-installer (שימוש בשם המדויק מה-YAML)
+; כל הקבצים שיצר PyInstaller בתיקיית dist-installer
 Source: "dist-installer\TalmudicFormulas\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-; הוספת קבצי טקסט לתיקיית התוכנה המותקנת
-Source: "license.txt"; DestDir: "{app}"; Flags: ignoreversion
-Source: "comments.txt"; DestDir: "{app}"; Flags: ignoreversion
-; הוספת בסיס הנתונים (חשוב מאוד אם הוא לא בתוך התיקייה ש-PyInstaller אסף)
+
+; קבצי טקסט — עם skipifsourcedoesntexist כדי שהבנייה לא תיכשל אם חסרים
+Source: "license.txt"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
+Source: "comments.txt"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
+
+; בסיס הנתונים — כבר נכלל ב-PyInstaller, אבל נוסף גם כאן לוודאות
 Source: "talmud.db"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
