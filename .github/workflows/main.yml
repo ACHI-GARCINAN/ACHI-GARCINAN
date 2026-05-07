@@ -1,5 +1,4 @@
 name: Build and Release
-
 on:
   push:
     branches: [ "main" ]
@@ -7,59 +6,53 @@ on:
 
 jobs:
   build:
-    name: Build on ${{ matrix.os }}
+    name: Build
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         include:
           - os: windows-latest
-            platform: windows
-          - os: macos-13
-            platform: macos-intel
+            platform: win
           - os: macos-latest
-            platform: macos-arm
+            platform: mac-arm
+          - os: macos-13
+            platform: mac-intel
+
     permissions:
       contents: write
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Set up Python
+      - name: Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          architecture: 'x64'
 
-      - name: Calculate Version
+      - name: Version
         id: get_version
         shell: bash
         run: |
           git fetch --tags --force
-          LATEST_TAG=$(git tag -l "v1.*" | sort -V | tail -n1)
-          if [ -z "$LATEST_TAG" ]; then
-            NEW_TAG="v1.12"
-          else
-            CURRENT_MINOR=$(echo $LATEST_TAG | cut -d. -f2)
-            NEW_MINOR=$((CURRENT_MINOR + 1))
-            NEW_TAG="v1.$NEW_MINOR"
+          LATEST=$(git tag -l "v1.*" | sort -V | tail -n1)
+          if [ -z "$LATEST" ]; then NEW="v1.12"; else
+            MINOR=$(echo $LATEST | cut -d. -f2)
+            NEW="v1.$((MINOR + 1))"
           fi
-          echo "tag=$NEW_TAG" >> $GITHUB_OUTPUT
-          echo "Version calculated: $NEW_TAG"
+          echo "tag=$NEW" >> $GITHUB_OUTPUT
 
-      - name: Install Dependencies
-        run: |
-          pip install pyinstaller gdown PyQt6 PyQt6-Qt6 Pillow
+      - name: Deps
+        run: pip install pyinstaller gdown PyQt6 PyQt6-Qt6 Pillow
 
-      - name: Download DB
-        shell: bash
+      - name: DB
         run: gdown "1_jWI2qNMSyBkH3EneM2mZg-Wzibn_gLw" -O talmud.db
 
       - name: Build Windows
-        if: matrix.platform == 'windows'
+        if: matrix.platform == 'win'
         shell: powershell
         run: |
           choco install innosetup --no-progress
@@ -67,10 +60,8 @@ jobs:
           pyinstaller --noconfirm --onefile --windowed --icon="icon.ico" --name="TalmudicFormulas-Portable" --add-data "talmud.db;." --add-data "widgets;widgets" --add-data "assets;assets" --collect-all PyQt6 --distpath ./dist-portable main.py
           & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /DMyAppVersion="${{ steps.get_version.outputs.tag }}" "setup_script.iss"
 
-      - name: Build macOS
-        if: startsWith(matrix.platform, 'macos')
-        env:
-          HOMEBREW_NO_AUTO_UPDATE: 1
+      - name: Build Mac
+        if: startsWith(matrix.platform, 'mac')
         run: |
           brew install create-dmg
           ARCH=$(uname -m)
@@ -78,34 +69,11 @@ jobs:
           create-dmg --volname "Talmudic Formulas" "TalmudicFormulas-$ARCH-Installer.dmg" "dist/TalmudicFormulas-Mac-$ARCH.app" || true
           zip -r "TalmudicFormulas-Mac-$ARCH-Portable.zip" "dist/TalmudicFormulas-Mac-$ARCH.app"
 
-      - name: Create GitHub Release
+      - name: Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ steps.get_version.outputs.tag }}
-          name: גרסה ${{ steps.get_version.outputs.tag }}
-          body: |
-            ## הורדות ישירות לגרסה ${{ steps.get_version.outputs.tag }}
-            
-            ---
-
-            ### Windows (ווינדוס)
-            * **[הורדת מתקין (Setup)](https://github.com/${{ github.repository }}/releases/download/${{ steps.get_version.outputs.tag }}/TalmudicFormulas-Setup-Win.exe)** (מומלץ למשתמשי PC)
-            * **[הורדת גרסה ניידת (Portable)](https://github.com/${{ github.repository }}/releases/download/${{ steps.get_version.outputs.tag }}/TalmudicFormulas-Portable.exe)** (קובץ בודד ללא התקנה)
-
-            ---
-
-            ### macOS Apple Silicon (מעבדי M1, M2, M3 ומעלה)
-            * **[הורדת מתקין (DMG)](https://github.com/${{ github.repository }}/releases/download/${{ steps.get_version.outputs.tag }}/TalmudicFormulas-arm64-Installer.dmg)**
-            * **[הורדת גרסה ניידת (ZIP)](https://github.com/${{ github.repository }}/releases/download/${{ steps.get_version.outputs.tag }}/TalmudicFormulas-Mac-arm64-Portable.zip)**
-
-            ---
-
-            ### macOS Intel (מעבדי אינטל ישנים)
-            * **[הורדת מתקין (DMG)](https://github.com/${{ github.repository }}/releases/download/${{ steps.get_version.outputs.tag }}/TalmudicFormulas-x86_64-Installer.dmg)**
-            * **[הורדת גרסה ניידת (ZIP)](https://github.com/${{ github.repository }}/releases/download/${{ steps.get_version.outputs.tag }}/TalmudicFormulas-Mac-x86_64-Portable.zip)**
-
-            ---
-            **טיפ למשתמשי מק:** אם אינכם בטוחים איזה מעבד יש לכם, לחצו על תפריט התפוח () בפינת המסך ובחרו ב-"אודות מק זה" (About This Mac).
+          name: Version ${{ steps.get_version.outputs.tag }}
           files: |
             Output/*.exe
             dist-portable/*.exe
