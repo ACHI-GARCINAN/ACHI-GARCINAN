@@ -6,26 +6,41 @@ DB_PATH = ''
  
 def get_base_dir() -> str:
     if getattr(sys, 'frozen', False):
-        # נתיב הקובץ המריץ (.exe)
-        base_exe_dir = os.path.dirname(sys.executable)
-        # בדיקה האם אנחנו בתוך התקנה עם תיקיית _internal
-        internal_path = os.path.join(base_exe_dir, "_internal")
-        if os.path.exists(internal_path):
-            return internal_path
-        # אם התיקייה לא קיימת (מצב Portable), נשתמש בתיקייה הזמנית
-        return sys._MEIPASS
+        # נתיב תיקיית ה-exe תמיד
+        return os.path.dirname(sys.executable)
     return os.path.dirname(os.path.abspath(__file__))
- 
+
+def _find_db() -> str:
+    """
+    מחפש את talmud.db בסדר עדיפויות:
+    1. ליד ה-exe (גרסת התקנה ו-Portable)
+    2. בתוך _internal (PyInstaller onedir)
+    3. sys._MEIPASS (PyInstaller onefile)
+    """
+    if getattr(sys, 'frozen', False):
+        candidates = [
+            os.path.join(os.path.dirname(sys.executable), "talmud.db"),
+            os.path.join(os.path.dirname(sys.executable), "_internal", "talmud.db"),
+        ]
+        if hasattr(sys, '_MEIPASS'):
+            candidates.append(os.path.join(sys._MEIPASS, "talmud.db"))
+        for p in candidates:
+            if os.path.exists(p):
+                return p
+        return ""
+    # מצב פיתוח
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), "talmud.db")
+
 def load_masechet_list(folder: str) -> list:
     global DB_PATH
-    # ניסיון טעינה מהנתיב שהתקבל (ארגומנט או בסיס)
+    # ניסיון ראשון: הנתיב שהועבר (ארגומנט משורת הפקודה)
     db_path = os.path.join(folder, "talmud.db")
     
-    # אם לא נמצא שם, נבצע חיפוש אוטומטי בנתיב הבסיס המותאם
+    # אם לא נמצא שם — חיפוש אוטומטי
     if not os.path.exists(db_path):
-        db_path = os.path.join(get_base_dir(), "talmud.db")
+        db_path = _find_db()
         
-    if not os.path.exists(db_path):
+    if not db_path or not os.path.exists(db_path):
         return []
         
     DB_PATH = db_path
@@ -126,6 +141,7 @@ def search_word_in_shas(word: str) -> list:
     ).fetchall()
     con.close()
     return [{'masechet': r[0], 'page': r[1], 'section': r[2]} for r in rows]
+
 def fetch_manuscript_info(witness_name: str) -> dict | None:
     """
     שולף מידע על כתב יד מטבלת manuscript_info לפי שם העד הנוסח.
