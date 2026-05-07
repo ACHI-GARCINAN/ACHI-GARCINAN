@@ -1,83 +1,209 @@
 name: Build and Release
+
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   workflow_dispatch:
 
 jobs:
+  version:
+    name: Calculate Version
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.get_version.outputs.tag }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Calculate next version
+        id: get_version
+        shell: bash
+        run: |
+          git fetch --tags --force
+
+          LATEST_TAG=$(git tag -l "v1.*" | sort -V | tail -n1)
+
+          if [ -z "$LATEST_TAG" ]; then
+            NEW_TAG="v1.0"
+          else
+            MAJOR=$(echo "$LATEST_TAG" | cut -d. -f1)
+            MINOR=$(echo "$LATEST_TAG" | cut -d. -f2)
+            NEXT_MINOR=$((MINOR + 1))
+            NEW_TAG="${MAJOR}.${NEXT_MINOR}"
+          fi
+
+          echo "tag=$NEW_TAG" >> "$GITHUB_OUTPUT"
+          echo "Next version: $NEW_TAG"
+
   build:
-    name: Build
+    name: Build on ${{ matrix.os }}
+    needs: version
     runs-on: ${{ matrix.os }}
+
     strategy:
       fail-fast: false
       matrix:
         include:
           - os: windows-latest
-            platform: win
+            platform: windows
           - os: macos-latest
-            platform: mac-arm
-          - os: macos-13
-            platform: mac-intel
+            platform: macos
 
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller gdown PyQt6 PyQt6-Qt6 Pillow
+
+      - name: Download DB
+        shell: bash
+        run: |
+          gdown "1_jWI2qNMSyBkH3EneM2mZg-Wzibn_gLw" -O talmud.db
+
+      - name: Build Windows
+        if: matrix.platform == 'windows'
+        shell: powershell
+        run: |
+          choco install innosetup --no-progress
+
+          pyinstaller --noconfirm --onedir --windowed `
+            --icon="icon.ico" `
+            --name="TalmudicFormulas" `
+            --add-data "talmud.db;." `
+            --add-data "widgets;widgets" `
+            --add-data "assets;assets" `
+            --collect-all PyQt6 `
+            --distpath ./dist-installer `
+            main.py
+
+          pyinstaller --noconfirm --onefile --windowed `
+            --icon="icon.ico" `
+            --name="TalmudicFormulas-Portable" `
+            --add-data "talmud.db;." `
+            --add-data "widgets;widgets" `
+            --add-data "assets;assets" `
+            --collect-all PyQt6 `
+            --distpath ./dist-portable `
+            main.py
+
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /DMyAppVersion="${{ needs.version.outputs.tag }}" "setup_script.iss"
+
+      - name: Build macOS Universal
+        if: matrix.platform == 'macos'
+        shell: bash
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: 1
+        run: |
+          if ! command -v create-dmg >/dev/null 2>&1; then
+            brew install create-dmg
+          fi
+
+          pyinstaller \
+            --noconfirm \
+            --windowed \
+            --target-architecture universal2 \
+            --name "TalmudicFormulas" \
+            --add-data "talmud.db:." \
+            --add-data "widgets:widgets" \
+            --add-data "assets:assets" \
+            --collect-all PyQt6 \
+            main.py
+
+          create-dmg \
+            --volname "Talmudic Formulas" \
+            "TalmudicFormulas-Mac-Universal.dmg" \
+            "dist/TalmudicFormulas.app"
+
+          cd dist
+          zip -r ../TalmudicFormulas-Mac-Universal.zip TalmudicFormulas.app
+
+      - name: Upload Windows artifacts
+        if: matrix.platform == 'windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-build
+          path: |
+            Output/*.exe
+            dist-portable/*.exe
+
+      - name: Upload macOS artifacts
+        if: matrix.platform == 'macos'
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-build
+          path: |
+            *.dmg
+            *.zip
+
+  release:
+    name: Create Release
+    needs:
+      - version
+      - build
+    runs-on: ubuntu-latest
     permissions:
       contents: write
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
         with:
-          fetch-depth: 0
+          path: artifacts
 
-      - name: Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Version
-        id: get_version
-        shell: bash
-        run: |
-          git fetch --tags --force
-          LATEST=$(git tag -l "v1.*" | sort -V | tail -n1)
-          if [ -z "$LATEST" ]; then NEW="v1.12"; else
-            MINOR=$(echo $LATEST | cut -d. -f2)
-            NEW="v1.$((MINOR + 1))"
-          fi
-          echo "tag=$NEW" >> $GITHUB_OUTPUT
-
-      - name: Deps
-        run: pip install pyinstaller gdown PyQt6 PyQt6-Qt6 Pillow
-
-      - name: DB
-        run: gdown "1_jWI2qNMSyBkH3EneM2mZg-Wzibn_gLw" -O talmud.db
-
-      - name: Build Windows
-        if: matrix.platform == 'win'
-        shell: powershell
-        run: |
-          choco install innosetup --no-progress
-          pyinstaller --noconfirm --onedir --windowed --icon="icon.ico" --name="TalmudicFormulas" --add-data "talmud.db;." --add-data "widgets;widgets" --add-data "assets;assets" --collect-all PyQt6 --distpath ./dist-installer main.py
-          pyinstaller --noconfirm --onefile --windowed --icon="icon.ico" --name="TalmudicFormulas-Portable" --add-data "talmud.db;." --add-data "widgets;widgets" --add-data "assets;assets" --collect-all PyQt6 --distpath ./dist-portable main.py
-          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /DMyAppVersion="${{ steps.get_version.outputs.tag }}" "setup_script.iss"
-
-      - name: Build Mac
-        if: startsWith(matrix.platform, 'mac')
-        run: |
-          brew install create-dmg
-          ARCH=$(uname -m)
-          pyinstaller --noconfirm --windowed --name="TalmudicFormulas-Mac-$ARCH" --add-data "talmud.db:." --add-data "widgets:widgets" --add-data "assets:assets" --collect-all PyQt6 --distpath ./dist main.py
-          create-dmg --volname "Talmudic Formulas" "TalmudicFormulas-$ARCH-Installer.dmg" "dist/TalmudicFormulas-Mac-$ARCH.app" || true
-          zip -r "TalmudicFormulas-Mac-$ARCH-Portable.zip" "dist/TalmudicFormulas-Mac-$ARCH.app"
-
-      - name: Release
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ steps.get_version.outputs.tag }}
-          name: Version ${{ steps.get_version.outputs.tag }}
+          tag_name: ${{ needs.version.outputs.tag }}
+          name: גרסה ${{ needs.version.outputs.tag }}
+          body: |
+            ## הורדות ישירות לגרסה ${{ needs.version.outputs.tag }}
+
+            ---
+
+            ### Windows
+            * **הורדת מתקין (Setup)**  
+              https://github.com/${{ github.repository }}/releases/download/${{ needs.version.outputs.tag }}/TalmudicFormulas-Setup-Win.exe
+
+            * **הורדת גרסה ניידת (Portable)**  
+              https://github.com/${{ github.repository }}/releases/download/${{ needs.version.outputs.tag }}/TalmudicFormulas-Portable.exe
+
+            ---
+
+            ### macOS (Universal – Intel + Apple Silicon)
+            * **הורדת מתקין (DMG)**  
+              https://github.com/${{ github.repository }}/releases/download/${{ needs.version.outputs.tag }}/TalmudicFormulas-Mac-Universal.dmg
+
+            * **הורדת גרסה ניידת (ZIP)**  
+              https://github.com/${{ github.repository }}/releases/download/${{ needs.version.outputs.tag }}/TalmudicFormulas-Mac-Universal.zip
+
+            ---
+
+            **הערה למשתמשי מק:** גרסה זו תומכת גם במחשבי Intel וגם במחשבי Apple Silicon.
+
           files: |
-            Output/*.exe
-            dist-portable/*.exe
-            *.dmg
-            *.zip
+            artifacts/**/*.exe
+            artifacts/**/*.dmg
+            artifacts/**/*.zip
+
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
