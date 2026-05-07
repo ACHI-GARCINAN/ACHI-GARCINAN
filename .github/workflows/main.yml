@@ -46,9 +46,9 @@ jobs:
       shell: powershell
       run: |
         choco install innosetup --no-progress
-        # בנייה ל-Installer (onedir)
+        # בנייה ל-Installer
         pyinstaller --noconfirm --onedir --windowed --icon="icon.ico" --name="TalmudicFormulas" --add-data "talmud.db;." --add-data "widgets;widgets" --add-data "assets;assets" --collect-all PyQt6 --distpath ./dist-installer main.py
-        # בנייה לגרסה ניידת (onefile)
+        # בנייה לגרסה ניידת
         pyinstaller --noconfirm --onefile --windowed --icon="icon.ico" --name="TalmudicFormulas-Portable" --add-data "talmud.db;." --add-data "widgets;widgets" --add-data "assets;assets" --collect-all PyQt6 --distpath ./dist-portable main.py
         # יצירת ה-Installer
         & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "setup_script.iss"
@@ -56,28 +56,36 @@ jobs:
     # --- macOS Build ---
     - name: Build macOS
       if: startsWith(matrix.platform, 'macos')
+      env:
+        HOMEBREW_NO_AUTO_UPDATE: 1 # מאיץ משמעותית את הריצה במק
       run: |
         brew install create-dmg
         ARCH=$(uname -m)
         pyinstaller --noconfirm --windowed --name="TalmudicFormulas-Mac-$ARCH" --add-data "talmud.db:." --add-data "widgets:widgets" --add-data "assets:assets" --collect-all PyQt6 --distpath ./dist main.py
-        # יצירת DMG (התקנה)
+        # יצירת DMG
         create-dmg --volname "Talmudic Formulas" "TalmudicFormulas-$ARCH-Installer.dmg" "dist/TalmudicFormulas-Mac-$ARCH.app" || true
-        # יצירת Zip (נייד)
+        # יצירת Zip
         zip -r "TalmudicFormulas-Mac-$ARCH-Portable.zip" "dist/TalmudicFormulas-Mac-$ARCH.app"
 
-    # --- Create Release ---
+        # --- Create Release ---
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
       with:
         tag_name: v1.${{ github.run_number }}
         name: גרסה v1.${{ github.run_number }}
         body: |
-          ##  הורדות ישירות
-          ###  Windows
-          * **התקנה:** TalmudicFormulas-Setup-Win.exe
-          * **נייד:** TalmudicFormulas-Portable.exe
-          ###  macOS
-          * הורד את הקובץ המתאים לארכיטקטורה שלך (arm64 או x86_64).
+          ##  הורדות ישירות (Direct Downloads)
+
+          ###  Windows (ווינדוס)
+          *  **[לחץ כאן להורדת המתקין (Setup)](https://github.com/${{ github.repository }}/releases/download/v1.${{ github.run_number }}/TalmudicFormulas-Setup-Win.exe)**
+          *  **[לחץ כאן להורדת גרסה ניידת (Portable)](https://github.com/${{ github.repository }}/releases/download/v1.${{ github.run_number }}/TalmudicFormulas-Portable.exe)**
+
+          ###  macOS (מאק)
+          *  **[הורדה למעבדי Apple Silicon - M1/M2/M3](https://github.com/${{ github.repository }}/releases/download/v1.${{ github.run_number }}/TalmudicFormulas-arm64-Installer.dmg)**
+          *  **[הורדה למעבדי Intel](https://github.com/${{ github.repository }}/releases/download/v1.${{ github.run_number }}/TalmudicFormulas-x86_64-Installer.dmg)**
+          
+          ---
+          *ניתן למצוא את כל הקבצים גם ברשימת ה-Assets למטה.*
         files: |
           Output/*.exe
           dist-portable/*.exe
