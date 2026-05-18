@@ -254,10 +254,12 @@ jobs:
 
             > **הערה למשתמשי מק:** גרסה זו תומכת הן במחשבי Intel והן במחשבי Apple Silicon.
 
+
           files: |
-            artifacts/windows-build/Output/TalmudicFormulas-Setup-Win.exe
-            artifacts/windows-build/dist-portable/TalmudicFormulas-Portable.exe
-            artifacts/macos-build/TalmudicFormulas-Mac-Universal.dmg
-            artifacts/macos-build/TalmudicFormulas-Mac-Universal.zip
+            artifacts/windows-build/**/TalmudicFormulas-Setup-Win.exe
+            artifacts/windows-build/**/TalmudicFormulas-Portable.exe
+            artifacts/macos-build/**/TalmudicFormulas-Mac-Universal.dmg
+            artifacts/macos-build/**/TalmudicFormulas-Mac-Universal.zip
+
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
