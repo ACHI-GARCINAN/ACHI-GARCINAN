@@ -47,14 +47,14 @@ jobs:
           echo "tag=$NEW_TAG" >> "$GITHUB_OUTPUT"
           echo "Next version: $NEW_TAG"
 
-  download-db:
+download-db:
     name: Download DB from release
     runs-on: ubuntu-latest
     steps:
       - name: Download talmud.db
         run: |
-          curl -L -o talmud.db \
-            "https://github.com/ACHI-GARCINAN/ACHI-GARCINAN/releases/download/v1.14/talmud.db"
+          curl -f -L -o talmud.db \
+            "https://github.com/ACHI-GARCINAN/Talmud-Formulas-Software/releases/download/1.0/talmud.db"
           echo "✅ talmud.db הורד בהצלחה"
           ls -lh talmud.db
 
