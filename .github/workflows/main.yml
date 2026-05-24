@@ -116,9 +116,9 @@ jobs:
           name: talmud-db
 
       - name: Verify DB
-      --icon="icon.icns" \
         shell: bash
-        run: ls -lh talmud.db
+        run: |
+          ls -lh talmud.db
 
       # ── Windows Build ──
       - name: Build Windows
