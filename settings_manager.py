@@ -41,10 +41,10 @@ DEFAULTS = {
     'highlight_diffs': False,
     'hide_empty_witnesses': True,
     'hide_minor_diffs': False,
+    'show_summary': False,
     'continuous_sections_view': False,
     'display_mode': 'sections',
 }
-
 
 def load_settings() -> dict:
     path = get_settings_path()
