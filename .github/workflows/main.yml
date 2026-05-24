@@ -116,6 +116,7 @@ jobs:
           name: talmud-db
 
       - name: Verify DB
+      --icon="icon.icns" \
         shell: bash
         run: ls -lh talmud.db
 
@@ -167,6 +168,7 @@ jobs:
         run: |
           if ! command -v create-dmg >/dev/null 2>&1; then
             brew install create-dmg
+            mv *.dmg TalmudicFormulas-Mac-Universal.dmg
           fi
 
           pyinstaller \
@@ -225,7 +227,7 @@ jobs:
         run: find artifacts -type f
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.version.outputs.tag }}
           name: "גרסה ${{ needs.version.outputs.tag }}"
@@ -254,11 +256,12 @@ jobs:
 
             > **הערה למשתמשי מק:** גרסה זו תומכת הן במחשבי Intel והן במחשבי Apple Silicon.
 
+
           files: |
-            artifacts/windows-build/TalmudicFormulas-Setup-Win.exe
-            artifacts/windows-build/TalmudicFormulas-Portable.exe
-            artifacts/macos-build/TalmudicFormulas-Mac-Universal.dmg
-            artifacts/macos-build/TalmudicFormulas-Mac-Universal.zip
+            artifacts/windows-build/**/TalmudicFormulas-Setup-Win.exe
+            artifacts/windows-build/**/TalmudicFormulas-Portable.exe
+            artifacts/macos-build/**/TalmudicFormulas-Mac-Universal.dmg
+            artifacts/macos-build/**/TalmudicFormulas-Mac-Universal.zip
 
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

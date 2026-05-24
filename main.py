@@ -5,7 +5,6 @@
 import time
 import sys
 import os
-import ctypes
 from main_window import MainWindow, get_icon
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtCore import Qt, QEvent
@@ -53,13 +52,13 @@ class TalmudApp(QApplication):
 
 def main():
     if sys.platform == "win32":
-        my_app_id = "talmud.synopsis.viewer.v1" 
+        import ctypes
+        my_app_id = "talmud.synopsis.viewer.v1"
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(my_app_id)
-
-    QApplication.setHighDpiScaleFactorRoundingPolicy(
-        Qt.HighDpiScaleFactorRoundingPolicy.PassThrough
-    )
-
+    if sys.platform != 'darwin':
+        QApplication.setHighDpiScaleFactorRoundingPolicy(
+            Qt.HighDpiScaleFactorRoundingPolicy.PassThrough
+        )
     app = TalmudApp(sys.argv)
     
     # טעינת האייקון והגדרה לאפליקציה (עבור שורת המשימות/Dock)
@@ -122,10 +121,13 @@ def main():
     window = MainWindow(masechtot)
     print(f"MainWindow init: {time.time()-t0:.2f}s")
     app.set_main_window(window)
-    window.showMaximized()
+    if sys.platform == 'darwin':
+        window.show()
+        window.setWindowState(Qt.WindowState.WindowMaximized)
+    else:
+        window.showMaximized()
+    splash.finish(window)
     
-    splash.finish(window)  # מסתיר את הספלאש כשהחלון מוכן
-
     sys.exit(app.exec())
 
 

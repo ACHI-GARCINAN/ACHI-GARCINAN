@@ -19,9 +19,7 @@ class SearchResultsDialog(QDialog):
         bg       = '#F7F3EC' if is_colorful else '#F0F4F7'
         text     = '#1A0800' if is_colorful else '#2D3748'
         accent   = '#C8A060' if is_colorful else '#5A6A82'
-        item_sel = '#FFF0DC' if is_colorful else '#EDF2F7'
-        border   = '#D5C8A0' if is_colorful else '#CBD5E0'   # ← זה חסר!
-
+        border   = '#D5C8A0' if is_colorful else '#CBD5E0'
         self.setStyleSheet(f"QDialog{{background:{bg};}}")
 
         layout = QVBoxLayout(self)
