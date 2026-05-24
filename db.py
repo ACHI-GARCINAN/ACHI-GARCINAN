@@ -279,3 +279,4 @@ def fetch_manuscript_info(witness_name: str) -> dict | None:
         return {'name': row[0], 'full_text': row[1]}
     return None
 >>>>>>> c37a3da0c63e025bbcc5d92b3f0ff241f4be0b0e
+# Build trigger - 2026-05-24 12:29:16
