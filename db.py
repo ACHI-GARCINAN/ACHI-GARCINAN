@@ -12,18 +12,6 @@ def get_base_dir() -> str:
 
 
 def _find_db() -> str:
-<<<<<<< HEAD
-    if getattr(sys, 'frozen', False):
-        exe_dir = os.path.dirname(sys.executable)
-        candidates = []
-        # onefile / מק: _MEIPASS הוא תיקיה זמנית עם כל הקבצים
-        if hasattr(sys, '_MEIPASS'):
-            candidates.append(os.path.join(sys._MEIPASS, "talmud.db"))
-        # onedir Windows installer: _internal
-        candidates.append(os.path.join(exe_dir, "_internal", "talmud.db"))
-        # ליד ה-executable ישירות
-        candidates.append(os.path.join(exe_dir, "talmud.db"))
-=======
     """
     מחפש את talmud.db בסדר עדיפויות:
     1. sys._MEIPASS (PyInstaller onefile) — חייב להיות ראשון!
@@ -44,28 +32,10 @@ def _find_db() -> str:
         # _internal (PyInstaller onedir חדש)
         candidates.append(os.path.join(os.path.dirname(sys.executable), "_internal", "talmud.db"))
 
->>>>>>> c37a3da0c63e025bbcc5d92b3f0ff241f4be0b0e
         for p in candidates:
             if os.path.isfile(p):
                 return p
         return ""
-<<<<<<< HEAD
-    return os.path.join(os.path.dirname(os.path.abspath(__file__)), "talmud.db")
-
-def _open_db(db_path: str):
-    if not db_path or not os.path.isfile(db_path):
-        return None
-    try:
-        con = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
-        return con
-    except (sqlite3.OperationalError, Exception):
-        try:
-            con = sqlite3.connect(db_path)
-            con.execute("PRAGMA query_only = ON")
-            return con
-        except Exception:
-            return None
-=======
 
     # מצב פיתוח
     return os.path.join(os.path.dirname(os.path.abspath(__file__)), "talmud.db")
@@ -76,26 +46,16 @@ def _open_db(db_path: str) -> sqlite3.Connection | None:
     if not db_path or not os.path.isfile(db_path):
         return None
     try:
-        # uri=True + ?mode=ro מונע יצירת קובץ ריק אם הנתיב שגוי
+        # uri=True + ?mode=ro מונע יצירת קובץ ריק אם הנתיך שגוי
         con = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
         return con
     except sqlite3.OperationalError:
         return None
 
->>>>>>> c37a3da0c63e025bbcc5d92b3f0ff241f4be0b0e
 
 def load_masechet_list(folder: str) -> list:
     global DB_PATH
 
-<<<<<<< HEAD
-    auto = _find_db()
-    candidates = []
-    if auto:
-        candidates.append(auto)
-    folder_candidate = os.path.join(folder, "talmud.db")
-    if folder_candidate not in candidates:
-        candidates.append(folder_candidate)
-=======
     # סדר חיפוש:
     # 1. הנתיב שהועבר כארגומנט
     # 2. חיפוש אוטומטי (_find_db)
@@ -106,7 +66,6 @@ def load_masechet_list(folder: str) -> list:
     auto = _find_db()
     if auto:
         candidates.append(auto)
->>>>>>> c37a3da0c63e025bbcc5d92b3f0ff241f4be0b0e
 
     db_path = ""
     for p in candidates:
@@ -237,10 +196,6 @@ def search_word_in_shas(word: str) -> list:
 def fetch_manuscript_info(witness_name: str) -> dict | None:
     if not DB_PATH:
         return None
-<<<<<<< HEAD
-=======
-
->>>>>>> c37a3da0c63e025bbcc5d92b3f0ff241f4be0b0e
     con = _open_db(DB_PATH)
     if con is None:
         return None
@@ -253,30 +208,13 @@ def fetch_manuscript_info(witness_name: str) -> dict | None:
         con.close()
         return None
 
-<<<<<<< HEAD
-    try:
-        row = con.execute(
-            "SELECT name, full_text FROM manuscript_info WHERE witness_id IN "
-            "(SELECT id FROM witnesses WHERE name = ?) LIMIT 1",
-            (witness_name,)
-        ).fetchone()
-    except Exception:
-        con.close()
-        return None
-
-    con.close()
-    return {'name': row[0], 'full_text': row[1]} if row else None
-=======
     row = con.execute(
-        "SELECT name, full_text FROM manuscript_info WHERE witness_id IN "
-        "(SELECT id FROM witnesses WHERE name = ?) LIMIT 1",
+        "SELECT title, description, link FROM manuscript_info WHERE witness_name=?",
         (witness_name,)
     ).fetchone()
 
     con.close()
+    if not row:
+        return None
 
-    if row:
-        return {'name': row[0], 'full_text': row[1]}
-    return None
->>>>>>> c37a3da0c63e025bbcc5d92b3f0ff241f4be0b0e
-# Build trigger - 2026-05-24 12:29:16
+    return {'title': row[0], 'description': row[1], 'link': row[2]}
