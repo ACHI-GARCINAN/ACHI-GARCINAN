@@ -47,7 +47,7 @@ jobs:
           echo "tag=$NEW_TAG" >> "$GITHUB_OUTPUT"
           echo "Next version: $NEW_TAG"
 
-download-db:
+  download-db:
     name: Download DB from release
     runs-on: ubuntu-latest
     steps:
