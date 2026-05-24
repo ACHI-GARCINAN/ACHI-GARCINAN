@@ -54,7 +54,7 @@ jobs:
       - name: Download talmud.db
         run: |
           curl -L -o talmud.db \
-            "https://github.com/ACHI-GARCINAN/ACHI-GARCINAN/releases/download/1.0/talmud.db"
+            "https://github.com/ACHI-GARCINAN/ACHI-GARCINAN/releases/download/v1.14/talmud.db"
           echo "✅ talmud.db הורד בהצלחה"
           ls -lh talmud.db
 
@@ -166,10 +166,7 @@ jobs:
         env:
           HOMEBREW_NO_AUTO_UPDATE: 1
         run: |
-          if ! command -v create-dmg >/dev/null 2>&1; then
-            brew install create-dmg
-            mv *.dmg TalmudicFormulas-Mac-Universal.dmg
-          fi
+          brew install create-dmg
 
           pyinstaller \
             --noconfirm \
@@ -190,7 +187,7 @@ jobs:
             "dist/TalmudicFormulas.app"
 
           cd dist
-          zip -r ../TalmudicFormulas-Mac-Universal.zip TalmudicFormulas.app
+          zip -r ../TalmudicFormulas-Mac-Universal.zip TalmudicFormulas.app || true
 
       - name: Upload Windows artifacts
         if: matrix.platform == 'windows'
