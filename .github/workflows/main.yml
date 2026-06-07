@@ -128,10 +128,14 @@ download-db:
           choco install innosetup --no-progress
 
           # גרסת installer
+          # ודא שקובץ talmud.db נגיש בתיקייה הנוכחית
+          Write-Output "Checking for talmud.db in $PWD"
+          Get-ChildItem -Path . -Filter talmud.db -Force | Format-List -Property FullName,Length
+
           pyinstaller --noconfirm --onedir --windowed `
             --icon="icon.ico" `
             --name="TalmudicFormulas" `
-            --add-data "talmud.db;." `
+            --add-data "${env:CD}\talmud.db;." `
             --add-data "widgets;widgets" `
             --add-data "assets;assets" `
             --collect-all PyQt6 `
@@ -144,7 +148,7 @@ download-db:
           pyinstaller --noconfirm --onefile --windowed `
             --icon="icon.ico" `
             --name="TalmudicFormulas-Portable" `
-            --add-data "talmud.db;." `
+            --add-data "${env:CD}\talmud.db;." `
             --add-data "widgets;widgets" `
             --add-data "assets;assets" `
             --collect-all PyQt6 `

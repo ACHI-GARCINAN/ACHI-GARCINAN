@@ -96,6 +96,12 @@ def main():
     painter.end()
 
     splash = QSplashScreen(splash_pix)
+    # Ensure splash shows the app icon where supported
+    try:
+        if not icon.isNull():
+            splash.setWindowIcon(icon)
+    except Exception:
+        pass
     splash.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
     splash.show()
     app.processEvents()
