@@ -220,3 +220,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+# ci-trigger: touch to start GitHub Actions workflow when needed
