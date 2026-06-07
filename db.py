@@ -6,14 +6,26 @@ DB_PATH = ''
  
 def get_base_dir() -> str:
     if getattr(sys, 'frozen', False):
-        # נתיב הקובץ המריץ (.exe)
+        # במקרה של אריזה עם PyInstaller יש כמה תצורות אפשריות:
+        # - onedir: הקבצים נפרשים לצד ה-executable (sys._MEIPASS אינו קיים)
+        # - onefile: הקבצים מפוענחים ל-temporary folder ונחשבים ב-sys._MEIPASS
+        # לכן נעדיף תחילה את תיקיית ה-executable (יש שם בדרך כלל talmud.db
+        # בתצורת onedir), אז נבדוק תיקיית _internal אם נדרשת, ואז נשתמש ב-_MEIPASS.
         base_exe_dir = os.path.dirname(sys.executable)
-        # בדיקה האם אנחנו בתוך התקנה עם תיקיית _internal
+        # אם קיימת תיקיית _internal (משתמשים מסוימים עשויים ליצור מבנה זה)
         internal_path = os.path.join(base_exe_dir, "_internal")
         if os.path.exists(internal_path):
             return internal_path
-        # אם התיקייה לא קיימת (מצב Portable), נשתמש בתיקייה הזמנית
-        return sys._MEIPASS
+        # אם talmud.db קיים בצד ה-exe (onedir/portable), להשתמש בתיקייה זו
+        exe_db = os.path.join(base_exe_dir, "talmud.db")
+        if os.path.exists(exe_db):
+            return base_exe_dir
+        # לבסוף לנסות את sys._MEIPASS אם קיים (onefile)
+        meipass = getattr(sys, '_MEIPASS', None)
+        if meipass and os.path.exists(os.path.join(meipass, 'talmud.db')):
+            return meipass
+        # ברירת מחדל לחזור לתיקיית ה-executable
+        return base_exe_dir
     return os.path.dirname(os.path.abspath(__file__))
  
 def load_masechet_list(folder: str) -> list:
