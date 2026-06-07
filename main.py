@@ -199,6 +199,12 @@ def main():
     window = MainWindow(masechtot)
     print(f"MainWindow init: {time.time()-t0:.2f}s")
     app.set_main_window(window)
+    # Ensure main window has the same application icon (visible in taskbar when
+    # running as a bundled executable or certain desktop environments).
+    try:
+        window.setWindowIcon(icon)
+    except Exception:
+        pass
     window.showMaximized()
 
     splash.finish(window)  # מסתיר את הספלאש כשהחלון מוכן
