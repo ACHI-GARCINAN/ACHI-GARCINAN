@@ -125,7 +125,7 @@ jobs:
         if: matrix.platform == 'windows'
         shell: powershell
         run: |
-          choco install innosetup --no-progress
+          choco install innosetup --no-progress --yes
 
           # גרסת installer
           # ודא שקובץ talmud.db נגיש בתיקייה הנוכחית
