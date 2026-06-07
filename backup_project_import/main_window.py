@@ -1,13 +1,12 @@
 import re
 import sys
 import os
-import ctypes
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QHBoxLayout, QVBoxLayout,
     QListWidget, QListWidgetItem, QLabel, QSplitter,
     QPushButton, QLineEdit, QSpacerItem, QSizePolicy
 )
-from PyQt6.QtCore import Qt, QObject, QEvent
+from PyQt6.QtCore import Qt, QObject, QEvent, QTimer
 
 from PyQt6.QtGui import QFont, QCursor, QIcon, QKeyEvent
 from styles import get_theme_styles, get_theme_config
@@ -16,20 +15,31 @@ from utils import _page_matches, _masechet_matches
 from settings_manager import load_settings, save_settings, save_last_position, load_last_position, save_layout, load_layout
 from icons import get_theme_icon, IconName
 
+# ייבוא מוקדם של כל הwidgets — מונע עיכוב בטעינה הראשונה
+from widgets.witness_panel import WitnessPanel
+from widgets.touch_scroll import TouchScrollArea
+from widgets.section_block import SectionBlock
+from widgets.words_view import WordsView
+from widgets.copyright_popup import CopyrightPopup
+from widgets.settings_dialog import SettingsDialog
 
-def get_base_dir() -> str:
-    if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
-        return sys._MEIPASS
-    return os.path.dirname(os.path.abspath(__file__))
 
 def get_icon() -> QIcon:
-    base = get_base_dir()
-    for name in ('logo.ico', 'logo.png', 'icon.ico', 'icon.png'):
-        path = os.path.join(base, name)
-        if os.path.exists(path):
-            return QIcon(path)
-    return QIcon()
+    candidates = []
+    if getattr(sys, 'frozen', False):
+        if hasattr(sys, '_MEIPASS'):
+            candidates.append(sys._MEIPASS)
+        candidates.append(os.path.dirname(sys.executable))
+        candidates.append(os.path.join(os.path.dirname(sys.executable), "_internal"))
+    else:
+        candidates.append(os.path.dirname(os.path.abspath(__file__)))
 
+    for base in candidates:
+        for name in ('logo.ico', 'logo.png', 'icon.ico', 'icon.png'):
+            path = os.path.join(base, name)
+            if os.path.exists(path):
+                return QIcon(path)
+    return QIcon()
 
 
 
@@ -138,15 +148,12 @@ class MainWindow(QMainWindow):
             last_ms, last_pg = load_last_position()
             last_ms = min(last_ms, len(self.masechtot) - 1)
             self._restore_page_idx = last_pg
-            from PyQt6.QtCore import QTimer
             QTimer.singleShot(150, lambda: self.masechet_list.setCurrentRow(last_ms))            
     def _show_copyright_notice(self):
-        from widgets.copyright_popup import CopyrightPopup
         popup = CopyrightPopup(self.centralWidget())
         popup.exec()
 
     def _open_settings(self):
-        from widgets.settings_dialog import SettingsDialog
         dlg = SettingsDialog(self._font_family, self._font_size, self._theme, self._continuous_sections_view, self)
         dlg.settings_changed.connect(self._apply_settings)
         dlg.exec()
@@ -191,8 +198,6 @@ class MainWindow(QMainWindow):
             self._words_view.update_font(font_family, font_size, theme=self._theme)
 
     def _build_ui(self):
-        from widgets.witness_panel import WitnessPanel
-        from widgets.touch_scroll import TouchScrollArea
         central = QWidget()
         self.setCentralWidget(central)
         root = QHBoxLayout(central)
@@ -326,20 +331,6 @@ class MainWindow(QMainWindow):
 
         self.text_scroll.setWidget(self.text_container)
         self.ma_layout.addWidget(self.text_scroll, 1)
-
-        # שורת קרדיט בתחתית
-        self.credit_bar = QWidget()
-        self.credit_bar.setFixedHeight(22)
-        credit_layout = QHBoxLayout(self.credit_bar)
-        credit_layout.setContentsMargins(8, 0, 8, 0)
-        credit_layout.setSpacing(0)
-        self.credit_label = QLabel(
-            "באדיבות הספרייה הלאומית לישראל, ואגודת פרידברג לכתבי יד יהודיים  |  כל הזכויות שמורות"
-        )
-        self.credit_label.setFont(QFont("David", 8))
-        self.credit_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        credit_layout.addWidget(self.credit_label)
-        self.ma_layout.addWidget(self.credit_bar)
 
         # Sidebar Panel
         self.page_panel = QWidget()
@@ -530,15 +521,6 @@ class MainWindow(QMainWindow):
             }}
         """)
 
-        # עיצוב שורת הקרדיט לפי ערכת נושא
-        if hasattr(self, 'credit_bar'):
-            self.credit_bar.setStyleSheet(
-                f"background-color:{cfg['header_bg']}; border-top: 1px solid {cfg['panel_header_border']};"
-            )
-            self.credit_label.setStyleSheet(
-                f"color:{cfg['header_subtext']}; background:transparent;"
-            )
-
     def _go_prev_page(self):
         row = self.page_list.currentRow()
         if row > 0:
@@ -564,9 +546,7 @@ class MainWindow(QMainWindow):
             self.splitter.setSizes([0, 995, 420])
         else:
             self.nav_panel.show()
-            self.sidebar_toggle_btn.setIcon(get_theme_icon(IconName.SIDEBAR_HIDE, self._theme, 18))  # ← מראה "לחץ להסתיר"
-            self.splitter.setSizes([215, 780, 420])
-            save_layout(self.splitter.sizes(), self.nav_panel.isVisible())
+            self.sidebar_toggle_btn.setIcon(get_theme_icon(IconName.SIDEBAR_HIDE, self._theme, 18))
             self.splitter.setSizes([215, 780, 420])
         save_layout(self.splitter.sizes(), self.nav_panel.isVisible())
     def _quick_nav(self):
@@ -823,7 +803,6 @@ class MainWindow(QMainWindow):
             restore_idx = getattr(self, '_restore_page_idx', 0)
             self._restore_page_idx = 0  # אפס כדי שמעכשיו תמיד יתחיל מדף ראשון בעת החלפת מסכת
             restore_idx = min(restore_idx, len(pages) - 1)
-            from PyQt6.QtCore import QTimer
             QTimer.singleShot(0, lambda: self.page_list.setCurrentRow(restore_idx))
             
     def _load_page(self, idx: int):
@@ -833,7 +812,6 @@ class MainWindow(QMainWindow):
         # שמור מיקום נוכחי — debounce: רק אחרי 2 שניות של שקט
         ms_idx = self.masechet_list.currentRow()
         if not hasattr(self, '_save_pos_timer'):
-            from PyQt6.QtCore import QTimer
             self._save_pos_timer = QTimer()
             self._save_pos_timer.setSingleShot(True)
             self._save_pos_timer.timeout.connect(
@@ -878,7 +856,6 @@ class MainWindow(QMainWindow):
         self.witness_panel.reset()
 
     def _load_page_sections(self, sections: list, page_label: str):
-        from widgets.section_block import SectionBlock
         if self._continuous_sections_view:
             self.text_layout.setSpacing(0)
             self.text_layout.setContentsMargins(12, 14, 12, 30)
@@ -900,7 +877,6 @@ class MainWindow(QMainWindow):
             self.section_blocks.append(block)
 
     def _load_page_words(self, page: dict):
-        from widgets.words_view import WordsView
         words_data = fetch_page_words(page['_id'])
         self._current_words_data = words_data
         self._current_word_idx = -1
@@ -964,7 +940,6 @@ class MainWindow(QMainWindow):
                     self._select_word(i, self._current_words_data, page)
                     if self._words_view and self._words_view._flow_widget:
                         lbl = self._words_view._flow_widget._labels[i]
-                        from PyQt6.QtCore import QTimer
                         QTimer.singleShot(50, lambda w=lbl: self.text_scroll.ensureWidgetVisible(w))
                     self.setFocus()
                     break
@@ -974,7 +949,6 @@ class MainWindow(QMainWindow):
                 if block.section.get('section', '') == prev_section_label:
                     section = block.section
                     self._select_section(section, block, page)
-                    from PyQt6.QtCore import QTimer
                     QTimer.singleShot(50, lambda b=block: self.text_scroll.ensureWidgetVisible(b))
                     break
                     

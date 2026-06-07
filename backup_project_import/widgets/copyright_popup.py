@@ -44,7 +44,7 @@ class CopyrightPopup(QWidget):
         inner.setContentsMargins(30, 26, 30, 26)
         inner.setSpacing(14)
 
-        title = QLabel("זכויות יוצרים")
+        title = QLabel("הערת שימוש")
         title.setFont(QFont("David", 15, QFont.Weight.Bold))
         title.setStyleSheet("color:#5A1A00;background:transparent;")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -56,9 +56,9 @@ class CopyrightPopup(QWidget):
         inner.addWidget(sep)
 
         body = QLabel(
-            "באדיבות הספרייה הלאומית לישראל,\n"
-            "ואגודת פרידברג לכתבי יד יהודיים\n\n"
-            "כל הזכויות שמורות"
+            "שים לב כי כל החומר כאן לוקט מתוכן השייך משפטית לאתר\n"
+            "\u201cפרידברג \u2013 הכי גרסינן\u201d,\n\n"
+            "והשימוש בו מותר אך ורק לצורך שימוש פרטי ולא לצורך מסחרי!"
         )
         body.setFont(QFont("David", 13))
         body.setStyleSheet("color:#2A1000;background:transparent;")

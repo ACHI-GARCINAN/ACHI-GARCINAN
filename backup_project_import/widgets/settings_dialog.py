@@ -205,7 +205,8 @@ class SettingsDialog(QDialog):
                     min-height: 20px;
                 }
                 QLineEdit:focus { border-color: #5A6A82; }
-                QLineEdit#size_edit { min-height: 20px; max-height: 28px; }                QPushButton#ok_btn {
+                QLineEdit#size_edit { min-height: 20px; max-height: 28px; }
+                QPushButton#ok_btn {
                     background-color: #5A6A82;
                     color: white;
                     border: none;
@@ -361,13 +362,12 @@ class SettingsDialog(QDialog):
         self.btn_larger.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_larger.clicked.connect(self._increase_size)
 
+        size_layout.addWidget(size_label)
+        size_layout.addStretch()
         size_layout.addWidget(self.btn_smaller)
         size_layout.addWidget(self.size_edit)
         size_layout.addWidget(self.btn_larger)
         layout.addWidget(size_row)
-        size_layout.addStretch()
-        size_layout.addWidget(size_label)
-
         
         # ── בחירת ערכת נושא ──
         theme_title = QLabel("ערכת נושא:")
@@ -447,17 +447,16 @@ class SettingsDialog(QDialog):
             }
         """)
         layout.addWidget(self.chk_continuous)
-
+        
         hint_lbl = QLabel("(הקטעים יוצגו ברצף, ללא מסגרות וכותרות, ניתן עדיין לבחור קטע)")
         hint_lbl.setFont(QFont("David", 10))
-        hint_lbl.setStyleSheet("color: #718096;")        
+        hint_lbl.setStyleSheet("color: #718096;")
         layout.addWidget(hint_lbl)
-
 
         # ── תצוגה מקדימה ──
         preview_lbl = QLabel("תצוגה מקדימה של גופן:")
         preview_lbl.setFont(QFont("David", 12))
-        hint_lbl.setStyleSheet("color: #718096;")        
+        preview_lbl.setStyleSheet("color: #718096;")
         preview_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(preview_lbl)
 
@@ -508,7 +507,7 @@ class SettingsDialog(QDialog):
         
     def _set_placeholder_image(self, label: QLabel, filename: str, alt_text: str):
         if getattr(sys, 'frozen', False):
-            base = sys._MEIPASS
+            base = getattr(sys, '_MEIPASS', os.path.dirname(sys.executable))
         else:
             base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         path = os.path.join(base, "assets", filename)

@@ -5,7 +5,6 @@
 import time
 import sys
 import os
-import ctypes
 from main_window import MainWindow, get_icon
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtCore import Qt, QEvent
@@ -53,13 +52,13 @@ class TalmudApp(QApplication):
 
 def main():
     if sys.platform == "win32":
-        my_app_id = "talmud.synopsis.viewer.v1" 
+        import ctypes
+        my_app_id = "talmud.synopsis.viewer.v1"
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(my_app_id)
-
-    QApplication.setHighDpiScaleFactorRoundingPolicy(
-        Qt.HighDpiScaleFactorRoundingPolicy.PassThrough
-    )
-
+    if sys.platform != 'darwin':
+        QApplication.setHighDpiScaleFactorRoundingPolicy(
+            Qt.HighDpiScaleFactorRoundingPolicy.PassThrough
+        )
     app = TalmudApp(sys.argv)
     
     # טעינת האייקון והגדרה לאפליקציה (עבור שורת המשימות/Dock)
@@ -119,90 +118,16 @@ def main():
         QMessageBox.critical(None, "שגיאה", "לא נמצא קובץ talmud.db בתיקייה.")
         sys.exit(1)
 
-    # הצגת הודעת זכויות יוצרים בהפעלה הראשונה — לפני פתיחת החלון הראשי
-    from settings_manager import load_settings, save_settings
-    _s = load_settings()
-    if not _s.get('first_run_done', False):
-        from PyQt6.QtWidgets import QDialog, QVBoxLayout, QLabel, QPushButton, QFrame
-        from PyQt6.QtGui import QFont
-
-        splash.hide()  # מסתיר את הספלאש בזמן הדיאלוג
-
-        dlg = QDialog()
-        dlg.setWindowTitle("ברוכים הבאים")
-        dlg.setFixedWidth(480)
-        dlg.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
-        dlg.setWindowFlags(
-            Qt.WindowType.Dialog |
-            Qt.WindowType.CustomizeWindowHint |
-            Qt.WindowType.WindowTitleHint
-        )  # ללא כפתור X — רק "הבנתי" סוגר
-        dlg.setStyleSheet("""
-            QDialog { background-color: #FFFDF8; }
-        """)
-
-        layout = QVBoxLayout(dlg)
-        layout.setContentsMargins(36, 32, 36, 28)
-        layout.setSpacing(16)
-
-        title_lbl = QLabel("זכויות יוצרים")
-        title_lbl.setFont(QFont("David", 16, QFont.Weight.Bold))
-        title_lbl.setStyleSheet("color:#5A1A00;")
-        title_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(title_lbl)
-
-        sep = QFrame()
-        sep.setFrameShape(QFrame.Shape.HLine)
-        sep.setStyleSheet("background:#D5C8A0; max-height:1px; border:none;")
-        layout.addWidget(sep)
-
-        body_lbl = QLabel(
-            "באדיבות הספרייה הלאומית לישראל,\n"
-            "ואגודת פרידברג לכתבי יד יהודיים\n\n"
-            "כל הזכויות שמורות"
-        )
-        body_lbl.setFont(QFont("David", 14))
-        body_lbl.setStyleSheet("color:#2A1000;")
-        body_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        body_lbl.setWordWrap(True)
-        layout.addWidget(body_lbl)
-
-        sep2 = QFrame()
-        sep2.setFrameShape(QFrame.Shape.HLine)
-        sep2.setStyleSheet("background:#D5C8A0; max-height:1px; border:none;")
-        layout.addWidget(sep2)
-
-        ok_btn = QPushButton("הבנתי")
-        ok_btn.setFont(QFont("David", 13, QFont.Weight.Bold))
-        ok_btn.setFixedHeight(38)
-        ok_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        ok_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #C8A060;
-                color: #FFFDF8;
-                border: none;
-                border-radius: 8px;
-                padding: 0 20px;
-            }
-            QPushButton:hover { background-color: #A07840; }
-        """)
-        ok_btn.clicked.connect(dlg.accept)
-        layout.addWidget(ok_btn, 0, Qt.AlignmentFlag.AlignCenter)
-
-        result = dlg.exec()
-        if result != QDialog.DialogCode.Accepted:
-            # המשתמש סגר בלי ללחוץ "הבנתי" — סגור לחלוטין
-            sys.exit(0)
-
-        save_settings({'first_run_done': True})
-
     window = MainWindow(masechtot)
     print(f"MainWindow init: {time.time()-t0:.2f}s")
     app.set_main_window(window)
-    window.showMaximized()
-
-    splash.finish(window)  # מסתיר את הספלאש כשהחלון מוכן
-
+    if sys.platform == 'darwin':
+        window.show()
+        window.setWindowState(Qt.WindowState.WindowMaximized)
+    else:
+        window.showMaximized()
+    splash.finish(window)
+    
     sys.exit(app.exec())
 
 
