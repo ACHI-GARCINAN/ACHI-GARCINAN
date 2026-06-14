@@ -26,7 +26,8 @@ def get_base_dir() -> str:
 
 def get_icon() -> QIcon:
     base = get_base_dir()
-    for name in ('logo.ico', 'logo.png', 'icon.ico', 'icon.png'):
+    # Prioritize Windows-friendly ICO files first to ensure taskbar shows icon quickly
+    for name in ('icon.ico', 'logo.ico', 'icon.png', 'logo.png'):
         path = os.path.join(base, name)
         if os.path.exists(path):
             return QIcon(path)

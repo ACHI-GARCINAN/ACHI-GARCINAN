@@ -107,6 +107,12 @@ def main():
         pass
     splash.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
     splash.show()
+    # Re-apply app icon after showing the splash and process events so Windows updates the taskbar icon.
+    try:
+        if not icon.isNull():
+            app.setWindowIcon(icon)
+    except Exception:
+        pass
     app.processEvents()
     # ───────────────────────────────────────────────────────
 
