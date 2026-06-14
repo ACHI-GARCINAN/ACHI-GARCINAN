@@ -2,6 +2,9 @@
 דיאלוג הגדרות - בחירת גופן, גודל וערכת נושא
 """
 import os
+import sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QComboBox,
     QPushButton, QFrame, QWidget, QLineEdit, QRadioButton, QButtonGroup, QCheckBox

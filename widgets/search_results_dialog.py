@@ -1,9 +1,14 @@
+import os
+import sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel,
     QListWidget, QListWidgetItem, QPushButton, QApplication
 )
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QFont, QCursor
+from .search_spinner import SearchSpinner
     
 class SearchResultsDialog(QDialog):
     def __init__(self, word: str, results: list, theme: str = 'classic', parent=None):
@@ -81,12 +86,19 @@ class SearchResultsDialog(QDialog):
             lambda: self.copy_btn.setEnabled(len(self.list_widget.selectedItems()) > 0)
         )
 
+        # יצירת spinner אנימציה
+        self._spinner = SearchSpinner(self)
+
         # טעינת תוצאות עם עיכוב קצר כדי שהחלון יופיע קודם
         QTimer.singleShot(50, self._load_results)
 
     def _load_results(self):
+        # הצג אנימציה
+        self._spinner.show()
+        
         if not self._results:
             self.count_label.setText('לא נמצאו תוצאות')
+            QTimer.singleShot(800, self._spinner.hide)
             return
 
         self.count_label.setText(f'נמצאו {len(self._results)} תוצאות')
@@ -100,6 +112,9 @@ class SearchResultsDialog(QDialog):
             item = QListWidgetItem(display)
             item.setData(Qt.ItemDataRole.UserRole, copy_text)
             self.list_widget.addItem(item)
+        
+        # הסתר אנימציה לאחר טעינה
+        QTimer.singleShot(600, self._spinner.hide)
 
     def _copy_location(self):
         items = self.list_widget.selectedItems()

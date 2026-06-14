@@ -81,10 +81,16 @@ def save_last_position(masechet_idx: int, page_idx: int) -> None:
 def load_last_position() -> tuple:
     """טוען את המיקום האחרון. מחזיר (masechet_idx, page_idx) או (0, 0) כברירת מחדל."""
     settings = load_settings()
-    return (
-        settings.get('last_masechet_idx', 0),
-        settings.get('last_page_idx', 0),
-    )
+    ms_idx = settings.get('last_masechet_idx', 0)
+    pg_idx = settings.get('last_page_idx', 0)
+    
+    # Validate
+    if not isinstance(ms_idx, int) or ms_idx < 0:
+        ms_idx = 0
+    if not isinstance(pg_idx, int) or pg_idx < 0:
+        pg_idx = 0
+    
+    return (ms_idx, pg_idx)
 
 
 def save_layout(splitter_sizes: list, sidebar_visible: bool) -> None:
@@ -98,7 +104,25 @@ def save_layout(splitter_sizes: list, sidebar_visible: bool) -> None:
 def load_layout() -> dict:
     """טוען את מצב הפריסה. מחזיר ברירות מחדל אם לא נשמר."""
     s = load_settings()
+    splitter_sizes = s.get('splitter_sizes', [215, 780, 420])
+    sidebar_visible = s.get('sidebar_visible', True)
+    
+    # Validate splitter sizes
+    if not isinstance(splitter_sizes, list) or len(splitter_sizes) != 3:
+        splitter_sizes = [215, 780, 420]
+    else:
+        # Ensure all are positive integers
+        try:
+            splitter_sizes = [int(x) for x in splitter_sizes]
+            if any(x < 0 for x in splitter_sizes):
+                splitter_sizes = [215, 780, 420]
+        except (ValueError, TypeError):
+            splitter_sizes = [215, 780, 420]
+    
+    if not isinstance(sidebar_visible, bool):
+        sidebar_visible = True
+    
     return {
-        'splitter_sizes': s.get('splitter_sizes', [215, 780, 420]),
-        'sidebar_visible': s.get('sidebar_visible', True),
+        'splitter_sizes': splitter_sizes,
+        'sidebar_visible': sidebar_visible,
     }

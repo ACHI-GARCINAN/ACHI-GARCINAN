@@ -1,7 +1,17 @@
 import os
-import sqlite3
 import sys
- 
+from collections import OrderedDict
+
+try:
+    import sqlite3
+except ImportError:
+    try:
+        from pysqlite3 import dbapi2 as sqlite3
+    except ImportError as exc:
+        raise ImportError(
+            'Could not import sqlite3 or pysqlite3. Install one of these packages.'
+        ) from exc
+
 DB_PATH = ''
  
 def get_base_dir() -> str:
@@ -38,6 +48,7 @@ def load_masechet_list(folder: str) -> list:
         db_path = os.path.join(get_base_dir(), "talmud.db")
         
     if not os.path.exists(db_path):
+        print(f"⚠️  Warning: talmud.db not found at {db_path}")
         return []
         
     DB_PATH = db_path
@@ -104,8 +115,7 @@ def fetch_page_words(page_id: int) -> list:
             (page_id,)
         ).fetchall()
         con.close()
- 
-        from collections import OrderedDict
+
         word_map: OrderedDict = OrderedDict()
         for sw_id, sec_label, wit_name, content in rows:
             if sw_id not in word_map:

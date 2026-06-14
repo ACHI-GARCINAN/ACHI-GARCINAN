@@ -51,12 +51,25 @@ jobs:
     name: Download DB from release
     runs-on: ubuntu-latest
     steps:
-      - name: Download talmud.db
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Check and download talmud.db
         run: |
-          curl -f -L -o talmud.db \
-            "https://github.com/ACHI-GARCINAN/Talmud-Formulas-Software/releases/download/1.0/talmud.db"
-          echo "✅ talmud.db הורד בהצלחה"
-          ls -lh talmud.db
+          if [ -f talmud.db ]; then
+            echo "✅ talmud.db found in repo - using existing copy"
+            ls -lh talmud.db
+          else
+            echo "⚠️  talmud.db not in repo - downloading from release..."
+            curl -f -L -o talmud.db \
+              "https://github.com/ACHI-GARCINAN/Talmud-Formulas-Software/releases/download/1.0/talmud.db"
+            if [ ! -f talmud.db ]; then
+              echo "❌ Failed to download talmud.db"
+              exit 1
+            fi
+            echo "✅ Downloaded successfully"
+            ls -lh talmud.db
+          fi
 
       - name: Upload DB as artifact
         uses: actions/upload-artifact@v4
@@ -108,7 +121,7 @@ jobs:
         shell: bash
         run: |
           python -m pip install --upgrade pip
-          pip install pyinstaller PyQt6 PyQt6-Qt6 PyQt6-sip Pillow
+          pip install pyinstaller PyQt6 PyQt6-sip Pillow
 
       - name: Download DB artifact
         uses: actions/download-artifact@v4
@@ -129,13 +142,15 @@ jobs:
 
           # גרסת installer
           # ודא שקובץ talmud.db נגיש בתיקייה הנוכחית
-          Write-Output "Checking for talmud.db in $PWD"
+          Write-Output "Checking for talmud.db in $(Get-Location)"
           Get-ChildItem -Path . -Filter talmud.db -Force | Format-List -Property FullName,Length
 
+          $dbPath = Join-Path (Get-Location) "talmud.db"
+          
           pyinstaller --noconfirm --onedir --windowed `
             --icon="icon.ico" `
             --name="TalmudicFormulas" `
-            --add-data "${env:CD}\talmud.db;." `
+            --add-data "$dbPath;." `
             --add-data "widgets;widgets" `
             --add-data "assets;assets" `
             --collect-all PyQt6 `
@@ -148,7 +163,7 @@ jobs:
           pyinstaller --noconfirm --onefile --windowed `
             --icon="icon.ico" `
             --name="TalmudicFormulas-Portable" `
-            --add-data "${env:CD}\talmud.db;." `
+            --add-data "$dbPath;." `
             --add-data "widgets;widgets" `
             --add-data "assets;assets" `
             --collect-all PyQt6 `

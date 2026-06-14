@@ -53,8 +53,11 @@ class TalmudApp(QApplication):
 
 def main():
     if sys.platform == "win32":
-        my_app_id = "talmud.synopsis.viewer.v1" 
-        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(my_app_id)
+        try:
+            my_app_id = "talmud.synopsis.viewer.v1" 
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(my_app_id)
+        except Exception as e:
+            print(f"Warning: Could not set app ID - {e}")
 
     QApplication.setHighDpiScaleFactorRoundingPolicy(
         Qt.HighDpiScaleFactorRoundingPolicy.PassThrough

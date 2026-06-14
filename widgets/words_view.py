@@ -6,6 +6,8 @@ from PyQt6.QtCore import Qt, pyqtSignal, QSize, QTimer
 from PyQt6.QtGui import QCursor
 
 from styles import get_theme_config
+from db import search_word_in_shas
+from .search_results_dialog import SearchResultsDialog
 
 class _ClickableWord(QLabel):
     """מילה לחיצה בודדת בתצוגת המילים."""
@@ -80,8 +82,6 @@ class _ClickableWord(QLabel):
         search_action = menu.addAction(f'חפש "{self.text()}" בש"ס')
         action = menu.exec(event.globalPos())
         if action == search_action:
-            from db import search_word_in_shas
-            from search_results_dialog import SearchResultsDialog
             import re
             word = re.sub(r'[\u05B0-\u05C7]', '', self.text().strip())
             results = search_word_in_shas(word)

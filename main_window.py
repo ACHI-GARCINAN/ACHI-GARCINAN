@@ -152,6 +152,17 @@ class MainWindow(QMainWindow):
         dlg.exec()
 
     def _apply_settings(self, font_family: str, font_size: int, theme: str, continuous_sections_view: bool = False):
+        # Validate inputs
+        if not isinstance(font_size, int) or font_size < 8 or font_size > 48:
+            print(f"Warning: Invalid font_size {font_size}, using default 16")
+            font_size = 16
+        if not isinstance(font_family, str) or not font_family.strip():
+            print(f"Warning: Invalid font_family {font_family}, using default 'David'")
+            font_family = 'David'
+        if theme not in ('classic', 'colorful'):
+            print(f"Warning: Invalid theme {theme}, using default 'classic'")
+            theme = 'classic'
+        
         self._font_family = font_family
         self._font_size = font_size
         theme_changed = (self._theme != theme)
@@ -831,7 +842,10 @@ class MainWindow(QMainWindow):
             return
         self.current_page_idx = idx
         # שמור מיקום נוכחי — debounce: רק אחרי 2 שניות של שקט
-        ms_idx = self.masechet_list.currentRow()
+        # בטל טיימר קודם לעיתים אם עדיין פעיל (מניעת race condition)
+        if hasattr(self, '_save_pos_timer') and self._save_pos_timer.isActive():
+            self._save_pos_timer.stop()
+        
         if not hasattr(self, '_save_pos_timer'):
             from PyQt6.QtCore import QTimer
             self._save_pos_timer = QTimer()
