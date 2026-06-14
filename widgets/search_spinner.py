@@ -44,7 +44,7 @@ class SearchSpinner(QWidget):
         layout.addWidget(self._spinner_lbl, alignment=Qt.AlignmentFlag.AlignCenter)
         
         # טקסט
-        self._text_lbl = QLabel("חיפוש במילון...")
+        self._text_lbl = QLabel("מחפש בש\"ס...")
         self._text_lbl.setFont(QFont("David", 12))
         self._text_lbl.setStyleSheet("color:#C8A060;background:transparent;")
         self._text_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -98,6 +98,7 @@ class SearchSpinner(QWidget):
         super().showEvent(event)
         self._timer.start()
         self._center_on_parent()
+        self.raise_()
     
     def hideEvent(self, event):
         """מעצור אנימציה כשהחלון נסגר"""

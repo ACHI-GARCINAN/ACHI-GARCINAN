@@ -7,6 +7,8 @@ from PyQt6.QtWidgets import (
     QListWidget, QListWidgetItem, QLabel, QSplitter,
     QPushButton, QLineEdit, QSpacerItem, QSizePolicy
 )
+from widgets.witness_panel import WitnessPanel
+from widgets.touch_scroll import TouchScrollArea
 from PyQt6.QtCore import Qt, QObject, QEvent
 
 from PyQt6.QtGui import QFont, QCursor, QIcon, QKeyEvent
@@ -202,8 +204,6 @@ class MainWindow(QMainWindow):
             self._words_view.update_font(font_family, font_size, theme=self._theme)
 
     def _build_ui(self):
-        from widgets.witness_panel import WitnessPanel
-        from widgets.touch_scroll import TouchScrollArea
         central = QWidget()
         self.setCentralWidget(central)
         root = QHBoxLayout(central)

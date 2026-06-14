@@ -101,9 +101,12 @@ class SearchResultsDialog(QDialog):
         )
 
         self._spinner = SearchSpinner(self)
-        self._spinner.show()
+        QTimer.singleShot(0, self._start_search)
 
-        self._worker = SearchWorker(word)
+    def _start_search(self):
+        self._spinner.show()
+        self._spinner.raise_()
+        self._worker = SearchWorker(self._word)
         self._worker.finished.connect(self._load_results)
         self._worker.start()
 
