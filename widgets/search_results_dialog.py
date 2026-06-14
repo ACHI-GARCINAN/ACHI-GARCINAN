@@ -6,26 +6,40 @@ from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel,
     QListWidget, QListWidgetItem, QPushButton, QApplication
 )
-from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtCore import Qt, QTimer, QThread, pyqtSignal
 from PyQt6.QtGui import QFont, QCursor
 from .search_spinner import SearchSpinner
-    
+from db import search_word_in_shas
+
+
+class SearchWorker(QThread):
+    finished = pyqtSignal(list)
+
+    def __init__(self, word: str):
+        super().__init__()
+        self._word = word
+
+    def run(self):
+        results = search_word_in_shas(self._word)
+        self.finished.emit(results)
+
+
 class SearchResultsDialog(QDialog):
-    def __init__(self, word: str, results: list, theme: str = 'classic', parent=None):
+    def __init__(self, word: str, theme: str = 'classic', parent=None):
         super().__init__(parent)
+        self._word = word
         self.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
         self.setWindowTitle(f'חיפוש: {word}')
         from main_window import get_icon
         self.setWindowIcon(get_icon())
         self.setMinimumSize(420, 380)
-        self._results = results
 
         is_colorful = (theme == 'colorful')
         bg       = '#F7F3EC' if is_colorful else '#F0F4F7'
         text     = '#1A0800' if is_colorful else '#2D3748'
         accent   = '#C8A060' if is_colorful else '#5A6A82'
         item_sel = '#FFF0DC' if is_colorful else '#EDF2F7'
-        border   = '#D5C8A0' if is_colorful else '#CBD5E0'   # ← זה חסר!
+        border   = '#D5C8A0' if is_colorful else '#CBD5E0'
 
         self.setStyleSheet(f"QDialog{{background:{bg};}}")
 
@@ -86,25 +100,22 @@ class SearchResultsDialog(QDialog):
             lambda: self.copy_btn.setEnabled(len(self.list_widget.selectedItems()) > 0)
         )
 
-        # יצירת spinner אנימציה
         self._spinner = SearchSpinner(self)
-
-        # טעינת תוצאות עם עיכוב קצר כדי שהחלון יופיע קודם
-        QTimer.singleShot(50, self._load_results)
-
-    def _load_results(self):
-        # הצג אנימציה
         self._spinner.show()
-        
-        if not self._results:
+
+        self._worker = SearchWorker(word)
+        self._worker.finished.connect(self._load_results)
+        self._worker.start()
+
+    def _load_results(self, results: list):
+        if not results:
             self.count_label.setText('לא נמצאו תוצאות')
-            QTimer.singleShot(800, self._spinner.hide)
+            self._spinner.hide()
             return
 
-        self.count_label.setText(f'נמצאו {len(self._results)} תוצאות')
+        self.count_label.setText(f'נמצאו {len(results)} תוצאות')
 
-        for r in self._results:
-            # פורמט להעתקה: "בכורות דף נא" — ללא "מסכת" וללא מספר קטע
+        for r in results:
             ms_clean = r['masechet'].replace('מסכת ', '').strip()
             display = f"{ms_clean}  ·  דף {r['page']}  ·  {r['section']}"
             copy_text = f"{ms_clean} דף {r['page']}"
@@ -112,9 +123,8 @@ class SearchResultsDialog(QDialog):
             item = QListWidgetItem(display)
             item.setData(Qt.ItemDataRole.UserRole, copy_text)
             self.list_widget.addItem(item)
-        
-        # הסתר אנימציה לאחר טעינה
-        QTimer.singleShot(600, self._spinner.hide)
+
+        self._spinner.hide()
 
     def _copy_location(self):
         items = self.list_widget.selectedItems()

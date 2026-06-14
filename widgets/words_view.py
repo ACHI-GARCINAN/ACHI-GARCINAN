@@ -84,8 +84,7 @@ class _ClickableWord(QLabel):
         if action == search_action:
             import re
             word = re.sub(r'[\u05B0-\u05C7]', '', self.text().strip())
-            results = search_word_in_shas(word)
-            dlg = SearchResultsDialog(word, results, self._theme, self.window())
+            dlg = SearchResultsDialog(word, self._theme, self.window())
             dlg.exec()
             
 
