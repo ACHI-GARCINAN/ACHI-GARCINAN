@@ -54,6 +54,61 @@
 pip install -r requirements.txt
 ```
 
+## הרצה מקומית
+
+להריץ את התוכנה בסביבת פיתוח מקומית תוך שימוש ב-virtualenv:
+
+```bash
+python -m venv .venv
+# Windows
+.venv\Scripts\activate
+# Unix / macOS
+# source .venv/bin/activate
+
+pip install -r requirements.txt
+
+# הפעלת התוכנה (אם `talmud.db` נמצא בתיקייה הנוכחית):
+python main.py
+
+# או להפנות לתיקייה שבה קובץ talmud.db נמצא:
+python main.py "C:\\path\\to\\folder\\with\\talmud.db"
+```
+
+### בדיקות מהירות (smoke test)
+
+הרצת סקריפט בדיקה מהיר שמודד טעינה בסיסית של הממשק (לא פותח את הלולאה הראשית):
+
+```bash
+python run_smoke.py
+```
+
+## PyInstaller — build מקומי (דוגמאות)
+
+Windows (onedir):
+
+```bash
+pyinstaller --noconfirm --onedir --windowed \
+	--icon=icon.ico \
+	--name="TalmudicFormulas" \
+	--add-data "talmud.db;." \
+	--add-data "widgets;widgets" \
+	--add-data "assets;assets" \
+	main.py
+```
+
+macOS (universal):
+
+```bash
+pyinstaller --noconfirm --windowed --target-architecture universal2 \
+	--name "TalmudicFormulas" \
+	--add-data "talmud.db:." \
+	--add-data "widgets:widgets" \
+	--add-data "assets:assets" \
+	main.py
+```
+
+> הערה: ודא שאתה מריץ את PyInstaller מאותה סביבת Python שבה התקנת את `requirements.txt`. לבניית installers עבור פלטפורמה שאינה מקומית (למשל בניית Windows על macOS) יש להשתמש ב-runner מתאים או במכונה וירטואלית.
+
 ## תיעוד מסד נתונים
 
 תיאור סכמת מסד הנתונים של הפרויקט זמין ב-[docs/DB_SCHEMA.md](docs/DB_SCHEMA.md).
