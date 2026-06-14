@@ -1,5 +1,7 @@
 <img width="150" height="148" alt="שדג" src="https://github.com/user-attachments/assets/93be22a1-8343-4c03-95df-3aed93bc23d0" />
 
+![Build Status](https://github.com/ACHI-GARCINAN/Talmud-Formulas-Software/actions/workflows/main.yml/badge.svg)
+
 # נוסחאות התלמוד
 
 **נוסחאות התלמוד** הינה תוכנה המיועדת להצגת שינויי נוסחאות בין מהדורות והוצאות שונות של דפי הגמרא.
@@ -41,6 +43,20 @@
 ---
 
 **פרויקט זה נועד להנגיש את אוצרות הרוח של חכמי ישראל ללומדי התורה ולחוקריה**
+
+---
+
+## התקנה
+
+להתקין את התלויות הנדרשות מתוך הקובץ `requirements.txt`:
+
+```bash
+pip install -r requirements.txt
+```
+
+## תיעוד מסד נתונים
+
+תיאור סכמת מסד הנתונים של הפרויקט זמין ב-[docs/DB_SCHEMA.md](docs/DB_SCHEMA.md).
 
 ---
 
