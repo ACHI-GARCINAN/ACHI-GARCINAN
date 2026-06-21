@@ -15,6 +15,7 @@ on:
       - "assets/**"
       - "icon.ico"
       - "setup_script.iss"
+      - "requirements.txt"
       - ".github/workflows/**"
   workflow_dispatch:
 
