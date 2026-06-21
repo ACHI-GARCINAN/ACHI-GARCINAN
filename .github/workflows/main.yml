@@ -211,8 +211,8 @@ jobs:
             /DMyAppVersion="${{ needs.version.outputs.tag }}" `
             "setup_script.iss"
 
-      # ── macOS Build ──
-      - name: Build macOS Universal
+      # ── macOS Build (נטיבי לכל ארכיטקטורה: Intel על macos-13, Apple Silicon על macos-14) ──
+      - name: Build macOS (${{ matrix.label }})
         if: matrix.platform == 'macos'
         shell: bash
         env:
@@ -233,13 +233,17 @@ jobs:
             --hidden-import "PyQt6.QtSvgWidgets" \
             main.py
 
+          # אימות שהבינארי נבנה אכן עבור הארכיטקטורה הצפויה (arm64 / x86_64)
+          echo "Built architecture (${{ matrix.label }}):"
+          lipo -archs "dist/TalmudicFormulas.app/Contents/MacOS/TalmudicFormulas" || true
+
           create-dmg \
-            --volname "Talmudic Formulas" \
-            "TalmudicFormulas-Mac-Universal.dmg" \
+            --volname "Talmudic Formulas (${{ matrix.label }})" \
+            "TalmudicFormulas-Mac-${{ matrix.label }}.dmg" \
             "dist/TalmudicFormulas.app"
 
           cd dist
-          zip -r ../TalmudicFormulas-Mac-Universal.zip TalmudicFormulas.app || true
+          zip -r "../TalmudicFormulas-Mac-${{ matrix.label }}.zip" TalmudicFormulas.app || true
 
       - name: Upload Windows artifacts
         if: matrix.platform == 'windows'
@@ -254,10 +258,10 @@ jobs:
         if: matrix.platform == 'macos'
         uses: actions/upload-artifact@v4
         with:
-          name: macos-build
+          name: macos-build-${{ matrix.arch }}
           path: |
-            TalmudicFormulas-Mac-Universal.dmg
-            TalmudicFormulas-Mac-Universal.zip
+            TalmudicFormulas-Mac-${{ matrix.label }}.dmg
+            TalmudicFormulas-Mac-${{ matrix.label }}.zip
 
   release:
     name: Create Release
