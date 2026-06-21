@@ -89,7 +89,7 @@ jobs:
         include:
           - os: windows-latest
             platform: windows
-          - os: macos-13
+          - os: macos-latest
             platform: macos
 
     steps:
