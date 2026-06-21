@@ -18,7 +18,7 @@ SetupIconFile=icon.ico
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
-LicenseFile=license.txt
+LicenseFile=Usage Note.txt
 InfoAfterFile=comments.txt
 
 [Languages]
