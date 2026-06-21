@@ -1,4 +1,4 @@
-import os, sys
+import os, sys, re
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QScrollArea, QLabel, QCheckBox,
@@ -8,9 +8,9 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QFont, QCursor
 from settings_manager import load_settings, save_settings
 from styles import get_theme_styles, get_theme_config
-from witness_card import WitnessCard
-from touch_scroll import TouchScrollArea
-from manuscript_info_popup import ManuscriptInfoPopup
+from widgets.witness_card import WitnessCard
+from widgets.touch_scroll import TouchScrollArea
+from widgets.manuscript_info_popup import ManuscriptInfoPopup
 from utils import normalize_word
 from db import fetch_manuscript_info
 from icons import get_theme_icon, IconName
@@ -285,7 +285,7 @@ class WitnessPanel(QWidget):
                     n_ms = len(witnesses_list) - n_print
 
                     # אם יש רק עד אחד ואין בשמו אותיות אנגליות — כתוב את שמו
-                    has_english = bool(__import__('re').search(r'[A-Za-z]', witnesses_list[0]))
+                    has_english = bool(re.search(r'[A-Za-z]', witnesses_list[0]))
                     use_name = (len(witnesses_list) == 1 and not has_english)
                     if use_name:
                         name_str = witnesses_list[0]

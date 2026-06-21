@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import (
     QWidget, QFrame, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QApplication, QGraphicsDropShadowEffect
 )
-from PyQt6.QtCore import Qt, QUrl
+from PyQt6.QtCore import Qt, QUrl, QTimer, QEventLoop
 from PyQt6.QtGui import QFont, QColor, QCursor, QDesktopServices
 from icons import get_theme_icon, IconName
 
@@ -124,9 +124,9 @@ class CopyrightPopup(QWidget):
     def _copy_mail(self):
         QApplication.clipboard().setText(self.MAIL)
         sender = self.sender()
-        sender.setIcon(get_theme_icon(IconName.CHECK, 'classic', 14))
-        from PyQt6.QtCore import QTimer
-        QTimer.singleShot(1200, lambda: sender.setIcon(get_theme_icon(IconName.COPY, 'classic', 14)))
+        if sender:
+            sender.setIcon(get_theme_icon(IconName.CHECK, 'classic', 14))
+            QTimer.singleShot(1200, lambda: sender.setIcon(get_theme_icon(IconName.COPY, 'classic', 14)))
     def mousePressEvent(self, event):
         if not self._card.geometry().contains(event.position().toPoint()):
             self.close()
@@ -134,7 +134,7 @@ class CopyrightPopup(QWidget):
             super().mousePressEvent(event)
 
     def exec(self):
-        loop = __import__('PyQt6.QtCore', fromlist=['QEventLoop']).QEventLoop()
+        loop = QEventLoop()
         self.destroyed.connect(loop.quit)
         loop.exec()
 

@@ -30,7 +30,7 @@ class SearchResultsDialog(QDialog):
         self._word = word
         self.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
         self.setWindowTitle(f'חיפוש: {word}')
-        from main_window import get_icon
+        from icons import get_app_icon as get_icon
         self.setWindowIcon(get_icon())
         self.setMinimumSize(420, 380)
 

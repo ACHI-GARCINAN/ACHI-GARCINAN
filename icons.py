@@ -13,6 +13,7 @@ icons.py — אייקונים SVG מותאמים לתוכנת "נוסחאות ה
 """
 
 from __future__ import annotations
+import os
 from enum import Enum, auto
 
 from PyQt6.QtCore import QByteArray, QSize, Qt
@@ -216,3 +217,14 @@ def get_theme_icon(name: IconName, theme: str, size: int = 20) -> QIcon:
     """מחזיר QIcon בצבע המתאים לערכת הנושא."""
     color = THEME_COLORS.get(theme, THEME_COLORS["classic"])
     return get_icon(name, color, size)
+
+
+def get_app_icon() -> QIcon:
+    """מחזיר את אייקון האפליקציה — משמש בכל חלונות התוכנה."""
+    from db import get_base_dir
+    base = get_base_dir()
+    for name in ('icon.ico', 'logo.ico', 'icon.png', 'logo.png'):
+        path = os.path.join(base, name)
+        if os.path.exists(path):
+            return QIcon(path)
+    return QIcon()

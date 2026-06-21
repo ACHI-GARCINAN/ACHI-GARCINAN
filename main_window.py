@@ -13,25 +13,14 @@ from PyQt6.QtCore import Qt, QObject, QEvent
 
 from PyQt6.QtGui import QFont, QCursor, QIcon, QKeyEvent
 from styles import get_theme_styles, get_theme_config
-from db import fetch_masechet, fetch_page, fetch_page_words
+from db import fetch_masechet, fetch_page, fetch_page_words, get_base_dir
 from utils import _page_matches, _masechet_matches
 from settings_manager import load_settings, save_settings, save_last_position, load_last_position, save_layout, load_layout
-from icons import get_theme_icon, IconName
+from icons import get_theme_icon, IconName, get_app_icon
 
 
-def get_base_dir() -> str:
-    if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
-        return sys._MEIPASS
-    return os.path.dirname(os.path.abspath(__file__))
-
-def get_icon() -> QIcon:
-    base = get_base_dir()
-    # Prioritize Windows-friendly ICO files first to ensure taskbar shows icon quickly
-    for name in ('icon.ico', 'logo.ico', 'icon.png', 'logo.png'):
-        path = os.path.join(base, name)
-        if os.path.exists(path):
-            return QIcon(path)
-    return QIcon()
+def get_icon() -> QIcon:   # נשמר לתאימות לאחור — קורא לפונקציה המרכזית ב-icons.py
+    return get_app_icon()
 
 
 
@@ -579,7 +568,6 @@ class MainWindow(QMainWindow):
             self.sidebar_toggle_btn.setIcon(get_theme_icon(IconName.SIDEBAR_HIDE, self._theme, 18))  # ← מראה "לחץ להסתיר"
             self.splitter.setSizes([215, 780, 420])
             save_layout(self.splitter.sizes(), self.nav_panel.isVisible())
-            self.splitter.setSizes([215, 780, 420])
         save_layout(self.splitter.sizes(), self.nav_panel.isVisible())
     def _quick_nav(self):
         raw = self.search_box.text().strip()

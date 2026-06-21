@@ -460,7 +460,7 @@ class SettingsDialog(QDialog):
         # ── תצוגה מקדימה ──
         preview_lbl = QLabel("תצוגה מקדימה של גופן:")
         preview_lbl.setFont(QFont("David", 12))
-        hint_lbl.setStyleSheet("color: #718096;")        
+        preview_lbl.setStyleSheet("color: #718096;")
         preview_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(preview_lbl)
 
@@ -511,7 +511,7 @@ class SettingsDialog(QDialog):
         
     def _set_placeholder_image(self, label: QLabel, filename: str, alt_text: str):
         if getattr(sys, 'frozen', False):
-            base = sys._MEIPASS
+            base = getattr(sys, '_MEIPASS', None) or os.path.dirname(sys.executable)
         else:
             base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         path = os.path.join(base, "assets", filename)

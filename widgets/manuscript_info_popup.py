@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import (
     QWidget, QFrame, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QApplication, QGraphicsDropShadowEffect, QScrollArea
 )
-from PyQt6.QtCore import Qt, QUrl, QSize
+from PyQt6.QtCore import Qt, QUrl, QSize, QTimer, QEventLoop
 from PyQt6.QtGui import QFont, QColor, QCursor, QDesktopServices
 
 
@@ -143,7 +143,7 @@ class ManuscriptInfoPopup(QWidget):
             super().mousePressEvent(event)
 
     def exec(self):
-        loop = __import__('PyQt6.QtCore', fromlist=['QEventLoop']).QEventLoop()
+        loop = QEventLoop()
         self.destroyed.connect(loop.quit)
         loop.exec()
 

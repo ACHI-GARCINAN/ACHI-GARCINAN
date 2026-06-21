@@ -76,7 +76,7 @@ jobs:
         with:
           name: talmud-db
           path: talmud.db
-          retention-days: 1
+          retention-days: 3
 
   build:
     name: Build on ${{ matrix.os }}
@@ -89,7 +89,7 @@ jobs:
         include:
           - os: windows-latest
             platform: windows
-          - os: macos-latest
+          - os: macos-13
             platform: macos
 
     steps:
@@ -151,6 +151,7 @@ jobs:
             --icon="icon.ico" `
             --name="TalmudicFormulas" `
             --add-data "$dbPath;." `
+            --add-data "icon.ico;." `
             --add-data "widgets;widgets" `
             --add-data "assets;assets" `
             --collect-all PyQt6 `
@@ -164,6 +165,7 @@ jobs:
             --icon="icon.ico" `
             --name="TalmudicFormulas-Portable" `
             --add-data "$dbPath;." `
+            --add-data "icon.ico;." `
             --add-data "widgets;widgets" `
             --add-data "assets;assets" `
             --collect-all PyQt6 `
@@ -190,9 +192,9 @@ jobs:
           pyinstaller \
             --noconfirm \
             --windowed \
-            --target-architecture universal2 \
             --name "TalmudicFormulas" \
             --add-data "talmud.db:." \
+            --add-data "icon.ico:." \
             --add-data "widgets:widgets" \
             --add-data "assets:assets" \
             --collect-all PyQt6 \
@@ -201,7 +203,7 @@ jobs:
             main.py
 
           create-dmg \
-            --volname "נוסחאות התלמוד" \
+            --volname "Talmudic Formulas" \
             "TalmudicFormulas-Mac-Universal.dmg" \
             "dist/TalmudicFormulas.app"
 
