@@ -139,8 +139,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
-          restore-keys: ${{ runner.os }}-pip-
+          key: ${{ runner.os }}-${{ matrix.arch }}-pip-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: ${{ runner.os }}-${{ matrix.arch }}-pip-
 
       - name: Install dependencies
         shell: bash
@@ -298,23 +298,34 @@ jobs:
 
             ---
 
-            ### macOS (Universal — Intel + Apple Silicon)
+            ### macOS — Apple Silicon (M1/M2/M3 ומעלה)
 
             | סוג | קישור |
             |-----|-------|
-            | גרסת התקנה | [לחצו כאן להורדת גרסת התקנה](https://github.com/${{ github.repository }}/releases/download/${{ needs.version.outputs.tag }}/TalmudicFormulas-Mac-Universal.dmg) |
-            | גרסה ניידת | [לחצו כאן להורדת גרסה ניידת](https://github.com/${{ github.repository }}/releases/download/${{ needs.version.outputs.tag }}/TalmudicFormulas-Mac-Universal.zip) |
+            | גרסת התקנה | [לחצו כאן להורדת גרסת התקנה](https://github.com/${{ github.repository }}/releases/download/${{ needs.version.outputs.tag }}/TalmudicFormulas-Mac-AppleSilicon.dmg) |
+            | גרסה ניידת | [לחצו כאן להורדת גרסה ניידת](https://github.com/${{ github.repository }}/releases/download/${{ needs.version.outputs.tag }}/TalmudicFormulas-Mac-AppleSilicon.zip) |
 
             ---
 
-            > **הערה למשתמשי מק:** גרסה זו תומכת הן במחשבי Intel והן במחשבי Apple Silicon.
+            ### macOS — Intel
+
+            | סוג | קישור |
+            |-----|-------|
+            | גרסת התקנה | [לחצו כאן להורדת גרסת התקנה](https://github.com/${{ github.repository }}/releases/download/${{ needs.version.outputs.tag }}/TalmudicFormulas-Mac-Intel.dmg) |
+            | גרסה ניידת | [לחצו כאן להורדת גרסה ניידת](https://github.com/${{ github.repository }}/releases/download/${{ needs.version.outputs.tag }}/TalmudicFormulas-Mac-Intel.zip) |
+
+            ---
+
+            > **הערה למשתמשי מק:** הורידו את הגרסה המתאימה למעבד שלכם. מחשבי Mac משנת 2020 ואילך הם בדרך כלל Apple Silicon (M1/M2/M3); מחשבים ישנים יותר הם Intel. אם אינכם בטוחים: תפריט אפל () ← "על אודות Mac זה" ← שורת "שבב"/"מעבד".
 
 
           files: |
             artifacts/windows-build/**/TalmudicFormulas-Setup-Win.exe
             artifacts/windows-build/**/TalmudicFormulas-Portable.exe
-            artifacts/macos-build/**/TalmudicFormulas-Mac-Universal.dmg
-            artifacts/macos-build/**/TalmudicFormulas-Mac-Universal.zip
+            artifacts/macos-build-silicon/**/TalmudicFormulas-Mac-AppleSilicon.dmg
+            artifacts/macos-build-silicon/**/TalmudicFormulas-Mac-AppleSilicon.zip
+            artifacts/macos-build-intel/**/TalmudicFormulas-Mac-Intel.dmg
+            artifacts/macos-build-intel/**/TalmudicFormulas-Mac-Intel.zip
 
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
