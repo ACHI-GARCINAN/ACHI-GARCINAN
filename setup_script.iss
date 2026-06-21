@@ -32,7 +32,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Source: "dist-installer\TalmudicFormulas\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 ; קבצי טקסט — עם skipifsourcedoesntexist כדי שהבנייה לא תיכשל אם חסרים
-Source: "license.txt"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
+Source: "Usage Note.txt"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
 Source: "comments.txt"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
 
 ; בסיס הנתונים — כבר נכלל ב-PyInstaller, אבל נוסף גם כאן לוודאות
