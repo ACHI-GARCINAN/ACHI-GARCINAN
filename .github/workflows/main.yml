@@ -56,20 +56,39 @@ jobs:
       
       - name: Check and download talmud.db
         run: |
-          if [ -f talmud.db ]; then
-            echo "✅ talmud.db found in repo - using existing copy"
-            ls -lh talmud.db
+          # שימו לב: actions/checkout@v4 אינו מוריד קבצי Git LFS כברירת מחדל,
+          # ולכן ה-talmud.db שמגיע מה-repo עלול להיות קובץ מצביע (LFS pointer)
+          # זעיר של ~130 בתים — ולא בסיס הנתונים האמיתי (~1GB).
+          # לכן בודקים שזה באמת קובץ SQLite; אם לא — מורידים את האמיתי מה-Release.
+          need_download=0
+          if [ ! -f talmud.db ]; then
+            echo "⚠️  talmud.db not present"
+            need_download=1
+          elif head -c 16 talmud.db | grep -q "SQLite format 3"; then
+            echo "✅ Real SQLite talmud.db found in repo - using existing copy"
           else
-            echo "⚠️  talmud.db not in repo - downloading from release..."
+            echo "⚠️  talmud.db is not a real DB (likely a Git LFS pointer) - downloading from release"
+            echo "----- file head -----"
+            head -c 200 talmud.db || true
+            echo ""
+            echo "---------------------"
+            need_download=1
+          fi
+
+          if [ "$need_download" -eq 1 ]; then
+            echo "⬇️  Downloading talmud.db from release..."
             curl -f -L -o talmud.db \
               "https://github.com/ACHI-GARCINAN/Talmud-Formulas-Software/releases/download/1.0/talmud.db"
-            if [ ! -f talmud.db ]; then
-              echo "❌ Failed to download talmud.db"
-              exit 1
-            fi
-            echo "✅ Downloaded successfully"
-            ls -lh talmud.db
           fi
+
+          # אימות סופי: הקובץ חייב להיות SQLite DB אמיתי — אחרת מפילים את הבנייה
+          # כדי שלעולם לא תיווצר שוב גרסה בלי בסיס נתונים בשקט.
+          if ! head -c 16 talmud.db | grep -q "SQLite format 3"; then
+            echo "❌ talmud.db is NOT a valid SQLite database - aborting"
+            exit 1
+          fi
+          echo "✅ Verified: valid SQLite database"
+          ls -lh talmud.db
 
       - name: Upload DB as artifact
         uses: actions/upload-artifact@v4
@@ -89,8 +108,14 @@ jobs:
         include:
           - os: windows-latest
             platform: windows
-          - os: macos-latest
+          - os: macos-13
             platform: macos
+            arch: intel
+            label: Intel
+          - os: macos-14
+            platform: macos
+            arch: silicon
+            label: AppleSilicon
 
     steps:
       - name: Checkout code
@@ -132,6 +157,12 @@ jobs:
         shell: bash
         run: |
           ls -lh talmud.db
+          # ודא שזה בסיס נתונים אמיתי לפני האריזה — לא קובץ מצביע של LFS
+          if ! head -c 16 talmud.db | grep -q "SQLite format 3"; then
+            echo "❌ talmud.db is NOT a valid SQLite database - aborting build"
+            exit 1
+          fi
+          echo "✅ Verified valid SQLite database before packaging"
 
       # ── Windows Build ──
       - name: Build Windows

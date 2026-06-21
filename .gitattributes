@@ -1,1 +1,2 @@
-talmud.db filter=lfs diff=lfs merge=lfs -text
+# בסיס הנתונים talmud.db אינו נשמר במאגר (לא ב-LFS ולא רגיל) —
+# הוא מתארח כ-asset ב-GitHub Release וה-workflow מוריד אותו משם בזמן הבנייה.
